@@ -1,42 +1,51 @@
 # Product Scope
 
-## Phase 1 — Self-Custody Wallet
+## In Scope
 
-The first 30 days focus on building a self-custody wallet.
+### Wallet
 
-The wallet allows users to control their own private keys.
-
-### Included
-
-- Wallet creation
-- Wallet recovery/import
-- Secure local wallet storage
-- Portfolio/balance display
-- Receive
-- Send
+- Create wallet
+- Import wallet
+- Wallet recovery
+- View balances
+- Receive assets
+- Send assets
 - Transaction history
-- Network selection
-- EVM support
-- Solana support
-- Bitcoin support
-- Multi-platform client foundation
+- Network switching
+
+### Platforms
+
+- Web
+- iOS
+- Android
+- Desktop
+- Browser Extension
+
+### Networks
+
+- EVM
+- Solana
+- Bitcoin
 
 ## Separate Trust Domain
 
-Exchange and custodial functionality will remain a separate
-security and regulatory domain.
+The exchange/custody system is outside the self-custody wallet
+security domain.
 
-The wallet application must not directly become the custody
-system for an exchange.
+Future exchange functionality may include:
 
-## Architectural Boundary
+- Trading
+- Custody
+- Internal ledger
+- Deposits
+- Withdrawals
+- Compliance
+- Risk management
 
-Self-custody wallet:
+These are not part of the first 30-day wallet implementation.
 
-Client → wallet-core → blockchain providers
+## Scope Principle
 
-Exchange:
-
-Client → exchange API → custody/ledger/risk systems
-
-These domains must remain logically and operationally separated.
+When a feature creates significant additional security,
+regulatory or operational complexity without being necessary
+for the wallet MVP, it should be deferred.

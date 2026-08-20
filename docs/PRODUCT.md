@@ -1,22 +1,25 @@
 # Crypto Wallet Platform
 
-## Vision
+## Product Vision
 
-Build a secure, multi-platform, self-custody cryptocurrency wallet
-that allows users to securely create, import, manage and transact
-with cryptocurrency across multiple blockchain networks.
+Build a security-first, multi-platform, self-custody cryptocurrency
+wallet that can eventually serve millions of users.
 
-## Primary Goal
+The first product phase focuses on establishing a secure wallet
+foundation rather than launching a full cryptocurrency exchange.
 
-Create a security-first self-custody wallet foundation that can
-eventually scale to millions of users.
+## Primary Product
 
-## Product Principle
+The primary product is a self-custody cryptocurrency wallet.
 
-Users control their wallet private keys.
+Users control their wallet keys and assets.
 
-The application must never treat ordinary server authentication
-credentials as equivalent to wallet private keys.
+## Security Principle
+
+Security takes priority over feature velocity.
+
+Sensitive wallet material must remain inside the wallet security
+boundary and must not be unnecessarily exposed to backend services.
 
 ## Initial Blockchain Support
 
@@ -32,19 +35,20 @@ credentials as equivalent to wallet private keys.
 - Desktop
 - Browser Extension
 
-## Initial Product Capabilities
+## Initial MVP
 
 - Create wallet
 - Import wallet
-- View wallet balances
+- View balances
 - Receive assets
 - Send assets
-- View transaction history
-- Switch networks
+- Transaction history
+- Network switching
 
-## Security Principle
+## Exchange Boundary
 
-Security takes priority over feature velocity.
+Exchange and custodial functionality are separate from the
+self-custody wallet.
 
-No feature should be implemented in a way that compromises
-private-key or seed-phrase security.
+The first 30-day product does not attempt to launch a regulated
+public exchange.
