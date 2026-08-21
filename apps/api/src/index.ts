@@ -1,7 +1,4 @@
-import type {
-  SupportedChain,
-  WalletAccount,
-} from "@crypto-wallet/shared-types";
+import type { SupportedChain, WalletAccount } from "@crypto-wallet/shared-types";
 
 import { loadConfig } from "@crypto-wallet/config";
 

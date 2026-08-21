@@ -59,32 +59,21 @@ async function migrate(): Promise<void> {
       );
 
       if (existing.rowCount !== 0) {
-        console.log(
-          `Migration ${migration.version} already applied`,
-        );
+        console.log(`Migration ${migration.version} already applied`);
         continue;
       }
 
-      const migrationPath = join(
-        migrationsPath,
-        migration.file,
-      );
+      const migrationPath = join(migrationsPath, migration.file);
 
-      const migrationSql = await readFile(
-        migrationPath,
-        "utf8",
-      );
+      const migrationSql = await readFile(migrationPath, "utf8");
 
       await client.query(migrationSql);
 
-      await client.query(
-        "INSERT INTO schema_migrations (version) VALUES ($1)",
-        [migration.version],
-      );
+      await client.query("INSERT INTO schema_migrations (version) VALUES ($1)", [
+        migration.version,
+      ]);
 
-      console.log(
-        `Applied migration ${migration.version}: ${migration.file}`,
-      );
+      console.log(`Applied migration ${migration.version}: ${migration.file}`);
     }
 
     await client.query("COMMIT");

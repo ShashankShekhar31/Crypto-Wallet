@@ -1,11 +1,6 @@
-export type LedgerEntryType =
-  | "debit"
-  | "credit";
+export type LedgerEntryType = "debit" | "credit";
 
-export type LedgerEntryStatus =
-  | "pending"
-  | "posted"
-  | "reversed";
+export type LedgerEntryStatus = "pending" | "posted" | "reversed";
 
 export interface LedgerAccount {
   id: string;

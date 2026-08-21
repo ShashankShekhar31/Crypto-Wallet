@@ -1,18 +1,9 @@
-export type SupportedChain =
-  | "evm"
-  | "solana"
-  | "bitcoin";
+export type SupportedChain = "evm" | "solana" | "bitcoin";
 
-export type WalletType =
-  | "self-custody";
+export type WalletType = "self-custody";
 
 export type TransactionStatus =
-  | "draft"
-  | "signed"
-  | "submitted"
-  | "pending"
-  | "confirmed"
-  | "failed";
+  "draft" | "signed" | "submitted" | "pending" | "confirmed" | "failed";
 
 export interface WalletAccount {
   id: string;

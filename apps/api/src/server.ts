@@ -11,24 +11,24 @@ const app = Fastify({
 });
 
 app.setErrorHandler((error, request, reply) => {
-    request.log.error(error);
+  request.log.error(error);
 
-    if (error instanceof ApiError) {
-        return reply.status(error.statusCode).send({
-            error: {
-            code: error.code,
-            message: error.message,
-            },
-        });
-    }
+  if (error instanceof ApiError) {
+    return reply.status(error.statusCode).send({
+      error: {
+        code: error.code,
+        message: error.message,
+      },
+    });
+  }
 
-    return reply.status(500).send({
-        error: {
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Internal server error",
-          },
-      });
+  return reply.status(500).send({
+    error: {
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Internal server error",
+    },
   });
+});
 
 await app.register(healthRoutes);
 
