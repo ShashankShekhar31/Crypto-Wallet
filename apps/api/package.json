@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@crypto-wallet/config": "workspace:*",
     "@crypto-wallet/shared-types": "workspace:*"
   }
 }
