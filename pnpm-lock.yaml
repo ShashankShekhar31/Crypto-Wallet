@@ -214,7 +214,31 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
+  apps/api: {}
+
+  apps/desktop: {}
+
+  apps/extension: {}
+
+  apps/mobile: {}
+
+  apps/web: {}
+
+  packages/chain-core: {}
+
+  packages/config: {}
+
+  packages/crypto: {}
+
   packages/shared-types: {}
+
+  packages/storage: {}
+
+  packages/telemetry: {}
+
+  packages/ui: {}
+
+  packages/wallet-core: {}
 
 packages:
 

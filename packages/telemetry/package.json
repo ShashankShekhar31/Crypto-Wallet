@@ -1,0 +1,6 @@
+{
+  "name": "@crypto-wallet/telemetry",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module"
+}
