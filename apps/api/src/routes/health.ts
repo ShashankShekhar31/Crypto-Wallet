@@ -7,6 +7,8 @@ export async function healthRoutes(app: FastifyInstance) {
   app.get("/health", async (request) => {
     healthQuerySchema.parse(request.query);
 
-    return health;
+    return {
+      data: health,
+    };
   });
 }
