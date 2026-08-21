@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import Fastify from "fastify";
 
 import { config } from "./index.js";
@@ -6,6 +7,7 @@ import { ApiError } from "./errors.js";
 
 const app = Fastify({
   logger: true,
+  genReqId: () => crypto.randomUUID(),
 });
 
 app.setErrorHandler((error, request, reply) => {

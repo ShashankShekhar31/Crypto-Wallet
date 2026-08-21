@@ -9,6 +9,7 @@ export async function healthRoutes(app: FastifyInstance) {
 
     return {
       data: health,
+      requestId: request.id,
     };
   });
 }
