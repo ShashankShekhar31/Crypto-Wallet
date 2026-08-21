@@ -214,7 +214,11 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
-  apps/api: {}
+  apps/api:
+    dependencies:
+      '@crypto-wallet/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
 
   apps/desktop: {}
 
