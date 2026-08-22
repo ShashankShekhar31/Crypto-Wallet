@@ -1,7 +1,8 @@
-node_modules
-dist
-build
-.turbo
-.next
-out
-coverage
+node_modules/
+dist/
+.turbo/
+build/
+.next/
+out/
+coverage/
+results.sarif
