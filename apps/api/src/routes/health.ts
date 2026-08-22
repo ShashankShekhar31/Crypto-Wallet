@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
-import { health } from "../index.js";
+import { health } from "../health.js";
 import { healthQuerySchema } from "../validation.js";
 
 export async function healthRoutes(app: FastifyInstance) {
