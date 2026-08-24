@@ -83,3 +83,118 @@ The local object-storage foundation has been verified through:
 6. Removal of the test bucket after verification.
 
 No production wallet secrets, seed material, or private keys are stored in this local object-storage test.
+
+---
+
+## Network and Access Boundaries
+
+The free-resource implementation does not provision paid cloud
+networking or compute resources.
+
+Production deployments must preserve the following logical
+infrastructure boundaries.
+
+### VPC Boundary
+
+A production deployment should isolate platform infrastructure inside
+a private network boundary.
+
+The VPC concept represents the top-level network isolation boundary.
+
+Publicly reachable components must be limited to explicitly required
+edge services such as:
+
+- DNS
+- CDN
+- WAF
+- Public API ingress
+
+Internal application and data services should not be directly exposed
+to the public internet.
+
+### Public and Private Subnets
+
+The production network model separates:
+
+- Public edge services
+- Private application services
+- Private data services
+
+Databases, caches, internal services and security-sensitive
+components must remain private.
+
+The local Docker implementation does not reproduce cloud subnet
+isolation. Docker networks provide the local development boundary.
+
+### Security Groups
+
+Production security groups must follow least privilege.
+
+Inbound access should be explicitly allowed only when required.
+
+Examples:
+
+- Public HTTPS -> API ingress
+- API -> internal application services
+- Application -> database
+- Application -> cache
+- Application -> object storage
+
+Unnecessary inbound access must remain disabled.
+
+Database access must never be publicly exposed.
+
+### IAM Boundary
+
+Production infrastructure must use least-privilege identity and
+access policies.
+
+Services should receive only the permissions required for their
+specific function.
+
+Examples:
+
+- Application service -> required database access
+- Application service -> required object-storage access
+- CI -> only required deployment permissions
+- Operators -> explicitly authorized operational permissions
+
+No service should receive unrestricted infrastructure privileges by
+default.
+
+### Wallet Security Boundary
+
+Infrastructure access controls must never become a substitute for
+wallet-key security.
+
+The infrastructure layer must never store:
+
+- Wallet seed phrases
+- Wallet private keys
+- User wallet signing secrets
+
+Self-custody wallet secrets remain inside the wallet security
+boundary defined by the platform architecture.
+
+### Local Development Mapping
+
+The local implementation maps these concepts as follows:
+
+| Production Concept | Free / Local Equivalent |
+| --- | --- |
+| VPC | Docker network boundary |
+| Private subnet | Non-public Docker service network |
+| Security group | Explicit container ports and network rules |
+| IAM | Service-level credentials and least-privilege configuration |
+| Private database | Local database bound to internal services |
+| Object storage | MinIO on local Docker network |
+| Cloud networking | Docker Compose networking |
+
+### Production Limitation
+
+The local implementation provides architectural boundaries for
+development and testing but does not provide the same isolation,
+availability, policy enforcement or managed security guarantees as
+production cloud networking.
+
+Production cloud networking remains a future deployment concern.
