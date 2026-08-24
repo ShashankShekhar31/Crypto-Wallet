@@ -51,3 +51,35 @@ Each environment uses the shared OpenTofu environment contract:
 
 ```text
 infra/opentofu/modules/environment-contract
+---
+
+## Local Object Storage
+
+Local development uses MinIO as the provider-neutral object-storage implementation.
+
+The local object-storage service is defined in:
+
+infra/local/docker-compose.yml
+
+### Local Object Storage Configuration
+
+- Service: MinIO
+- API endpoint: http://localhost:9000
+- Console endpoint: http://localhost:9001
+- Persistent volume: local_minio_data
+- Container: crypto-wallet-minio
+
+The object-storage data is persisted through the named Docker volume and is independent of the lifecycle of the MinIO container.
+
+### Persistence Verification
+
+The local object-storage foundation has been verified through:
+
+1. MinIO readiness check.
+2. Container restart.
+3. Complete Compose container recreation.
+4. Creation of a test bucket.
+5. Verification that the bucket survived container recreation.
+6. Removal of the test bucket after verification.
+
+No production wallet secrets, seed material, or private keys are stored in this local object-storage test.
