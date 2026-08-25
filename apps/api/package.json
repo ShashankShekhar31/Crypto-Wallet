@@ -15,6 +15,7 @@
   "dependencies": {
     "@crypto-wallet/config": "workspace:*",
     "@crypto-wallet/shared-types": "workspace:*",
+    "@crypto-wallet/storage": "workspace:*",
     "fastify": "^5.12.1",
     "zod": "^4.4.3"
   },
