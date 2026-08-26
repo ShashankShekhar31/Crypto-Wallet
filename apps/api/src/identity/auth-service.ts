@@ -17,6 +17,10 @@ import {
 import { verifyPassword } from "./password.js";
 import { DeviceRepository } from "./device-repository.js";
 
+const PASSWORD_MAX_ATTEMPTS = 5;
+const PASSWORD_LOCK_DURATION_MS =
+  15 * 60 * 1000;
+
 export interface AuthenticateWithPasswordInput {
   normalizedEmail: string;
   password: string;
@@ -76,6 +80,16 @@ export class AuthenticationService {
     );
 
     if (!valid) {
+      await this.identityRepository.recordPasswordFailure(
+        identityAccount.id,
+        {
+          maxAttempts:
+            PASSWORD_MAX_ATTEMPTS,
+          lockDurationMs:
+            PASSWORD_LOCK_DURATION_MS,
+        },
+      );
+
       throw new Error("Invalid credentials");
     }
 
@@ -88,6 +102,10 @@ export class AuthenticationService {
     if (!device) {
       throw new Error("Invalid device");
     }
+
+    await this.identityRepository.resetPasswordFailures(
+      identityAccount.id,
+    );
 
     const refreshToken = generateRefreshToken();
     const refreshTokenHash =

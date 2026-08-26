@@ -49,6 +49,11 @@ export interface CreatedIdentityAccount {
   passwordCredential: PasswordCredentialRecord;
 }
 
+export interface RecordPasswordFailureInput {
+  maxAttempts: number;
+  lockDurationMs: number;
+}
+
 export class IdentityRepository {
   constructor(private readonly storage: Storage) {}
 
@@ -103,6 +108,91 @@ export class IdentityRepository {
 
     if (!row) {
       return null;
+    }
+
+    return mapPasswordCredential(row);
+  }
+
+    async recordPasswordFailure(
+    identityAccountId: string,
+    input: RecordPasswordFailureInput,
+  ): Promise<PasswordCredentialRecord> {
+    if (input.maxAttempts <= 0) {
+      throw new Error("Invalid maximum password attempts");
+    }
+
+    if (input.lockDurationMs <= 0) {
+      throw new Error("Invalid password lock duration");
+    }
+
+    const result =
+      await this.storage.query<PasswordCredentialRow>(
+        `
+          UPDATE password_credentials
+          SET
+            failed_attempt_count =
+              failed_attempt_count + 1,
+            locked_until =
+              CASE
+                WHEN failed_attempt_count + 1 >= $2
+                THEN NOW() + ($3 * INTERVAL '1 millisecond')
+                ELSE locked_until
+              END
+          WHERE identity_account_id = $1
+          RETURNING
+            id,
+            identity_account_id,
+            password_hash,
+            password_changed_at,
+            failed_attempt_count,
+            locked_until
+        `,
+        [
+          identityAccountId,
+          input.maxAttempts,
+          input.lockDurationMs,
+        ],
+      );
+
+    const row = result.rows[0];
+
+    if (!row) {
+      throw new Error(
+        "Password credential not found",
+      );
+    }
+
+    return mapPasswordCredential(row);
+  }
+
+  async resetPasswordFailures(
+    identityAccountId: string,
+  ): Promise<PasswordCredentialRecord> {
+    const result =
+      await this.storage.query<PasswordCredentialRow>(
+        `
+          UPDATE password_credentials
+          SET
+            failed_attempt_count = 0,
+            locked_until = NULL
+          WHERE identity_account_id = $1
+          RETURNING
+            id,
+            identity_account_id,
+            password_hash,
+            password_changed_at,
+            failed_attempt_count,
+            locked_until
+        `,
+        [identityAccountId],
+      );
+
+    const row = result.rows[0];
+
+    if (!row) {
+      throw new Error(
+        "Password credential not found",
+      );
     }
 
     return mapPasswordCredential(row);
