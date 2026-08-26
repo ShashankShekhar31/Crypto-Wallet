@@ -294,4 +294,136 @@ describe("SessionRepository", () => {
       await storage.disconnect();
     }
   });
+  it("rotates an active session atomically", async () => {
+  const storage = new PostgresStorage(databaseUrl);
+  const repository = new SessionRepository(storage);
+
+  const userId = randomUUID();
+  const deviceId = randomUUID();
+
+  try {
+    await storage.connect();
+
+    await storage.query(
+      `
+        INSERT INTO users (id)
+        VALUES ($1)
+      `,
+      [userId],
+    );
+
+    await storage.query(
+      `
+        INSERT INTO devices (
+          id,
+          user_id,
+          platform,
+          name
+        )
+        VALUES ($1, $2, $3, $4)
+      `,
+      [
+        deviceId,
+        userId,
+        "test",
+        "session-rotation-test",
+      ],
+    );
+
+    const original =
+      await repository.createSession({
+        userId,
+        deviceId,
+        refreshTokenHash:
+          `refresh-${randomUUID()}`,
+        expiresAt: new Date(
+          Date.now() + 60 * 60 * 1000,
+        ),
+        idleExpiresAt: new Date(
+          Date.now() + 15 * 60 * 1000,
+        ),
+      });
+
+    const rotated =
+      await repository.rotateSession(
+        original.id,
+        {
+          userId,
+          deviceId,
+          refreshTokenHash:
+            `replacement-${randomUUID()}`,
+          expiresAt: new Date(
+            Date.now() + 60 * 60 * 1000,
+          ),
+          idleExpiresAt: new Date(
+            Date.now() + 15 * 60 * 1000,
+          ),
+        },
+      );
+
+    expect(rotated.previousSession).toMatchObject({
+      id: original.id,
+      userId,
+      deviceId,
+      tokenFamilyId: original.tokenFamilyId,
+      status: "rotated",
+      replacedBySessionId:
+        rotated.replacementSession.id,
+    });
+
+    expect(
+      rotated.previousSession.rotatedAt,
+    ).toBeInstanceOf(Date);
+
+    expect(
+      rotated.replacementSession,
+    ).toMatchObject({
+      userId,
+      deviceId,
+      tokenFamilyId: original.tokenFamilyId,
+      status: "active",
+    });
+
+    expect(
+      rotated.replacementSession.id,
+    ).not.toBe(original.id);
+
+    const storedOriginal =
+      await repository.findByRefreshTokenHash(
+        original.refreshTokenHash,
+      );
+
+    expect(storedOriginal?.status).toBe(
+      "rotated",
+    );
+
+    const storedReplacement =
+      await repository.findByRefreshTokenHash(
+        rotated.replacementSession
+          .refreshTokenHash,
+      );
+
+    expect(storedReplacement?.status).toBe(
+      "active",
+    );
+  } finally {
+    await storage.query(
+      `
+        DELETE FROM devices
+        WHERE id = $1
+      `,
+      [deviceId],
+    );
+
+    await storage.query(
+      `
+        DELETE FROM users
+        WHERE id = $1
+      `,
+      [userId],
+    );
+
+    await storage.disconnect();
+  }
+});
 });

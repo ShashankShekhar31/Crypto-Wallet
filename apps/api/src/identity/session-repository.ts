@@ -196,6 +196,159 @@ export class SessionRepository {
 
     return mapAuthSession(row);
   }
+
+  async rotateSession(
+  sessionId: string,
+  replacement: CreateAuthSessionInput,
+): Promise<{
+  previousSession: AuthSessionRecord;
+  replacementSession: AuthSessionRecord;
+}> {
+  return this.storage.transaction(async (transaction) => {
+    const previousResult =
+      await transaction.query<AuthSessionRow>(
+        `
+          UPDATE auth_sessions
+          SET
+            status = 'rotated',
+            rotated_at = NOW()
+          WHERE id = $1
+            AND status = 'active'
+          RETURNING
+            id,
+            user_id,
+            device_id,
+            token_family_id,
+            refresh_token_hash,
+            status,
+            issued_at,
+            last_seen_at,
+            expires_at,
+            idle_expires_at,
+            rotated_at,
+            revoked_at,
+            revoked_reason,
+            replaced_by_session_id
+        `,
+        [sessionId],
+      );
+
+    const previousRow = previousResult.rows[0];
+
+    if (!previousRow) {
+      throw new Error(
+        "Active auth session not found",
+      );
+    }
+
+    const replacementSessionId = randomUUID();
+
+    const tokenFamilyId =
+      replacement.tokenFamilyId ??
+      previousRow.token_family_id;
+
+    const replacementResult =
+      await transaction.query<AuthSessionRow>(
+        `
+          INSERT INTO auth_sessions (
+            id,
+            user_id,
+            device_id,
+            token_family_id,
+            refresh_token_hash,
+            status,
+            expires_at,
+            idle_expires_at
+          )
+          VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            'active',
+            $6,
+            $7
+          )
+          RETURNING
+            id,
+            user_id,
+            device_id,
+            token_family_id,
+            refresh_token_hash,
+            status,
+            issued_at,
+            last_seen_at,
+            expires_at,
+            idle_expires_at,
+            rotated_at,
+            revoked_at,
+            revoked_reason,
+            replaced_by_session_id
+        `,
+        [
+          replacementSessionId,
+          replacement.userId,
+          replacement.deviceId,
+          tokenFamilyId,
+          replacement.refreshTokenHash,
+          replacement.expiresAt,
+          replacement.idleExpiresAt,
+        ],
+      );
+
+    const replacementRow =
+      replacementResult.rows[0];
+
+    if (!replacementRow) {
+      throw new Error(
+        "Failed to create replacement auth session",
+      );
+    }
+
+    const linkedResult =
+      await transaction.query<AuthSessionRow>(
+        `
+          UPDATE auth_sessions
+          SET replaced_by_session_id = $2
+          WHERE id = $1
+          RETURNING
+            id,
+            user_id,
+            device_id,
+            token_family_id,
+            refresh_token_hash,
+            status,
+            issued_at,
+            last_seen_at,
+            expires_at,
+            idle_expires_at,
+            rotated_at,
+            revoked_at,
+            revoked_reason,
+            replaced_by_session_id
+        `,
+        [
+          sessionId,
+          replacementSessionId,
+        ],
+      );
+
+    const linkedRow = linkedResult.rows[0];
+
+    if (!linkedRow) {
+      throw new Error(
+        "Failed to link rotated auth session",
+      );
+    }
+
+    return {
+      previousSession: mapAuthSession(linkedRow),
+      replacementSession:
+        mapAuthSession(replacementRow),
+    };
+  });
+}
 }
 
 function mapAuthSession(
