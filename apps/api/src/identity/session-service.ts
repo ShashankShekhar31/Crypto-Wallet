@@ -47,6 +47,17 @@ export class SessionService {
       throw new Error("Invalid refresh token");
     }
 
+    if (currentSession.status === "rotated") {
+      await this.sessionRepository.handleRefreshTokenReplay(
+        currentSession.id,
+        currentSession.tokenFamilyId,
+      );
+
+      throw new Error(
+        "Refresh token replay detected",
+      );
+    }
+
     if (currentSession.status !== "active") {
       throw new Error("Auth session is not active");
     }

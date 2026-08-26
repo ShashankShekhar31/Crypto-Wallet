@@ -1,3 +1,4 @@
+
 import {
   generateRefreshToken,
   hashRefreshToken,
@@ -14,6 +15,7 @@ import {
 } from "./session-repository.js";
 
 import { verifyPassword } from "./password.js";
+import { DeviceRepository } from "./device-repository.js";
 
 export interface AuthenticateWithPasswordInput {
   normalizedEmail: string;
@@ -33,6 +35,7 @@ export class AuthenticationService {
   constructor(
     private readonly identityRepository: IdentityRepository,
     private readonly sessionRepository: SessionRepository,
+    private readonly deviceRepository: DeviceRepository,
   ) {}
 
   async authenticateWithPassword(
@@ -74,6 +77,16 @@ export class AuthenticationService {
 
     if (!valid) {
       throw new Error("Invalid credentials");
+    }
+
+    const device =
+      await this.deviceRepository.findActiveDeviceForUser(
+        input.deviceId,
+        identityAccount.userId,
+      );
+
+    if (!device) {
+      throw new Error("Invalid device");
     }
 
     const refreshToken = generateRefreshToken();

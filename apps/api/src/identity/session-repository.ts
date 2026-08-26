@@ -197,6 +197,46 @@ export class SessionRepository {
     return mapAuthSession(row);
   }
 
+    async handleRefreshTokenReplay(
+    sessionId: string,
+    tokenFamilyId: string,
+  ): Promise<void> {
+    await this.storage.transaction(async (transaction) => {
+      const replayResult =
+        await transaction.query<AuthSessionRow>(
+          `
+            UPDATE auth_sessions
+            SET
+              status = 'replay_detected',
+              revoked_at = COALESCE(revoked_at, NOW()),
+              revoked_reason = 'refresh_token_replay'
+            WHERE id = $1
+              AND token_family_id = $2
+              AND status = 'rotated'
+            RETURNING id
+          `,
+          [sessionId, tokenFamilyId],
+        );
+
+      if (replayResult.rows.length === 0) {
+        return;
+      }
+
+      await transaction.query(
+        `
+          UPDATE auth_sessions
+          SET
+            status = 'revoked',
+            revoked_at = COALESCE(revoked_at, NOW()),
+            revoked_reason = 'refresh_token_replay'
+          WHERE token_family_id = $1
+            AND status = 'active'
+        `,
+        [tokenFamilyId],
+      );
+    });
+  }
+
   async rotateSession(
   sessionId: string,
   replacement: CreateAuthSessionInput,

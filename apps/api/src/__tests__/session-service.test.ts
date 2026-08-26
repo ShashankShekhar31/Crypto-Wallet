@@ -236,11 +236,12 @@ describe("SessionService", () => {
         ),
       });
 
-      await service.refresh({
-        refreshToken,
-        idleTimeoutMs:
-          15 * 60 * 1000,
-      });
+      const refreshed =
+        await service.refresh({
+          refreshToken,
+          idleTimeoutMs:
+            15 * 60 * 1000,
+        });
 
       await expect(
         service.refresh({
@@ -249,8 +250,31 @@ describe("SessionService", () => {
             15 * 60 * 1000,
         }),
       ).rejects.toThrow(
-        "Auth session is not active",
+        "Refresh token replay detected",
       );
+
+      const replacement =
+        await repository.findByRefreshTokenHash(
+          hashRefreshToken(
+            refreshed.refreshToken,
+          ),
+        );
+
+      expect(replacement).not.toBeNull();
+
+      expect(replacement).toMatchObject({
+        id: refreshed.session.id,
+        status: "revoked",
+        tokenFamilyId:
+          refreshed.session.tokenFamilyId,
+        revokedReason:
+          "refresh_token_replay",
+      });
+
+      expect(
+        replacement?.revokedAt,
+      ).toBeInstanceOf(Date);
+
     } finally {
       await storage.query(
         `

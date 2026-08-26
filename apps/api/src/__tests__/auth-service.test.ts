@@ -6,6 +6,7 @@ import { PostgresStorage } from "@crypto-wallet/storage";
 
 import { hashPassword } from "../identity/password.js";
 import { AuthenticationService } from "../identity/auth-service.js";
+import { DeviceRepository } from "../identity/device-repository.js";
 import { IdentityRepository } from "../identity/repository.js";
 import { SessionRepository } from "../identity/session-repository.js";
 import { hashRefreshToken } from "../identity/token.js";
@@ -27,11 +28,15 @@ describe("AuthenticationService", () => {
 
     const sessionRepository =
       new SessionRepository(storage);
+    
+    const deviceRepository =
+      new DeviceRepository(storage);
 
     const authenticationService =
       new AuthenticationService(
         identityRepository,
         sessionRepository,
+        deviceRepository,
       );
 
     const userId = randomUUID();
@@ -197,10 +202,14 @@ describe("AuthenticationService", () => {
     const sessionRepository =
       new SessionRepository(storage);
 
+    const deviceRepository =
+      new DeviceRepository(storage);
+
     const authenticationService =
       new AuthenticationService(
         identityRepository,
         sessionRepository,
+        deviceRepository,
       );
 
     const userId = randomUUID();
@@ -276,6 +285,7 @@ describe("AuthenticationService", () => {
         ),
       ).rejects.toThrow("Invalid credentials");
     } finally {
+      
       await storage.query(
         `
           DELETE FROM users
@@ -295,6 +305,7 @@ describe("AuthenticationService", () => {
       new AuthenticationService(
         new IdentityRepository(storage),
         new SessionRepository(storage),
+        new DeviceRepository(storage),
       );
 
     try {
@@ -320,4 +331,267 @@ describe("AuthenticationService", () => {
       await storage.disconnect();
     }
   });
+
+  it("rejects a device belonging to another user", async () => {
+  const storage =
+    new PostgresStorage(databaseUrl);
+
+  const identityRepository =
+    new IdentityRepository(storage);
+
+  const sessionRepository =
+    new SessionRepository(storage);
+
+  const deviceRepository =
+    new DeviceRepository(storage);
+
+  const authenticationService =
+    new AuthenticationService(
+      identityRepository,
+      sessionRepository,
+      deviceRepository,
+    );
+
+  const userId = randomUUID();
+  const deviceOwnerUserId = randomUUID();
+  const deviceId = randomUUID();
+  const identityAccountId = randomUUID();
+  const passwordCredentialId = randomUUID();
+
+  const email =
+    `device-owner-test-${randomUUID()}@example.com`;
+
+  const password =
+    "CorrectHorseBatteryStaple!123";
+
+  try {
+    await storage.connect();
+
+    await storage.query(
+      `
+        INSERT INTO users (id)
+        VALUES ($1), ($2)
+      `,
+      [userId, deviceOwnerUserId],
+    );
+
+    await storage.query(
+      `
+        INSERT INTO devices (
+          id,
+          user_id,
+          platform,
+          name
+        )
+        VALUES ($1, $2, $3, $4)
+      `,
+      [
+        deviceId,
+        deviceOwnerUserId,
+        "test",
+        "another-user-device",
+      ],
+    );
+
+    await storage.query(
+      `
+        INSERT INTO identity_accounts (
+          id,
+          user_id,
+          normalized_email,
+          status
+        )
+        VALUES ($1, $2, $3, 'active')
+      `,
+      [
+        identityAccountId,
+        userId,
+        email,
+      ],
+    );
+
+    const passwordHash =
+      await hashPassword(password);
+
+    await storage.query(
+      `
+        INSERT INTO password_credentials (
+          id,
+          identity_account_id,
+          password_hash,
+          failed_attempt_count
+        )
+        VALUES ($1, $2, $3, 0)
+      `,
+      [
+        passwordCredentialId,
+        identityAccountId,
+        passwordHash,
+      ],
+    );
+
+    await expect(
+      authenticationService.authenticateWithPassword({
+        normalizedEmail: email,
+        password,
+        deviceId,
+        expiresAt: new Date(
+          Date.now() + 60 * 60 * 1000,
+        ),
+        idleExpiresAt: new Date(
+          Date.now() + 15 * 60 * 1000,
+        ),
+      }),
+    ).rejects.toThrow("Invalid device");
+  } finally {
+    await storage.query(
+      `
+        DELETE FROM devices
+        WHERE id = $1
+      `,
+      [deviceId],
+    );
+
+    await storage.query(
+      `
+        DELETE FROM users
+        WHERE id IN ($1, $2)
+      `,
+      [userId, deviceOwnerUserId],
+    );
+
+    await storage.disconnect();
+  }
+});
+  it("rejects a revoked device", async () => {
+  const storage =
+    new PostgresStorage(databaseUrl);
+
+  const identityRepository =
+    new IdentityRepository(storage);
+
+  const sessionRepository =
+    new SessionRepository(storage);
+
+  const deviceRepository =
+    new DeviceRepository(storage);
+
+  const authenticationService =
+    new AuthenticationService(
+      identityRepository,
+      sessionRepository,
+      deviceRepository,
+    );
+
+  const userId = randomUUID();
+  const deviceId = randomUUID();
+  const identityAccountId = randomUUID();
+  const passwordCredentialId = randomUUID();
+
+  const email =
+    `revoked-device-${randomUUID()}@example.com`;
+
+  const password =
+    "CorrectHorseBatteryStaple!123";
+
+  try {
+    await storage.connect();
+
+    await storage.query(
+      `
+        INSERT INTO users (id)
+        VALUES ($1)
+      `,
+      [userId],
+    );
+
+    await storage.query(
+      `
+        INSERT INTO devices (
+          id,
+          user_id,
+          platform,
+          name,
+          revoked_at
+        )
+        VALUES ($1, $2, $3, $4, NOW())
+      `,
+      [
+        deviceId,
+        userId,
+        "test",
+        "revoked-device",
+      ],
+    );
+
+    await storage.query(
+      `
+        INSERT INTO identity_accounts (
+          id,
+          user_id,
+          normalized_email,
+          status
+        )
+        VALUES ($1, $2, $3, 'active')
+      `,
+      [
+        identityAccountId,
+        userId,
+        email,
+      ],
+    );
+
+    const passwordHash =
+      await hashPassword(password);
+
+    await storage.query(
+      `
+        INSERT INTO password_credentials (
+          id,
+          identity_account_id,
+          password_hash,
+          failed_attempt_count
+        )
+        VALUES ($1, $2, $3, 0)
+      `,
+      [
+        passwordCredentialId,
+        identityAccountId,
+        passwordHash,
+      ],
+    );
+
+    await expect(
+      authenticationService.authenticateWithPassword({
+        normalizedEmail: email,
+        password,
+        deviceId,
+        expiresAt: new Date(
+          Date.now() + 60 * 60 * 1000,
+        ),
+        idleExpiresAt: new Date(
+          Date.now() + 15 * 60 * 1000,
+        ),
+      }),
+    ).rejects.toThrow("Invalid device");
+  } finally {
+    await storage.query(
+      `
+        DELETE FROM devices
+        WHERE id = $1
+      `,
+      [deviceId],
+    );
+
+    await storage.query(
+      `
+        DELETE FROM users
+        WHERE id = $1
+      `,
+      [userId],
+    );
+
+    await storage.disconnect();
+  }
+});
 });
