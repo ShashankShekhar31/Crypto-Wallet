@@ -288,6 +288,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@crypto-wallet/cache':
+        specifier: workspace:*
+        version: link:../../packages/cache
       '@crypto-wallet/config':
         specifier: workspace:*
         version: link:../../packages/config

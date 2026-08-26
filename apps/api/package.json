@@ -13,6 +13,7 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@crypto-wallet/cache": "workspace:*",
     "@crypto-wallet/config": "workspace:*",
     "@crypto-wallet/shared-types": "workspace:*",
     "@crypto-wallet/storage": "workspace:*",

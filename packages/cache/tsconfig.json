@@ -10,5 +10,6 @@
     "sourceMap": true,
     "noEmitOnError": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/__tests__/**/*.ts", "dist", "node_modules"]
 }
