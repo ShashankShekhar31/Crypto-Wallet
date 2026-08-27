@@ -21,7 +21,11 @@ import {
   PasskeyChallengeStore,
 } from "./passkey-challenge-store.js";
 
-const CHALLENGE_TYPE = "registration" as const;
+const REGISTRATION_CHALLENGE_TYPE =
+  "registration" as const;
+
+const AUTHENTICATION_CHALLENGE_TYPE =
+  "authentication" as const;
 
 export interface PasskeyServiceOptions {
   identityRepository: IdentityRepository;
@@ -157,7 +161,7 @@ export class PasskeyService {
     await this.challengeStore.save(
       ceremonyId,
       {
-        type: CHALLENGE_TYPE,
+        type: REGISTRATION_CHALLENGE_TYPE,
         identityAccountId: identity.id,
         deviceId: null,
         challenge: options.challenge,
@@ -193,7 +197,7 @@ export class PasskeyService {
       );
     }
 
-    if (challenge.type !== CHALLENGE_TYPE) {
+    if (challenge.type !== REGISTRATION_CHALLENGE_TYPE) {
       throw new Error(
         "Invalid passkey ceremony type",
       );
@@ -346,7 +350,7 @@ export class PasskeyService {
   await this.challengeStore.save(
     ceremonyId,
     {
-      type: "authentication",
+      type: AUTHENTICATION_CHALLENGE_TYPE,
       identityAccountId: identity.id,
       deviceId: null,
       challenge: options.challenge,
@@ -382,7 +386,7 @@ export class PasskeyService {
     );
   }
 
-  if (challenge.type !== "authentication") {
+  if (challenge.type !== AUTHENTICATION_CHALLENGE_TYPE) {
     throw new Error(
       "Invalid passkey ceremony type",
     );

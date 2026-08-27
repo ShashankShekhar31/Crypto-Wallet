@@ -188,7 +188,7 @@ export class PasskeyRepository {
   }
 
   async markUsed(
-    credentialId: string,
+    passkeyId: string,
   ): Promise<PasskeyCredentialRecord | null> {
     const result =
       await this.storage.query<PasskeyCredentialRow>(
@@ -208,7 +208,7 @@ export class PasskeyRepository {
             last_used_at,
             revoked_at
         `,
-        [credentialId],
+        [passkeyId],
       );
 
     const row = result.rows[0];
