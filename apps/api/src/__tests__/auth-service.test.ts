@@ -10,6 +10,8 @@ import { DeviceRepository } from "../identity/device-repository.js";
 import { IdentityRepository } from "../identity/repository.js";
 import { SessionRepository } from "../identity/session-repository.js";
 import { hashRefreshToken } from "../identity/token.js";
+import { AuthEventRepository } from "../identity/auth-event-repository.js";
+import { LoginRiskService } from "../identity/login-risk-service.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -28,7 +30,13 @@ describe("AuthenticationService", () => {
 
     const sessionRepository =
       new SessionRepository(storage);
-    
+
+    const authEventRepository =
+      new AuthEventRepository(storage);
+
+    const loginRiskService =
+      new LoginRiskService(authEventRepository);
+
     const deviceRepository =
       new DeviceRepository(storage);
 
@@ -37,6 +45,8 @@ describe("AuthenticationService", () => {
         identityRepository,
         sessionRepository,
         deviceRepository,
+        authEventRepository,
+        loginRiskService,
       );
 
     const userId = randomUUID();
@@ -131,6 +141,37 @@ describe("AuthenticationService", () => {
           },
         );
 
+        const authEventResult =
+  await storage.query(
+    `
+      SELECT
+        user_id,
+        device_id,
+        session_id,
+        event_type,
+        outcome,
+        failure_code
+      FROM auth_events
+      WHERE user_id = $1
+        AND session_id = $2
+      ORDER BY occurred_at DESC
+      LIMIT 1
+    `,
+    [
+      userId,
+      result.session.id,
+    ],
+  );
+
+expect(authEventResult.rows[0]).toMatchObject({
+  user_id: userId,
+  device_id: deviceId,
+  session_id: result.session.id,
+  event_type: "password_login",
+  outcome: "success",
+  failure_code: null,
+});
+
       expect(result.identityAccount).toMatchObject({
         id: identityAccountId,
         userId,
@@ -182,6 +223,14 @@ describe("AuthenticationService", () => {
       );
 
       await storage.query(
+      `
+        DELETE FROM auth_events
+        WHERE user_id = $1
+      `,
+      [userId],
+    );
+
+      await storage.query(
         `
           DELETE FROM users
           WHERE id = $1
@@ -202,6 +251,12 @@ describe("AuthenticationService", () => {
     const sessionRepository =
       new SessionRepository(storage);
 
+    const authEventRepository =
+      new AuthEventRepository(storage);
+
+    const loginRiskService =
+      new LoginRiskService(authEventRepository);
+
     const deviceRepository =
       new DeviceRepository(storage);
 
@@ -210,6 +265,8 @@ describe("AuthenticationService", () => {
         identityRepository,
         sessionRepository,
         deviceRepository,
+        authEventRepository,
+        loginRiskService,
       );
 
     const userId = randomUUID();
@@ -285,7 +342,7 @@ describe("AuthenticationService", () => {
         ),
       ).rejects.toThrow("Invalid credentials");
     } finally {
-      
+
       await storage.query(
         `
           DELETE FROM users
@@ -301,11 +358,19 @@ describe("AuthenticationService", () => {
   it("rejects an unknown identity", async () => {
     const storage = new PostgresStorage(databaseUrl);
 
+    const authEventRepository =
+      new AuthEventRepository(storage);
+
+    const loginRiskService =
+      new LoginRiskService(authEventRepository);
+
     const authenticationService =
       new AuthenticationService(
         new IdentityRepository(storage),
         new SessionRepository(storage),
         new DeviceRepository(storage),
+        authEventRepository,
+        loginRiskService,
       );
 
     try {
@@ -339,6 +404,12 @@ describe("AuthenticationService", () => {
   const identityRepository =
     new IdentityRepository(storage);
 
+  const authEventRepository =
+    new AuthEventRepository(storage);
+
+  const loginRiskService =
+    new LoginRiskService(authEventRepository);
+
   const sessionRepository =
     new SessionRepository(storage);
 
@@ -350,6 +421,8 @@ describe("AuthenticationService", () => {
       identityRepository,
       sessionRepository,
       deviceRepository,
+      authEventRepository,
+      loginRiskService,
     );
 
   const userId = randomUUID();
@@ -470,6 +543,12 @@ describe("AuthenticationService", () => {
   const identityRepository =
     new IdentityRepository(storage);
 
+  const authEventRepository =
+    new AuthEventRepository(storage);
+
+  const loginRiskService =
+    new LoginRiskService(authEventRepository);
+
   const sessionRepository =
     new SessionRepository(storage);
 
@@ -481,6 +560,8 @@ describe("AuthenticationService", () => {
       identityRepository,
       sessionRepository,
       deviceRepository,
+      authEventRepository,
+      loginRiskService,
     );
 
   const userId = randomUUID();
@@ -601,11 +682,19 @@ describe("AuthenticationService", () => {
     const identityRepository =
       new IdentityRepository(storage);
 
+    const authEventRepository =
+      new AuthEventRepository(storage);
+
+    const loginRiskService =
+      new LoginRiskService(authEventRepository);
+
     const authenticationService =
       new AuthenticationService(
         identityRepository,
         new SessionRepository(storage),
         new DeviceRepository(storage),
+        authEventRepository,
+        loginRiskService,
       );
 
     const userId = randomUUID();
@@ -739,11 +828,19 @@ describe("AuthenticationService", () => {
     const identityRepository =
       new IdentityRepository(storage);
 
+    const authEventRepository =
+      new AuthEventRepository(storage);
+
+    const loginRiskService =
+      new LoginRiskService(authEventRepository);
+
     const authenticationService =
       new AuthenticationService(
         identityRepository,
         new SessionRepository(storage),
         new DeviceRepository(storage),
+        authEventRepository,
+        loginRiskService,
       );
 
     const userId = randomUUID();
@@ -887,11 +984,19 @@ describe("AuthenticationService", () => {
     const identityRepository =
       new IdentityRepository(storage);
 
+    const authEventRepository =
+      new AuthEventRepository(storage);
+
+    const loginRiskService =
+      new LoginRiskService(authEventRepository);
+
     const authenticationService =
       new AuthenticationService(
         identityRepository,
         new SessionRepository(storage),
         new DeviceRepository(storage),
+        authEventRepository,
+        loginRiskService,
       );
 
     const userId = randomUUID();
@@ -1015,11 +1120,19 @@ describe("AuthenticationService", () => {
     const identityRepository =
       new IdentityRepository(storage);
 
+    const authEventRepository =
+      new AuthEventRepository(storage);
+
+    const loginRiskService =
+      new LoginRiskService(authEventRepository);
+
     const authenticationService =
       new AuthenticationService(
         identityRepository,
         new SessionRepository(storage),
         new DeviceRepository(storage),
+        authEventRepository,
+        loginRiskService,
       );
 
     const userId = randomUUID();
@@ -1129,6 +1242,389 @@ describe("AuthenticationService", () => {
         credential?.lockedUntil,
       ).toBeNull();
     } finally {
+      await storage.query(
+        `
+          DELETE FROM devices
+          WHERE id = $1
+        `,
+        [deviceId],
+      );
+
+      await storage.query(
+        `
+          DELETE FROM auth_events
+          WHERE user_id = $1
+        `,
+        [userId],
+      );
+
+      await storage.query(
+        `
+          DELETE FROM users
+          WHERE id = $1
+        `,
+        [userId],
+      );
+
+      await storage.disconnect();
+    }
+  });
+    it("records a suspicious event for a first login from a new device", async () => {
+    const storage =
+      new PostgresStorage(databaseUrl);
+
+    const identityRepository =
+      new IdentityRepository(storage);
+
+    const sessionRepository =
+      new SessionRepository(storage);
+
+    const deviceRepository =
+      new DeviceRepository(storage);
+
+    const authEventRepository =
+      new AuthEventRepository(storage);
+
+    const loginRiskService =
+      new LoginRiskService(authEventRepository);
+
+    const authenticationService =
+      new AuthenticationService(
+        identityRepository,
+        sessionRepository,
+        deviceRepository,
+        authEventRepository,
+        loginRiskService,
+      );
+
+    const userId = randomUUID();
+    const deviceId = randomUUID();
+    const identityAccountId = randomUUID();
+    const passwordCredentialId = randomUUID();
+
+    const email =
+      `new-device-${randomUUID()}@example.com`;
+
+    const password =
+      "CorrectHorseBatteryStaple!123";
+
+    const sourceIpHash =
+      `ip-${randomUUID()}`;
+
+    try {
+      await storage.connect();
+
+      await storage.query(
+        `
+          INSERT INTO users (id)
+          VALUES ($1)
+        `,
+        [userId],
+      );
+
+      await storage.query(
+        `
+          INSERT INTO devices (
+            id,
+            user_id,
+            platform,
+            name
+          )
+          VALUES ($1, $2, $3, $4)
+        `,
+        [
+          deviceId,
+          userId,
+          "test",
+          "new-device-risk-test",
+        ],
+      );
+
+      await storage.query(
+        `
+          INSERT INTO identity_accounts (
+            id,
+            user_id,
+            normalized_email,
+            status
+          )
+          VALUES ($1, $2, $3, 'active')
+        `,
+        [
+          identityAccountId,
+          userId,
+          email,
+        ],
+      );
+
+      const passwordHash =
+        await hashPassword(password);
+
+      await storage.query(
+        `
+          INSERT INTO password_credentials (
+            id,
+            identity_account_id,
+            password_hash,
+            failed_attempt_count
+          )
+          VALUES ($1, $2, $3, 0)
+        `,
+        [
+          passwordCredentialId,
+          identityAccountId,
+          passwordHash,
+        ],
+      );
+
+      const result =
+        await authenticationService.authenticateWithPassword({
+          normalizedEmail: email,
+          password,
+          deviceId,
+          sourceIpHash,
+          expiresAt: new Date(
+            Date.now() + 60 * 60 * 1000,
+          ),
+          idleExpiresAt: new Date(
+            Date.now() + 15 * 60 * 1000,
+          ),
+        });
+
+      expect(result.session.status).toBe(
+        "active",
+      );
+
+      const suspiciousEvent =
+        await storage.query(
+          `
+            SELECT
+              event_type,
+              outcome,
+              failure_code,
+              source_ip_hash
+            FROM auth_events
+            WHERE user_id = $1
+              AND session_id = $2
+              AND outcome = 'suspicious'
+            ORDER BY occurred_at DESC
+            LIMIT 1
+          `,
+          [
+            userId,
+            result.session.id,
+          ],
+        );
+
+      expect(
+        suspiciousEvent.rows[0],
+      ).toMatchObject({
+        event_type: "login_detection",
+        outcome: "suspicious",
+        failure_code: "new_device",
+        source_ip_hash: sourceIpHash,
+      });
+    } finally {
+      await storage.query(
+        `
+          DELETE FROM auth_events
+          WHERE user_id = $1
+        `,
+        [userId],
+      );
+
+      await storage.query(
+        `
+          DELETE FROM devices
+          WHERE id = $1
+        `,
+        [deviceId],
+      );
+
+      await storage.query(
+        `
+          DELETE FROM users
+          WHERE id = $1
+        `,
+        [userId],
+      );
+
+      await storage.disconnect();
+    }
+  });
+    it("does not flag a previously known device as suspicious", async () => {
+    const storage =
+      new PostgresStorage(databaseUrl);
+
+    const identityRepository =
+      new IdentityRepository(storage);
+
+    const sessionRepository =
+      new SessionRepository(storage);
+
+    const deviceRepository =
+      new DeviceRepository(storage);
+
+    const authEventRepository =
+      new AuthEventRepository(storage);
+
+    const loginRiskService =
+      new LoginRiskService(authEventRepository);
+
+    const authenticationService =
+      new AuthenticationService(
+        identityRepository,
+        sessionRepository,
+        deviceRepository,
+        authEventRepository,
+        loginRiskService,
+      );
+
+    const userId = randomUUID();
+    const deviceId = randomUUID();
+    const identityAccountId = randomUUID();
+    const passwordCredentialId = randomUUID();
+
+    const email =
+      `known-device-${randomUUID()}@example.com`;
+
+    const password =
+      "CorrectHorseBatteryStaple!123";
+
+    const sourceIpHash =
+      `ip-${randomUUID()}`;
+
+    try {
+      await storage.connect();
+
+      await storage.query(
+        `
+          INSERT INTO users (id)
+          VALUES ($1)
+        `,
+        [userId],
+      );
+
+      await storage.query(
+        `
+          INSERT INTO devices (
+            id,
+            user_id,
+            platform,
+            name
+          )
+          VALUES ($1, $2, $3, $4)
+        `,
+        [
+          deviceId,
+          userId,
+          "test",
+          "known-device-risk-test",
+        ],
+      );
+
+      await storage.query(
+        `
+          INSERT INTO identity_accounts (
+            id,
+            user_id,
+            normalized_email,
+            status
+          )
+          VALUES ($1, $2, $3, 'active')
+        `,
+        [
+          identityAccountId,
+          userId,
+          email,
+        ],
+      );
+
+      const passwordHash =
+        await hashPassword(password);
+
+      await storage.query(
+        `
+          INSERT INTO password_credentials (
+            id,
+            identity_account_id,
+            password_hash,
+            failed_attempt_count
+          )
+          VALUES ($1, $2, $3, 0)
+        `,
+        [
+          passwordCredentialId,
+          identityAccountId,
+          passwordHash,
+        ],
+      );
+
+      const firstLogin =
+        await authenticationService.authenticateWithPassword({
+          normalizedEmail: email,
+          password,
+          deviceId,
+          sourceIpHash,
+          expiresAt: new Date(
+            Date.now() + 60 * 60 * 1000,
+          ),
+          idleExpiresAt: new Date(
+            Date.now() + 15 * 60 * 1000,
+          ),
+        });
+
+      expect(firstLogin.session.status).toBe(
+        "active",
+      );
+
+      const secondLogin =
+        await authenticationService.authenticateWithPassword({
+          normalizedEmail: email,
+          password,
+          deviceId,
+          sourceIpHash,
+          expiresAt: new Date(
+            Date.now() + 60 * 60 * 1000,
+          ),
+          idleExpiresAt: new Date(
+            Date.now() + 15 * 60 * 1000,
+          ),
+        });
+
+      expect(secondLogin.session.status).toBe(
+        "active",
+      );
+
+      const suspiciousEvents =
+        await storage.query(
+          `
+            SELECT
+              failure_code
+            FROM auth_events
+            WHERE user_id = $1
+              AND event_type = 'login_detection'
+              AND outcome = 'suspicious'
+          `,
+          [userId],
+        );
+
+      expect(suspiciousEvents.rows).toHaveLength(1);
+
+      expect(
+        suspiciousEvents.rows[0],
+      ).toMatchObject({
+        failure_code: "new_device",
+      });
+    } finally {
+      await storage.query(
+        `
+          DELETE FROM auth_events
+          WHERE user_id = $1
+        `,
+        [userId],
+      );
+
       await storage.query(
         `
           DELETE FROM devices
