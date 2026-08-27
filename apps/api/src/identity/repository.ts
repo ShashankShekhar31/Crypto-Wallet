@@ -85,6 +85,35 @@ export class IdentityRepository {
     return mapIdentityAccount(row);
   }
 
+  async findById(
+  identityAccountId: string,
+): Promise<IdentityAccountRecord | null> {
+  const result =
+    await this.storage.query<IdentityAccountRow>(
+      `
+        SELECT
+          id,
+          user_id,
+          normalized_email,
+          status,
+          created_at,
+          updated_at
+        FROM identity_accounts
+        WHERE id = $1
+        LIMIT 1
+      `,
+      [identityAccountId],
+    );
+
+  const row = result.rows[0];
+
+  if (!row) {
+    return null;
+  }
+
+  return mapIdentityAccount(row);
+}
+
   async findPasswordCredential(
     identityAccountId: string,
   ): Promise<PasswordCredentialRecord | null> {

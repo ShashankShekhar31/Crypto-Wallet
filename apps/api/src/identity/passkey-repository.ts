@@ -69,6 +69,33 @@ export class PasskeyRepository {
     return mapPasskeyCredential(row);
   }
 
+  async findActiveByIdentityAccountId(
+  identityAccountId: string,
+): Promise<PasskeyCredentialRecord[]> {
+  const result =
+    await this.storage.query<PasskeyCredentialRow>(
+      `
+        SELECT
+          id,
+          identity_account_id,
+          credential_id,
+          public_key,
+          sign_count,
+          backed_up,
+          created_at,
+          last_used_at,
+          revoked_at
+        FROM passkey_credentials
+        WHERE identity_account_id = $1
+          AND revoked_at IS NULL
+        ORDER BY created_at ASC
+      `,
+      [identityAccountId],
+    );
+
+  return result.rows.map(mapPasskeyCredential);
+}
+
   async createCredential(
     input: CreatePasskeyCredentialInput,
   ): Promise<PasskeyCredentialRecord> {
@@ -126,7 +153,7 @@ export class PasskeyRepository {
   }
 
   async updateSignCount(
-    credentialId: string,
+    passkeyId: string,
     signCount: number,
   ): Promise<PasskeyCredentialRecord | null> {
     const result =
@@ -148,7 +175,7 @@ export class PasskeyRepository {
             last_used_at,
             revoked_at
         `,
-        [credentialId, signCount],
+        [passkeyId, signCount],
       );
 
     const row = result.rows[0];

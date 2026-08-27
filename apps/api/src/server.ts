@@ -58,6 +58,58 @@ import {
   RefreshService,
 } from "./identity/refresh-service.js";
 
+import {
+  LogoutService,
+} from "./identity/logout-service.js";
+
+import {
+  createLogoutRoutes,
+} from "./routes/logout.js";
+
+import {
+  createTotpRoutes,
+} from "./routes/totp.js";
+
+import {
+  TotpService,
+} from "./identity/totp-service.js";
+
+import {
+  TotpRepository,
+} from "./identity/totp-repository.js";
+
+import {
+  SecretEncryption,
+} from "./identity/secret-encryption.js";
+
+import {
+  createRecoveryRoutes,
+} from "./routes/recovery.js";
+
+import {
+  RecoveryCodeRepository,
+} from "./identity/recovery-code-repository.js";
+
+import {
+  RecoveryCodeService,
+} from "./identity/recovery-service.js";
+
+import {
+  createPasskeyRoutes,
+} from "./routes/passkey.js";
+
+import {
+  PasskeyChallengeStore,
+} from "./identity/passkey-challenge-store.js";
+
+import {
+  PasskeyService,
+} from "./identity/passkey-service.js";
+
+import {
+  PasskeyRepository,
+} from "./identity/passkey-repository.js";
+
 const cacheClient = createCacheClient({
   url: config.redis.url,
 });
@@ -107,6 +159,58 @@ const refreshService =
     sessionRepository,
   );
 
+const logoutService =
+  new LogoutService(
+    sessionRepository,
+  );
+
+const totpRepository =
+  new TotpRepository(storage);
+
+const secretEncryption =
+  new SecretEncryption(
+    Buffer.from(
+      config.security.totpEncryptionKey,
+      "base64",
+    ),
+    config.security.totpEncryptionKeyVersion,
+  );
+
+const totpService =
+  new TotpService({
+    secretEncryption,
+    repository: totpRepository,
+  });
+
+const passkeyChallengeStore =
+  new PasskeyChallengeStore(
+    cacheClient,
+  );
+
+const passkeyService =
+  new PasskeyService({
+    identityRepository,
+    passkeyRepository: new PasskeyRepository(
+      storage,
+    ),
+    challengeStore:
+      passkeyChallengeStore,
+    rpId:
+      config.security.passkeyRpId,
+    rpName:
+      config.security.passkeyRpName,
+    origin:
+      config.security.passkeyOrigin,
+  });
+
+const recoveryCodeRepository =
+  new RecoveryCodeRepository(storage);
+
+const recoveryCodeService =
+  new RecoveryCodeService({
+    repository: recoveryCodeRepository,
+  });
+
 app.setErrorHandler(
   (error, request, reply) => {
     request.log.error(error);
@@ -154,6 +258,30 @@ await app.register(
 await app.register(
   createRefreshRoutes({
     refreshService,
+  }),
+);
+
+await app.register(
+  createLogoutRoutes({
+    logoutService,
+  }),
+);
+
+await app.register(
+  createTotpRoutes({
+    totpService,
+  }),
+);
+
+await app.register(
+  createPasskeyRoutes({
+    passkeyService,
+  }),
+);
+
+await app.register(
+  createRecoveryRoutes({
+    recoveryCodeService,
   }),
 );
 
