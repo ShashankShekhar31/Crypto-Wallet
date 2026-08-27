@@ -435,7 +435,7 @@ describe("PasskeyService", () => {
 
       const publicKey = Buffer.from(`public-key-${randomUUID()}`);
 
-      const credential = await repository.createCredential({
+      await repository.createCredential({
         identityAccountId: identity.identityAccountId,
         credentialId,
         publicKey,
