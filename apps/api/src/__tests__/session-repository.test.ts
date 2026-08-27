@@ -426,4 +426,268 @@ describe("SessionRepository", () => {
     await storage.disconnect();
   }
 });
+  it("detects refresh token replay and revokes the token family", async () => {
+    const storage = new PostgresStorage(databaseUrl);
+    const repository = new SessionRepository(storage);
+
+    const userId = randomUUID();
+    const deviceId = randomUUID();
+
+    try {
+      await storage.connect();
+
+      await storage.query(
+        `
+          INSERT INTO users (id)
+          VALUES ($1)
+        `,
+        [userId],
+      );
+
+      await storage.query(
+        `
+          INSERT INTO devices (
+            id,
+            user_id,
+            platform,
+            name
+          )
+          VALUES ($1, $2, $3, $4)
+        `,
+        [
+          deviceId,
+          userId,
+          "test",
+          "session-replay-test",
+        ],
+      );
+
+      const original =
+        await repository.createSession({
+          userId,
+          deviceId,
+          refreshTokenHash:
+            `refresh-${randomUUID()}`,
+          expiresAt: new Date(
+            Date.now() + 60 * 60 * 1000,
+          ),
+          idleExpiresAt: new Date(
+            Date.now() + 15 * 60 * 1000,
+          ),
+        });
+
+      const rotated =
+        await repository.rotateSession(
+          original.id,
+          {
+            userId,
+            deviceId,
+            refreshTokenHash:
+              `replacement-${randomUUID()}`,
+            expiresAt: new Date(
+              Date.now() + 60 * 60 * 1000,
+            ),
+            idleExpiresAt: new Date(
+              Date.now() + 15 * 60 * 1000,
+            ),
+          },
+        );
+
+      await repository.handleRefreshTokenReplay(
+        original.id,
+        original.tokenFamilyId,
+      );
+
+      const replayed =
+        await repository.findByRefreshTokenHash(
+          original.refreshTokenHash,
+        );
+
+      expect(replayed).toMatchObject({
+        id: original.id,
+        status: "replay_detected",
+        revokedReason:
+          "refresh_token_replay",
+      });
+
+      expect(
+        replayed?.revokedAt,
+      ).toBeInstanceOf(Date);
+
+      const replacement =
+        await repository.findByRefreshTokenHash(
+          rotated.replacementSession
+            .refreshTokenHash,
+        );
+
+      expect(replacement).toMatchObject({
+        id:
+          rotated.replacementSession.id,
+        status: "revoked",
+        revokedReason:
+          "refresh_token_replay",
+      });
+
+      expect(
+        replacement?.revokedAt,
+      ).toBeInstanceOf(Date);
+    } finally {
+      await storage.query(
+        `
+          DELETE FROM devices
+          WHERE id = $1
+        `,
+        [deviceId],
+      );
+
+      await storage.query(
+        `
+          DELETE FROM users
+          WHERE id = $1
+        `,
+        [userId],
+      );
+
+      await storage.disconnect();
+    }
+  });
+    it("does not revoke sessions from another token family", async () => {
+    const storage = new PostgresStorage(databaseUrl);
+    const repository = new SessionRepository(storage);
+
+    const userId = randomUUID();
+    const deviceId = randomUUID();
+
+    try {
+      await storage.connect();
+
+      await storage.query(
+        `
+          INSERT INTO users (id)
+          VALUES ($1)
+        `,
+        [userId],
+      );
+
+      await storage.query(
+        `
+          INSERT INTO devices (
+            id,
+            user_id,
+            platform,
+            name
+          )
+          VALUES ($1, $2, $3, $4)
+        `,
+        [
+          deviceId,
+          userId,
+          "test",
+          "session-family-test",
+        ],
+      );
+
+      const firstSession =
+        await repository.createSession({
+          userId,
+          deviceId,
+          refreshTokenHash:
+            `first-${randomUUID()}`,
+          expiresAt: new Date(
+            Date.now() + 60 * 60 * 1000,
+          ),
+          idleExpiresAt: new Date(
+            Date.now() + 15 * 60 * 1000,
+          ),
+        });
+
+      const firstRotated =
+        await repository.rotateSession(
+          firstSession.id,
+          {
+            userId,
+            deviceId,
+            refreshTokenHash:
+              `first-replacement-${randomUUID()}`,
+            expiresAt: new Date(
+              Date.now() + 60 * 60 * 1000,
+            ),
+            idleExpiresAt: new Date(
+              Date.now() + 15 * 60 * 1000,
+            ),
+          },
+        );
+
+      const secondSession =
+        await repository.createSession({
+          userId,
+          deviceId,
+          refreshTokenHash:
+            `second-${randomUUID()}`,
+          expiresAt: new Date(
+            Date.now() + 60 * 60 * 1000,
+          ),
+          idleExpiresAt: new Date(
+            Date.now() + 15 * 60 * 1000,
+          ),
+        });
+
+      expect(
+        secondSession.tokenFamilyId,
+      ).not.toBe(
+        firstSession.tokenFamilyId,
+      );
+
+      await repository.handleRefreshTokenReplay(
+        firstSession.id,
+        firstSession.tokenFamilyId,
+      );
+
+      const replayed =
+        await repository.findByRefreshTokenHash(
+          firstSession.refreshTokenHash,
+        );
+
+      expect(replayed?.status).toBe(
+        "replay_detected",
+      );
+
+      const firstReplacement =
+        await repository.findByRefreshTokenHash(
+          firstRotated.replacementSession
+            .refreshTokenHash,
+        );
+
+      expect(
+        firstReplacement?.status,
+      ).toBe("revoked");
+
+      const unrelated =
+        await repository.findByRefreshTokenHash(
+          secondSession.refreshTokenHash,
+        );
+
+      expect(unrelated?.status).toBe(
+        "active",
+      );
+    } finally {
+      await storage.query(
+        `
+          DELETE FROM devices
+          WHERE id = $1
+        `,
+        [deviceId],
+      );
+
+      await storage.query(
+        `
+          DELETE FROM users
+          WHERE id = $1
+        `,
+        [userId],
+      );
+
+      await storage.disconnect();
+    }
+  });
 });
