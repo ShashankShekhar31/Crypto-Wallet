@@ -1,9 +1,4 @@
-import {
-  randomBytes,
-  scrypt,
-  timingSafeEqual,
-  type ScryptOptions,
-} from "node:crypto";
+import { randomBytes, scrypt, timingSafeEqual, type ScryptOptions } from "node:crypto";
 
 const SCRYPT_COST = 1 << 15;
 const SCRYPT_BLOCK_SIZE = 8;
@@ -22,20 +17,14 @@ function scryptAsync(
   options: ScryptOptions,
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    scrypt(
-      password,
-      salt,
-      keyLength,
-      options,
-      (error, derivedKey) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+    scrypt(password, salt, keyLength, options, (error, derivedKey) => {
+      if (error) {
+        reject(error);
+        return;
+      }
 
-        resolve(derivedKey);
-      },
-    );
+      resolve(derivedKey);
+    });
   });
 }
 
@@ -44,17 +33,12 @@ export async function hashPassword(password: string): Promise<string> {
 
   const salt = randomBytes(SALT_BYTES);
 
-  const derivedKey = await scryptAsync(
-    password,
-    salt,
-    KEY_BYTES,
-    {
-      N: SCRYPT_COST,
-      r: SCRYPT_BLOCK_SIZE,
-      p: SCRYPT_PARALLELIZATION,
-      maxmem: SCRYPT_MAX_MEMORY,
-    },
-  );
+  const derivedKey = await scryptAsync(password, salt, KEY_BYTES, {
+    N: SCRYPT_COST,
+    r: SCRYPT_BLOCK_SIZE,
+    p: SCRYPT_PARALLELIZATION,
+    maxmem: SCRYPT_MAX_MEMORY,
+  });
 
   return [
     PASSWORD_HASH_VERSION,
@@ -64,25 +48,17 @@ export async function hashPassword(password: string): Promise<string> {
   ].join("$");
 }
 
-export async function verifyPassword(
-  password: string,
-  storedHash: string,
-): Promise<boolean> {
+export async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
   validatePasswordInput(password);
 
   const parsed = parsePasswordHash(storedHash);
 
-  const derivedKey = await scryptAsync(
-    password,
-    parsed.salt,
-    parsed.keyLength,
-    {
-      N: parsed.cost,
-      r: parsed.blockSize,
-      p: parsed.parallelization,
-      maxmem: SCRYPT_MAX_MEMORY,
-    },
-  );
+  const derivedKey = await scryptAsync(password, parsed.salt, parsed.keyLength, {
+    N: parsed.cost,
+    r: parsed.blockSize,
+    p: parsed.parallelization,
+    maxmem: SCRYPT_MAX_MEMORY,
+  });
 
   if (derivedKey.length !== parsed.hash.length) {
     return false;
@@ -151,11 +127,7 @@ function parsePasswordHash(storedHash: string): {
   const blockSize = parameterValues.get("r");
   const parallelization = parameterValues.get("p");
 
-  if (
-    cost === undefined ||
-    blockSize === undefined ||
-    parallelization === undefined
-  ) {
+  if (cost === undefined || blockSize === undefined || parallelization === undefined) {
     throw new Error("Invalid password hash parameters");
   }
 

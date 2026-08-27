@@ -10,9 +10,7 @@ import { generateRecoveryCodes } from "../identity/recovery-code.js";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for recovery code repository tests",
-  );
+  throw new Error("DATABASE_URL is required for recovery code repository tests");
 }
 
 describe("RecoveryCodeRepository", () => {
@@ -46,17 +44,10 @@ describe("RecoveryCodeRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `recovery-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `recovery-${randomUUID()}@example.com`],
       );
 
-      const created = await repository.createCodes(
-        identityAccountId,
-        codes,
-      );
+      const created = await repository.createCodes(identityAccountId, codes);
 
       expect(created).toHaveLength(3);
 
@@ -66,29 +57,18 @@ describe("RecoveryCodeRepository", () => {
           usedAt: null,
         });
 
-        expect(record.id).toEqual(
-          expect.any(String),
-        );
+        expect(record.id).toEqual(expect.any(String));
 
-        expect(record.codeHash).toMatch(
-          /^[0-9a-f]{64}$/,
-        );
+        expect(record.codeHash).toMatch(/^[0-9a-f]{64}$/);
 
-        expect(record.createdAt).toBeInstanceOf(
-          Date,
-        );
+        expect(record.createdAt).toBeInstanceOf(Date);
       }
 
-      const listed =
-        await repository.listUnusedCodes(
-          identityAccountId,
-        );
+      const listed = await repository.listUnusedCodes(identityAccountId);
 
       expect(listed).toHaveLength(3);
 
-      expect(
-        listed.map((record) => record.codeHash),
-      ).toEqual(
+      expect(listed.map((record) => record.codeHash)).toEqual(
         created.map((record) => record.codeHash),
       );
     } finally {
@@ -140,38 +120,20 @@ describe("RecoveryCodeRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `consume-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `consume-${randomUUID()}@example.com`],
       );
 
-      await repository.createCodes(
-        identityAccountId,
-        codes,
-      );
+      await repository.createCodes(identityAccountId, codes);
 
-      const consumed =
-        await repository.consumeCode(
-          identityAccountId,
-          code,
-        );
+      const consumed = await repository.consumeCode(identityAccountId, code);
 
       expect(consumed).not.toBeNull();
 
-      expect(consumed?.identityAccountId).toBe(
-        identityAccountId,
-      );
+      expect(consumed?.identityAccountId).toBe(identityAccountId);
 
-      expect(consumed?.usedAt).toBeInstanceOf(
-        Date,
-      );
+      expect(consumed?.usedAt).toBeInstanceOf(Date);
 
-      const unused =
-        await repository.listUnusedCodes(
-          identityAccountId,
-        );
+      const unused = await repository.listUnusedCodes(identityAccountId);
 
       expect(unused).toHaveLength(1);
     } finally {
@@ -223,31 +185,16 @@ describe("RecoveryCodeRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `single-use-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `single-use-${randomUUID()}@example.com`],
       );
 
-      await repository.createCodes(
-        identityAccountId,
-        codes,
-      );
+      await repository.createCodes(identityAccountId, codes);
 
-      const first =
-        await repository.consumeCode(
-          identityAccountId,
-          code,
-        );
+      const first = await repository.consumeCode(identityAccountId, code);
 
       expect(first).not.toBeNull();
 
-      const second =
-        await repository.consumeCode(
-          identityAccountId,
-          code,
-        );
+      const second = await repository.consumeCode(identityAccountId, code);
 
       expect(second).toBeNull();
     } finally {
@@ -293,23 +240,12 @@ describe("RecoveryCodeRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `invalid-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `invalid-${randomUUID()}@example.com`],
       );
 
-      await repository.createCodes(
-        identityAccountId,
-        codes,
-      );
+      await repository.createCodes(identityAccountId, codes);
 
-      const result =
-        await repository.consumeCode(
-          identityAccountId,
-          `invalid-${randomUUID()}`,
-        );
+      const result = await repository.consumeCode(identityAccountId, `invalid-${randomUUID()}`);
 
       expect(result).toBeNull();
     } finally {
@@ -376,23 +312,13 @@ describe("RecoveryCodeRepository", () => {
         ],
       );
 
-      await repository.createCodes(
-        firstIdentityAccountId,
-        codes,
-      );
+      await repository.createCodes(firstIdentityAccountId, codes);
 
-      const result =
-        await repository.consumeCode(
-          secondIdentityAccountId,
-          code,
-        );
+      const result = await repository.consumeCode(secondIdentityAccountId, code);
 
       expect(result).toBeNull();
 
-      const stillUnused =
-        await repository.listUnusedCodes(
-          firstIdentityAccountId,
-        );
+      const stillUnused = await repository.listUnusedCodes(firstIdentityAccountId);
 
       expect(stillUnused).toHaveLength(1);
     } finally {
@@ -444,34 +370,18 @@ describe("RecoveryCodeRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `revoke-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `revoke-${randomUUID()}@example.com`],
       );
 
-      await repository.createCodes(
-        identityAccountId,
-        codes,
-      );
+      await repository.createCodes(identityAccountId, codes);
 
-      await repository.consumeCode(
-        identityAccountId,
-        firstCode,
-      );
+      await repository.consumeCode(identityAccountId, firstCode);
 
-      const deleted =
-        await repository.revokeUnusedCodes(
-          identityAccountId,
-        );
+      const deleted = await repository.revokeUnusedCodes(identityAccountId);
 
       expect(deleted).toBe(2);
 
-      const remaining =
-        await repository.listUnusedCodes(
-          identityAccountId,
-        );
+      const remaining = await repository.listUnusedCodes(identityAccountId);
 
       expect(remaining).toHaveLength(0);
     } finally {

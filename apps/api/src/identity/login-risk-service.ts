@@ -15,36 +15,27 @@ export interface LoginRiskResult {
 }
 
 export class LoginRiskService {
-  constructor(
-    private readonly authEventRepository: AuthEventRepository,
-  ) {}
+  constructor(private readonly authEventRepository: AuthEventRepository) {}
 
-  async evaluate(
-    input: EvaluateLoginRiskInput,
-  ): Promise<LoginRiskResult> {
+  async evaluate(input: EvaluateLoginRiskInput): Promise<LoginRiskResult> {
     const reasons: string[] = [];
 
-    const knownDevice =
-      await this.authEventRepository.hasSuccessfulLoginForDevice(
-        input.userId,
-        input.deviceId,
-      );
+    const knownDevice = await this.authEventRepository.hasSuccessfulLoginForDevice(
+      input.userId,
+      input.deviceId,
+    );
 
     if (!knownDevice) {
       reasons.push("new_device");
     }
 
     if (input.sourceIpHash) {
-      const recentFailures =
-        await this.authEventRepository.countRecentFailuresByIp(
-          input.sourceIpHash,
-          RECENT_FAILURE_WINDOW_MS,
-        );
+      const recentFailures = await this.authEventRepository.countRecentFailuresByIp(
+        input.sourceIpHash,
+        RECENT_FAILURE_WINDOW_MS,
+      );
 
-      if (
-        recentFailures >=
-        SUSPICIOUS_FAILURE_THRESHOLD
-      ) {
+      if (recentFailures >= SUSPICIOUS_FAILURE_THRESHOLD) {
         reasons.push("recent_ip_failures");
       }
     }

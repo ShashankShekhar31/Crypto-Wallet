@@ -23,33 +23,24 @@ interface RecoveryCodeRow {
 export class RecoveryCodeRepository {
   constructor(private readonly storage: Storage) {}
 
-  async createCodes(
-    identityAccountId: string,
-    codes: string[],
-  ): Promise<RecoveryCodeRecord[]> {
+  async createCodes(identityAccountId: string, codes: string[]): Promise<RecoveryCodeRecord[]> {
     if (!identityAccountId) {
-      throw new Error(
-        "Identity account ID is required",
-      );
+      throw new Error("Identity account ID is required");
     }
 
     if (codes.length === 0) {
-      throw new Error(
-        "At least one recovery code is required",
-      );
+      throw new Error("At least one recovery code is required");
     }
 
-    return this.storage.transaction(
-      async (transaction) => {
-        const records: RecoveryCodeRecord[] = [];
+    return this.storage.transaction(async (transaction) => {
+      const records: RecoveryCodeRecord[] = [];
 
-        for (const code of codes) {
-          const id = randomUUID();
-          const codeHash = hashRecoveryCode(code);
+      for (const code of codes) {
+        const id = randomUUID();
+        const codeHash = hashRecoveryCode(code);
 
-          const result =
-            await transaction.query<RecoveryCodeRow>(
-              `
+        const result = await transaction.query<RecoveryCodeRow>(
+          `
                 INSERT INTO recovery_codes (
                   id,
                   identity_account_id,
@@ -67,44 +58,31 @@ export class RecoveryCodeRepository {
                   used_at,
                   created_at
               `,
-              [
-                id,
-                identityAccountId,
-                codeHash,
-              ],
-            );
+          [id, identityAccountId, codeHash],
+        );
 
-          const row = result.rows[0];
+        const row = result.rows[0];
 
-          if (!row) {
-            throw new Error(
-              "Failed to create recovery code",
-            );
-          }
-
-          records.push(mapRecoveryCode(row));
+        if (!row) {
+          throw new Error("Failed to create recovery code");
         }
 
-        return records;
-      },
-    );
+        records.push(mapRecoveryCode(row));
+      }
+
+      return records;
+    });
   }
 
-  async consumeCode(
-    identityAccountId: string,
-    code: string,
-  ): Promise<RecoveryCodeRecord | null> {
+  async consumeCode(identityAccountId: string, code: string): Promise<RecoveryCodeRecord | null> {
     if (!identityAccountId) {
-      throw new Error(
-        "Identity account ID is required",
-      );
+      throw new Error("Identity account ID is required");
     }
 
     const codeHash = hashRecoveryCode(code);
 
-    const result =
-      await this.storage.query<RecoveryCodeRow>(
-        `
+    const result = await this.storage.query<RecoveryCodeRow>(
+      `
           UPDATE recovery_codes
           SET used_at = NOW()
           WHERE identity_account_id = $1
@@ -117,11 +95,8 @@ export class RecoveryCodeRepository {
             used_at,
             created_at
         `,
-        [
-          identityAccountId,
-          codeHash,
-        ],
-      );
+      [identityAccountId, codeHash],
+    );
 
     const row = result.rows[0];
 
@@ -132,12 +107,9 @@ export class RecoveryCodeRepository {
     return mapRecoveryCode(row);
   }
 
-  async listUnusedCodes(
-    identityAccountId: string,
-  ): Promise<RecoveryCodeRecord[]> {
-    const result =
-      await this.storage.query<RecoveryCodeRow>(
-        `
+  async listUnusedCodes(identityAccountId: string): Promise<RecoveryCodeRecord[]> {
+    const result = await this.storage.query<RecoveryCodeRow>(
+      `
           SELECT
             id,
             identity_account_id,
@@ -149,15 +121,13 @@ export class RecoveryCodeRepository {
             AND used_at IS NULL
           ORDER BY created_at ASC
         `,
-        [identityAccountId],
-      );
+      [identityAccountId],
+    );
 
     return result.rows.map(mapRecoveryCode);
   }
 
-  async revokeUnusedCodes(
-    identityAccountId: string,
-  ): Promise<number> {
+  async revokeUnusedCodes(identityAccountId: string): Promise<number> {
     const result = await this.storage.query(
       `
         DELETE FROM recovery_codes
@@ -171,9 +141,7 @@ export class RecoveryCodeRepository {
   }
 }
 
-function mapRecoveryCode(
-  row: RecoveryCodeRow,
-): RecoveryCodeRecord {
+function mapRecoveryCode(row: RecoveryCodeRow): RecoveryCodeRecord {
   return {
     id: row.id,
     identityAccountId: row.identity_account_id,

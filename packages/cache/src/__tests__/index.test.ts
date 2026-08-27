@@ -1,17 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  connectCacheClient,
-  createCacheClient,
-  disconnectCacheClient,
-} from "../index.js";
+import { connectCacheClient, createCacheClient, disconnectCacheClient } from "../index.js";
 
 const redisUrl = process.env.REDIS_URL;
 
 if (!redisUrl) {
-  throw new Error(
-    "REDIS_URL is required for cache tests",
-  );
+  throw new Error("REDIS_URL is required for cache tests");
 }
 
 describe("CacheClient", () => {

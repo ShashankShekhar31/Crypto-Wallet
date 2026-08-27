@@ -1,10 +1,6 @@
-import {
-  generateRecoveryCodes,
-} from "./recovery-code.js";
+import { generateRecoveryCodes } from "./recovery-code.js";
 
-import {
-  RecoveryCodeRepository,
-} from "./recovery-code-repository.js";
+import { RecoveryCodeRepository } from "./recovery-code-repository.js";
 
 export interface RecoveryCodeServiceOptions {
   repository: RecoveryCodeRepository;
@@ -30,26 +26,16 @@ export interface RevokedRecoveryCodes {
 export class RecoveryCodeService {
   private readonly repository: RecoveryCodeRepository;
 
-  constructor(
-    options: RecoveryCodeServiceOptions,
-  ) {
+  constructor(options: RecoveryCodeServiceOptions) {
     this.repository = options.repository;
   }
 
-  async createCodes(
-    identityAccountId: string,
-  ): Promise<CreatedRecoveryCodes> {
-    validateIdentityAccountId(
-      identityAccountId,
-    );
+  async createCodes(identityAccountId: string): Promise<CreatedRecoveryCodes> {
+    validateIdentityAccountId(identityAccountId);
 
-    const codes =
-      generateRecoveryCodes();
+    const codes = generateRecoveryCodes();
 
-    await this.repository.createCodes(
-      identityAccountId,
-      codes,
-    );
+    await this.repository.createCodes(identityAccountId, codes);
 
     return {
       codes,
@@ -57,36 +43,19 @@ export class RecoveryCodeService {
     };
   }
 
-  async consumeCode(
-    identityAccountId: string,
-    code: string,
-  ): Promise<ConsumedRecoveryCode> {
-    validateIdentityAccountId(
-      identityAccountId,
-    );
+  async consumeCode(identityAccountId: string, code: string): Promise<ConsumedRecoveryCode> {
+    validateIdentityAccountId(identityAccountId);
 
-    if (
-      typeof code !== "string" ||
-      code.trim().length === 0
-    ) {
-      throw new Error(
-        "Recovery code is required",
-      );
+    if (typeof code !== "string" || code.trim().length === 0) {
+      throw new Error("Recovery code is required");
     }
 
-    const normalizedCode =
-      code.trim().toUpperCase();
+    const normalizedCode = code.trim().toUpperCase();
 
-    const consumed =
-      await this.repository.consumeCode(
-        identityAccountId,
-        normalizedCode,
-      );
+    const consumed = await this.repository.consumeCode(identityAccountId, normalizedCode);
 
     if (!consumed) {
-      throw new Error(
-        "Invalid or already used recovery code",
-      );
+      throw new Error("Invalid or already used recovery code");
     }
 
     return {
@@ -94,34 +63,20 @@ export class RecoveryCodeService {
     };
   }
 
-  async getStatus(
-    identityAccountId: string,
-  ): Promise<RecoveryCodeStatus> {
-    validateIdentityAccountId(
-      identityAccountId,
-    );
+  async getStatus(identityAccountId: string): Promise<RecoveryCodeStatus> {
+    validateIdentityAccountId(identityAccountId);
 
-    const codes =
-      await this.repository.listUnusedCodes(
-        identityAccountId,
-      );
+    const codes = await this.repository.listUnusedCodes(identityAccountId);
 
     return {
       remaining: codes.length,
     };
   }
 
-  async revokeCodes(
-    identityAccountId: string,
-  ): Promise<RevokedRecoveryCodes> {
-    validateIdentityAccountId(
-      identityAccountId,
-    );
+  async revokeCodes(identityAccountId: string): Promise<RevokedRecoveryCodes> {
+    validateIdentityAccountId(identityAccountId);
 
-    const revokedCount =
-      await this.repository.revokeUnusedCodes(
-        identityAccountId,
-      );
+    const revokedCount = await this.repository.revokeUnusedCodes(identityAccountId);
 
     return {
       revokedCount,
@@ -129,15 +84,8 @@ export class RecoveryCodeService {
   }
 }
 
-function validateIdentityAccountId(
-  identityAccountId: string,
-): void {
-  if (
-    typeof identityAccountId !== "string" ||
-    identityAccountId.trim().length === 0
-  ) {
-    throw new Error(
-      "Identity account ID is required",
-    );
+function validateIdentityAccountId(identityAccountId: string): void {
+  if (typeof identityAccountId !== "string" || identityAccountId.trim().length === 0) {
+    throw new Error("Identity account ID is required");
   }
 }

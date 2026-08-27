@@ -9,9 +9,7 @@ import { SessionRepository } from "../identity/session-repository.js";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for session repository tests",
-  );
+  throw new Error("DATABASE_URL is required for session repository tests");
 }
 
 describe("SessionRepository", () => {
@@ -22,13 +20,9 @@ describe("SessionRepository", () => {
     const userId = randomUUID();
     const deviceId = randomUUID();
 
-    const expiresAt = new Date(
-      Date.now() + 60 * 60 * 1000,
-    );
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-    const idleExpiresAt = new Date(
-      Date.now() + 15 * 60 * 1000,
-    );
+    const idleExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
     try {
       await storage.connect();
@@ -51,12 +45,7 @@ describe("SessionRepository", () => {
           )
           VALUES ($1, $2, $3, $4)
         `,
-        [
-          deviceId,
-          userId,
-          "test",
-          "session-repository-test",
-        ],
+        [deviceId, userId, "test", "session-repository-test"],
       );
 
       const session = await repository.createSession({
@@ -75,9 +64,7 @@ describe("SessionRepository", () => {
         tokenFamilyId: expect.any(String),
       });
 
-      expect(session.id).toEqual(
-        expect.any(String),
-      );
+      expect(session.id).toEqual(expect.any(String));
 
       expect(session.issuedAt).toBeInstanceOf(Date);
       expect(session.lastSeenAt).toBeInstanceOf(Date);
@@ -137,30 +124,18 @@ describe("SessionRepository", () => {
           )
           VALUES ($1, $2, $3, $4)
         `,
-        [
-          deviceId,
-          userId,
-          "test",
-          "session-repository-test",
-        ],
+        [deviceId, userId, "test", "session-repository-test"],
       );
 
       const session = await repository.createSession({
         userId,
         deviceId,
         refreshTokenHash,
-        expiresAt: new Date(
-          Date.now() + 60 * 60 * 1000,
-        ),
-        idleExpiresAt: new Date(
-          Date.now() + 15 * 60 * 1000,
-        ),
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        idleExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
       });
 
-      const found =
-        await repository.findByRefreshTokenHash(
-          refreshTokenHash,
-        );
+      const found = await repository.findByRefreshTokenHash(refreshTokenHash);
 
       expect(found).not.toBeNull();
 
@@ -200,10 +175,7 @@ describe("SessionRepository", () => {
     try {
       await storage.connect();
 
-      const session =
-        await repository.findByRefreshTokenHash(
-          `missing-${randomUUID()}`,
-        );
+      const session = await repository.findByRefreshTokenHash(`missing-${randomUUID()}`);
 
       expect(session).toBeNull();
     } finally {
@@ -239,31 +211,18 @@ describe("SessionRepository", () => {
           )
           VALUES ($1, $2, $3, $4)
         `,
-        [
-          deviceId,
-          userId,
-          "test",
-          "session-repository-test",
-        ],
+        [deviceId, userId, "test", "session-repository-test"],
       );
 
       const session = await repository.createSession({
         userId,
         deviceId,
         refreshTokenHash: `refresh-${randomUUID()}`,
-        expiresAt: new Date(
-          Date.now() + 60 * 60 * 1000,
-        ),
-        idleExpiresAt: new Date(
-          Date.now() + 15 * 60 * 1000,
-        ),
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        idleExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
       });
 
-      const revoked =
-        await repository.revokeSession(
-          session.id,
-          "user_logout",
-        );
+      const revoked = await repository.revokeSession(session.id, "user_logout");
 
       expect(revoked).not.toBeNull();
 
@@ -295,25 +254,25 @@ describe("SessionRepository", () => {
     }
   });
   it("rotates an active session atomically", async () => {
-  const storage = new PostgresStorage(databaseUrl);
-  const repository = new SessionRepository(storage);
+    const storage = new PostgresStorage(databaseUrl);
+    const repository = new SessionRepository(storage);
 
-  const userId = randomUUID();
-  const deviceId = randomUUID();
+    const userId = randomUUID();
+    const deviceId = randomUUID();
 
-  try {
-    await storage.connect();
+    try {
+      await storage.connect();
 
-    await storage.query(
-      `
+      await storage.query(
+        `
         INSERT INTO users (id)
         VALUES ($1)
       `,
-      [userId],
-    );
+        [userId],
+      );
 
-    await storage.query(
-      `
+      await storage.query(
+        `
         INSERT INTO devices (
           id,
           user_id,
@@ -322,110 +281,74 @@ describe("SessionRepository", () => {
         )
         VALUES ($1, $2, $3, $4)
       `,
-      [
-        deviceId,
-        userId,
-        "test",
-        "session-rotation-test",
-      ],
-    );
+        [deviceId, userId, "test", "session-rotation-test"],
+      );
 
-    const original =
-      await repository.createSession({
+      const original = await repository.createSession({
         userId,
         deviceId,
-        refreshTokenHash:
-          `refresh-${randomUUID()}`,
-        expiresAt: new Date(
-          Date.now() + 60 * 60 * 1000,
-        ),
-        idleExpiresAt: new Date(
-          Date.now() + 15 * 60 * 1000,
-        ),
+        refreshTokenHash: `refresh-${randomUUID()}`,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        idleExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
       });
 
-    const rotated =
-      await repository.rotateSession(
-        original.id,
-        {
-          userId,
-          deviceId,
-          refreshTokenHash:
-            `replacement-${randomUUID()}`,
-          expiresAt: new Date(
-            Date.now() + 60 * 60 * 1000,
-          ),
-          idleExpiresAt: new Date(
-            Date.now() + 15 * 60 * 1000,
-          ),
-        },
+      const rotated = await repository.rotateSession(original.id, {
+        userId,
+        deviceId,
+        refreshTokenHash: `replacement-${randomUUID()}`,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        idleExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      });
+
+      expect(rotated.previousSession).toMatchObject({
+        id: original.id,
+        userId,
+        deviceId,
+        tokenFamilyId: original.tokenFamilyId,
+        status: "rotated",
+        replacedBySessionId: rotated.replacementSession.id,
+      });
+
+      expect(rotated.previousSession.rotatedAt).toBeInstanceOf(Date);
+
+      expect(rotated.replacementSession).toMatchObject({
+        userId,
+        deviceId,
+        tokenFamilyId: original.tokenFamilyId,
+        status: "active",
+      });
+
+      expect(rotated.replacementSession.id).not.toBe(original.id);
+
+      const storedOriginal = await repository.findByRefreshTokenHash(original.refreshTokenHash);
+
+      expect(storedOriginal?.status).toBe("rotated");
+
+      const storedReplacement = await repository.findByRefreshTokenHash(
+        rotated.replacementSession.refreshTokenHash,
       );
 
-    expect(rotated.previousSession).toMatchObject({
-      id: original.id,
-      userId,
-      deviceId,
-      tokenFamilyId: original.tokenFamilyId,
-      status: "rotated",
-      replacedBySessionId:
-        rotated.replacementSession.id,
-    });
-
-    expect(
-      rotated.previousSession.rotatedAt,
-    ).toBeInstanceOf(Date);
-
-    expect(
-      rotated.replacementSession,
-    ).toMatchObject({
-      userId,
-      deviceId,
-      tokenFamilyId: original.tokenFamilyId,
-      status: "active",
-    });
-
-    expect(
-      rotated.replacementSession.id,
-    ).not.toBe(original.id);
-
-    const storedOriginal =
-      await repository.findByRefreshTokenHash(
-        original.refreshTokenHash,
-      );
-
-    expect(storedOriginal?.status).toBe(
-      "rotated",
-    );
-
-    const storedReplacement =
-      await repository.findByRefreshTokenHash(
-        rotated.replacementSession
-          .refreshTokenHash,
-      );
-
-    expect(storedReplacement?.status).toBe(
-      "active",
-    );
-  } finally {
-    await storage.query(
-      `
+      expect(storedReplacement?.status).toBe("active");
+    } finally {
+      await storage.query(
+        `
         DELETE FROM devices
         WHERE id = $1
       `,
-      [deviceId],
-    );
+        [deviceId],
+      );
 
-    await storage.query(
-      `
+      await storage.query(
+        `
         DELETE FROM users
         WHERE id = $1
       `,
-      [userId],
-    );
+        [userId],
+      );
 
-    await storage.disconnect();
-  }
-});
+      await storage.disconnect();
+    }
+  });
   it("detects refresh token replay and revokes the token family", async () => {
     const storage = new PostgresStorage(databaseUrl);
     const repository = new SessionRepository(storage);
@@ -454,83 +377,48 @@ describe("SessionRepository", () => {
           )
           VALUES ($1, $2, $3, $4)
         `,
-        [
-          deviceId,
-          userId,
-          "test",
-          "session-replay-test",
-        ],
+        [deviceId, userId, "test", "session-replay-test"],
       );
 
-      const original =
-        await repository.createSession({
-          userId,
-          deviceId,
-          refreshTokenHash:
-            `refresh-${randomUUID()}`,
-          expiresAt: new Date(
-            Date.now() + 60 * 60 * 1000,
-          ),
-          idleExpiresAt: new Date(
-            Date.now() + 15 * 60 * 1000,
-          ),
-        });
+      const original = await repository.createSession({
+        userId,
+        deviceId,
+        refreshTokenHash: `refresh-${randomUUID()}`,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        idleExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      });
 
-      const rotated =
-        await repository.rotateSession(
-          original.id,
-          {
-            userId,
-            deviceId,
-            refreshTokenHash:
-              `replacement-${randomUUID()}`,
-            expiresAt: new Date(
-              Date.now() + 60 * 60 * 1000,
-            ),
-            idleExpiresAt: new Date(
-              Date.now() + 15 * 60 * 1000,
-            ),
-          },
-        );
+      const rotated = await repository.rotateSession(original.id, {
+        userId,
+        deviceId,
+        refreshTokenHash: `replacement-${randomUUID()}`,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        idleExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      });
 
-      await repository.handleRefreshTokenReplay(
-        original.id,
-        original.tokenFamilyId,
-      );
+      await repository.handleRefreshTokenReplay(original.id, original.tokenFamilyId);
 
-      const replayed =
-        await repository.findByRefreshTokenHash(
-          original.refreshTokenHash,
-        );
+      const replayed = await repository.findByRefreshTokenHash(original.refreshTokenHash);
 
       expect(replayed).toMatchObject({
         id: original.id,
         status: "replay_detected",
-        revokedReason:
-          "refresh_token_replay",
+        revokedReason: "refresh_token_replay",
       });
 
-      expect(
-        replayed?.revokedAt,
-      ).toBeInstanceOf(Date);
+      expect(replayed?.revokedAt).toBeInstanceOf(Date);
 
-      const replacement =
-        await repository.findByRefreshTokenHash(
-          rotated.replacementSession
-            .refreshTokenHash,
-        );
+      const replacement = await repository.findByRefreshTokenHash(
+        rotated.replacementSession.refreshTokenHash,
+      );
 
       expect(replacement).toMatchObject({
-        id:
-          rotated.replacementSession.id,
+        id: rotated.replacementSession.id,
         status: "revoked",
-        revokedReason:
-          "refresh_token_replay",
+        revokedReason: "refresh_token_replay",
       });
 
-      expect(
-        replacement?.revokedAt,
-      ).toBeInstanceOf(Date);
+      expect(replacement?.revokedAt).toBeInstanceOf(Date);
     } finally {
       await storage.query(
         `
@@ -551,7 +439,7 @@ describe("SessionRepository", () => {
       await storage.disconnect();
     }
   });
-    it("does not revoke sessions from another token family", async () => {
+  it("does not revoke sessions from another token family", async () => {
     const storage = new PostgresStorage(databaseUrl);
     const repository = new SessionRepository(storage);
 
@@ -579,97 +467,50 @@ describe("SessionRepository", () => {
           )
           VALUES ($1, $2, $3, $4)
         `,
-        [
-          deviceId,
-          userId,
-          "test",
-          "session-family-test",
-        ],
+        [deviceId, userId, "test", "session-family-test"],
       );
 
-      const firstSession =
-        await repository.createSession({
-          userId,
-          deviceId,
-          refreshTokenHash:
-            `first-${randomUUID()}`,
-          expiresAt: new Date(
-            Date.now() + 60 * 60 * 1000,
-          ),
-          idleExpiresAt: new Date(
-            Date.now() + 15 * 60 * 1000,
-          ),
-        });
+      const firstSession = await repository.createSession({
+        userId,
+        deviceId,
+        refreshTokenHash: `first-${randomUUID()}`,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        idleExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      });
 
-      const firstRotated =
-        await repository.rotateSession(
-          firstSession.id,
-          {
-            userId,
-            deviceId,
-            refreshTokenHash:
-              `first-replacement-${randomUUID()}`,
-            expiresAt: new Date(
-              Date.now() + 60 * 60 * 1000,
-            ),
-            idleExpiresAt: new Date(
-              Date.now() + 15 * 60 * 1000,
-            ),
-          },
-        );
+      const firstRotated = await repository.rotateSession(firstSession.id, {
+        userId,
+        deviceId,
+        refreshTokenHash: `first-replacement-${randomUUID()}`,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        idleExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      });
 
-      const secondSession =
-        await repository.createSession({
-          userId,
-          deviceId,
-          refreshTokenHash:
-            `second-${randomUUID()}`,
-          expiresAt: new Date(
-            Date.now() + 60 * 60 * 1000,
-          ),
-          idleExpiresAt: new Date(
-            Date.now() + 15 * 60 * 1000,
-          ),
-        });
+      const secondSession = await repository.createSession({
+        userId,
+        deviceId,
+        refreshTokenHash: `second-${randomUUID()}`,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        idleExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      });
 
-      expect(
-        secondSession.tokenFamilyId,
-      ).not.toBe(
-        firstSession.tokenFamilyId,
+      expect(secondSession.tokenFamilyId).not.toBe(firstSession.tokenFamilyId);
+
+      await repository.handleRefreshTokenReplay(firstSession.id, firstSession.tokenFamilyId);
+
+      const replayed = await repository.findByRefreshTokenHash(firstSession.refreshTokenHash);
+
+      expect(replayed?.status).toBe("replay_detected");
+
+      const firstReplacement = await repository.findByRefreshTokenHash(
+        firstRotated.replacementSession.refreshTokenHash,
       );
 
-      await repository.handleRefreshTokenReplay(
-        firstSession.id,
-        firstSession.tokenFamilyId,
-      );
+      expect(firstReplacement?.status).toBe("revoked");
 
-      const replayed =
-        await repository.findByRefreshTokenHash(
-          firstSession.refreshTokenHash,
-        );
+      const unrelated = await repository.findByRefreshTokenHash(secondSession.refreshTokenHash);
 
-      expect(replayed?.status).toBe(
-        "replay_detected",
-      );
-
-      const firstReplacement =
-        await repository.findByRefreshTokenHash(
-          firstRotated.replacementSession
-            .refreshTokenHash,
-        );
-
-      expect(
-        firstReplacement?.status,
-      ).toBe("revoked");
-
-      const unrelated =
-        await repository.findByRefreshTokenHash(
-          secondSession.refreshTokenHash,
-        );
-
-      expect(unrelated?.status).toBe(
-        "active",
-      );
+      expect(unrelated?.status).toBe("active");
     } finally {
       await storage.query(
         `

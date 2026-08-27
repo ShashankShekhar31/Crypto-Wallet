@@ -9,9 +9,7 @@ import { PasskeyRepository } from "../identity/passkey-repository.js";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for passkey repository tests",
-  );
+  throw new Error("DATABASE_URL is required for passkey repository tests");
 }
 
 describe("PasskeyRepository", () => {
@@ -22,13 +20,9 @@ describe("PasskeyRepository", () => {
     const userId = randomUUID();
     const identityAccountId = randomUUID();
 
-    const credentialId = Buffer.from(
-      `credential-${randomUUID()}`,
-    );
+    const credentialId = Buffer.from(`credential-${randomUUID()}`);
 
-    const publicKey = Buffer.from(
-      `public-key-${randomUUID()}`,
-    );
+    const publicKey = Buffer.from(`public-key-${randomUUID()}`);
 
     try {
       await storage.connect();
@@ -51,21 +45,16 @@ describe("PasskeyRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `passkey-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `passkey-${randomUUID()}@example.com`],
       );
 
-      const created =
-        await repository.createCredential({
-          identityAccountId,
-          credentialId,
-          publicKey,
-          signCount: 0,
-          backedUp: true,
-        });
+      const created = await repository.createCredential({
+        identityAccountId,
+        credentialId,
+        publicKey,
+        signCount: 0,
+        backedUp: true,
+      });
 
       expect(created).toMatchObject({
         identityAccountId,
@@ -75,26 +64,15 @@ describe("PasskeyRepository", () => {
         revokedAt: null,
       });
 
-      expect(created.id).toEqual(
-        expect.any(String),
-      );
+      expect(created.id).toEqual(expect.any(String));
 
-      expect(created.credentialId).toEqual(
-        credentialId,
-      );
+      expect(created.credentialId).toEqual(credentialId);
 
-      expect(created.publicKey).toEqual(
-        publicKey,
-      );
+      expect(created.publicKey).toEqual(publicKey);
 
-      expect(created.createdAt).toBeInstanceOf(
-        Date,
-      );
+      expect(created.createdAt).toBeInstanceOf(Date);
 
-      const found =
-        await repository.findByCredentialId(
-          credentialId,
-        );
+      const found = await repository.findByCredentialId(credentialId);
 
       expect(found).not.toBeNull();
 
@@ -105,13 +83,9 @@ describe("PasskeyRepository", () => {
         backedUp: true,
       });
 
-      expect(found?.credentialId).toEqual(
-        credentialId,
-      );
+      expect(found?.credentialId).toEqual(credentialId);
 
-      expect(found?.publicKey).toEqual(
-        publicKey,
-      );
+      expect(found?.publicKey).toEqual(publicKey);
     } finally {
       await storage.query(
         `
@@ -132,12 +106,9 @@ describe("PasskeyRepository", () => {
     try {
       await storage.connect();
 
-      const credential =
-        await repository.findByCredentialId(
-          Buffer.from(
-            `missing-${randomUUID()}`,
-          ),
-        );
+      const credential = await repository.findByCredentialId(
+        Buffer.from(`missing-${randomUUID()}`),
+      );
 
       expect(credential).toBeNull();
     } finally {
@@ -173,30 +144,17 @@ describe("PasskeyRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `sign-count-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `sign-count-${randomUUID()}@example.com`],
       );
 
-      const credential =
-        await repository.createCredential({
-          identityAccountId,
-          credentialId: Buffer.from(
-            `credential-${randomUUID()}`,
-          ),
-          publicKey: Buffer.from(
-            `public-key-${randomUUID()}`,
-          ),
-          signCount: 3,
-        });
+      const credential = await repository.createCredential({
+        identityAccountId,
+        credentialId: Buffer.from(`credential-${randomUUID()}`),
+        publicKey: Buffer.from(`public-key-${randomUUID()}`),
+        signCount: 3,
+      });
 
-      const updated =
-        await repository.updateSignCount(
-          credential.id,
-          4,
-        );
+      const updated = await repository.updateSignCount(credential.id, 4);
 
       expect(updated).not.toBeNull();
 
@@ -242,37 +200,21 @@ describe("PasskeyRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `non-decreasing-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `non-decreasing-${randomUUID()}@example.com`],
       );
 
-      const credential =
-        await repository.createCredential({
-          identityAccountId,
-          credentialId: Buffer.from(
-            `credential-${randomUUID()}`,
-          ),
-          publicKey: Buffer.from(
-            `public-key-${randomUUID()}`,
-          ),
-          signCount: 5,
-        });
+      const credential = await repository.createCredential({
+        identityAccountId,
+        credentialId: Buffer.from(`credential-${randomUUID()}`),
+        publicKey: Buffer.from(`public-key-${randomUUID()}`),
+        signCount: 5,
+      });
 
-      const updated =
-        await repository.updateSignCount(
-          credential.id,
-          4,
-        );
+      const updated = await repository.updateSignCount(credential.id, 4);
 
       expect(updated).toBeNull();
 
-      const found =
-        await repository.findByCredentialId(
-          credential.credentialId,
-        );
+      const found = await repository.findByCredentialId(credential.credentialId);
 
       expect(found?.signCount).toBe(5);
     } finally {
@@ -316,36 +258,22 @@ describe("PasskeyRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `mark-used-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `mark-used-${randomUUID()}@example.com`],
       );
 
-      const credential =
-        await repository.createCredential({
-          identityAccountId,
-          credentialId: Buffer.from(
-            `credential-${randomUUID()}`,
-          ),
-          publicKey: Buffer.from(
-            `public-key-${randomUUID()}`,
-          ),
-        });
+      const credential = await repository.createCredential({
+        identityAccountId,
+        credentialId: Buffer.from(`credential-${randomUUID()}`),
+        publicKey: Buffer.from(`public-key-${randomUUID()}`),
+      });
 
       expect(credential.lastUsedAt).toBeNull();
 
-      const updated =
-        await repository.markUsed(
-          credential.id,
-        );
+      const updated = await repository.markUsed(credential.id);
 
       expect(updated).not.toBeNull();
 
-      expect(updated?.lastUsedAt).toBeInstanceOf(
-        Date,
-      );
+      expect(updated?.lastUsedAt).toBeInstanceOf(Date);
     } finally {
       await storage.query(
         `
@@ -387,45 +315,25 @@ describe("PasskeyRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `revoke-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `revoke-${randomUUID()}@example.com`],
       );
 
-      const credential =
-        await repository.createCredential({
-          identityAccountId,
-          credentialId: Buffer.from(
-            `credential-${randomUUID()}`,
-          ),
-          publicKey: Buffer.from(
-            `public-key-${randomUUID()}`,
-          ),
-        });
+      const credential = await repository.createCredential({
+        identityAccountId,
+        credentialId: Buffer.from(`credential-${randomUUID()}`),
+        publicKey: Buffer.from(`public-key-${randomUUID()}`),
+      });
 
-      const revoked =
-        await repository.revokeCredential(
-          credential.id,
-        );
+      const revoked = await repository.revokeCredential(credential.id);
 
       expect(revoked).not.toBeNull();
 
-      expect(revoked?.revokedAt).toBeInstanceOf(
-        Date,
-      );
+      expect(revoked?.revokedAt).toBeInstanceOf(Date);
 
-      const found =
-        await repository.findByCredentialId(
-          credential.credentialId,
-        );
+      const found = await repository.findByCredentialId(credential.credentialId);
 
-      expect(found?.revokedAt).toBeInstanceOf(
-        Date,
-      );
+      expect(found?.revokedAt).toBeInstanceOf(Date);
     } finally {
-        
       await storage.query(
         `
           DELETE FROM users

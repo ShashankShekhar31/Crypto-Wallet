@@ -9,18 +9,14 @@ import { DeviceRepository } from "../identity/device-repository.js";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for device repository tests",
-  );
+  throw new Error("DATABASE_URL is required for device repository tests");
 }
 
 describe("DeviceRepository", () => {
   it("finds an active device belonging to the user", async () => {
-    const storage =
-      new PostgresStorage(databaseUrl);
+    const storage = new PostgresStorage(databaseUrl);
 
-    const repository =
-      new DeviceRepository(storage);
+    const repository = new DeviceRepository(storage);
 
     const userId = randomUUID();
     const deviceId = randomUUID();
@@ -46,19 +42,10 @@ describe("DeviceRepository", () => {
           )
           VALUES ($1, $2, $3, $4)
         `,
-        [
-          deviceId,
-          userId,
-          "test",
-          "device-repository-test",
-        ],
+        [deviceId, userId, "test", "device-repository-test"],
       );
 
-      const device =
-        await repository.findActiveDeviceForUser(
-          deviceId,
-          userId,
-        );
+      const device = await repository.findActiveDeviceForUser(deviceId, userId);
 
       expect(device).not.toBeNull();
 
@@ -70,9 +57,7 @@ describe("DeviceRepository", () => {
         revokedAt: null,
       });
 
-      expect(device?.createdAt).toBeInstanceOf(
-        Date,
-      );
+      expect(device?.createdAt).toBeInstanceOf(Date);
     } finally {
       await storage.query(
         `
@@ -94,11 +79,9 @@ describe("DeviceRepository", () => {
   });
 
   it("returns null when the device belongs to another user", async () => {
-    const storage =
-      new PostgresStorage(databaseUrl);
+    const storage = new PostgresStorage(databaseUrl);
 
-    const repository =
-      new DeviceRepository(storage);
+    const repository = new DeviceRepository(storage);
 
     const deviceOwnerUserId = randomUUID();
     const requestingUserId = randomUUID();
@@ -112,10 +95,7 @@ describe("DeviceRepository", () => {
           INSERT INTO users (id)
           VALUES ($1), ($2)
         `,
-        [
-          deviceOwnerUserId,
-          requestingUserId,
-        ],
+        [deviceOwnerUserId, requestingUserId],
       );
 
       await storage.query(
@@ -128,19 +108,10 @@ describe("DeviceRepository", () => {
           )
           VALUES ($1, $2, $3, $4)
         `,
-        [
-          deviceId,
-          deviceOwnerUserId,
-          "test",
-          "foreign-device",
-        ],
+        [deviceId, deviceOwnerUserId, "test", "foreign-device"],
       );
 
-      const device =
-        await repository.findActiveDeviceForUser(
-          deviceId,
-          requestingUserId,
-        );
+      const device = await repository.findActiveDeviceForUser(deviceId, requestingUserId);
 
       expect(device).toBeNull();
     } finally {
@@ -156,10 +127,7 @@ describe("DeviceRepository", () => {
           DELETE FROM users
           WHERE id IN ($1, $2)
         `,
-        [
-          deviceOwnerUserId,
-          requestingUserId,
-        ],
+        [deviceOwnerUserId, requestingUserId],
       );
 
       await storage.disconnect();
@@ -167,11 +135,9 @@ describe("DeviceRepository", () => {
   });
 
   it("returns null when the device is revoked", async () => {
-    const storage =
-      new PostgresStorage(databaseUrl);
+    const storage = new PostgresStorage(databaseUrl);
 
-    const repository =
-      new DeviceRepository(storage);
+    const repository = new DeviceRepository(storage);
 
     const userId = randomUUID();
     const deviceId = randomUUID();
@@ -198,19 +164,10 @@ describe("DeviceRepository", () => {
           )
           VALUES ($1, $2, $3, $4, NOW())
         `,
-        [
-          deviceId,
-          userId,
-          "test",
-          "revoked-device",
-        ],
+        [deviceId, userId, "test", "revoked-device"],
       );
 
-      const device =
-        await repository.findActiveDeviceForUser(
-          deviceId,
-          userId,
-        );
+      const device = await repository.findActiveDeviceForUser(deviceId, userId);
 
       expect(device).toBeNull();
     } finally {
@@ -234,20 +191,14 @@ describe("DeviceRepository", () => {
   });
 
   it("returns null when the device does not exist", async () => {
-    const storage =
-      new PostgresStorage(databaseUrl);
+    const storage = new PostgresStorage(databaseUrl);
 
-    const repository =
-      new DeviceRepository(storage);
+    const repository = new DeviceRepository(storage);
 
     try {
       await storage.connect();
 
-      const device =
-        await repository.findActiveDeviceForUser(
-          randomUUID(),
-          randomUUID(),
-        );
+      const device = await repository.findActiveDeviceForUser(randomUUID(), randomUUID());
 
       expect(device).toBeNull();
     } finally {

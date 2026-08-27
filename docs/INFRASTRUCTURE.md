@@ -41,11 +41,11 @@ The infrastructure follows these principles:
 
 The platform currently defines three infrastructure environments:
 
-| Environment | Purpose | Deployment Tier | Paid Resources |
-|---|---|---|---|
-| development | Active local development | development | false |
-| staging | Pre-production validation | pre-production | false |
-| demo | Demonstration and integration testing | demo | false |
+| Environment | Purpose                               | Deployment Tier | Paid Resources |
+| ----------- | ------------------------------------- | --------------- | -------------- |
+| development | Active local development              | development     | false          |
+| staging     | Pre-production validation             | pre-production  | false          |
+| demo        | Demonstration and integration testing | demo            | false          |
 
 Each environment uses the shared OpenTofu environment contract:
 
@@ -198,3 +198,4 @@ availability, policy enforcement or managed security guarantees as
 production cloud networking.
 
 Production cloud networking remains a future deployment concern.
+```

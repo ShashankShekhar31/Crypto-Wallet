@@ -57,9 +57,7 @@ export interface RecordPasswordFailureInput {
 export class IdentityRepository {
   constructor(private readonly storage: Storage) {}
 
-  async findByEmail(
-    normalizedEmail: string,
-  ): Promise<IdentityAccountRecord | null> {
+  async findByEmail(normalizedEmail: string): Promise<IdentityAccountRecord | null> {
     const result = await this.storage.query<IdentityAccountRow>(
       `
         SELECT
@@ -85,11 +83,8 @@ export class IdentityRepository {
     return mapIdentityAccount(row);
   }
 
-  async findById(
-  identityAccountId: string,
-): Promise<IdentityAccountRecord | null> {
-  const result =
-    await this.storage.query<IdentityAccountRow>(
+  async findById(identityAccountId: string): Promise<IdentityAccountRecord | null> {
+    const result = await this.storage.query<IdentityAccountRow>(
       `
         SELECT
           id,
@@ -105,14 +100,14 @@ export class IdentityRepository {
       [identityAccountId],
     );
 
-  const row = result.rows[0];
+    const row = result.rows[0];
 
-  if (!row) {
-    return null;
+    if (!row) {
+      return null;
+    }
+
+    return mapIdentityAccount(row);
   }
-
-  return mapIdentityAccount(row);
-}
 
   async findPasswordCredential(
     identityAccountId: string,
@@ -142,7 +137,7 @@ export class IdentityRepository {
     return mapPasswordCredential(row);
   }
 
-    async recordPasswordFailure(
+  async recordPasswordFailure(
     identityAccountId: string,
     input: RecordPasswordFailureInput,
   ): Promise<PasswordCredentialRecord> {
@@ -154,9 +149,8 @@ export class IdentityRepository {
       throw new Error("Invalid password lock duration");
     }
 
-    const result =
-      await this.storage.query<PasswordCredentialRow>(
-        `
+    const result = await this.storage.query<PasswordCredentialRow>(
+      `
           UPDATE password_credentials
           SET
             failed_attempt_count =
@@ -176,30 +170,21 @@ export class IdentityRepository {
             failed_attempt_count,
             locked_until
         `,
-        [
-          identityAccountId,
-          input.maxAttempts,
-          input.lockDurationMs,
-        ],
-      );
+      [identityAccountId, input.maxAttempts, input.lockDurationMs],
+    );
 
     const row = result.rows[0];
 
     if (!row) {
-      throw new Error(
-        "Password credential not found",
-      );
+      throw new Error("Password credential not found");
     }
 
     return mapPasswordCredential(row);
   }
 
-  async resetPasswordFailures(
-    identityAccountId: string,
-  ): Promise<PasswordCredentialRecord> {
-    const result =
-      await this.storage.query<PasswordCredentialRow>(
-        `
+  async resetPasswordFailures(identityAccountId: string): Promise<PasswordCredentialRecord> {
+    const result = await this.storage.query<PasswordCredentialRow>(
+      `
           UPDATE password_credentials
           SET
             failed_attempt_count = 0,
@@ -213,30 +198,25 @@ export class IdentityRepository {
             failed_attempt_count,
             locked_until
         `,
-        [identityAccountId],
-      );
+      [identityAccountId],
+    );
 
     const row = result.rows[0];
 
     if (!row) {
-      throw new Error(
-        "Password credential not found",
-      );
+      throw new Error("Password credential not found");
     }
 
     return mapPasswordCredential(row);
   }
 
-  async createIdentityAccount(
-    input: CreateIdentityAccountInput,
-  ): Promise<CreatedIdentityAccount> {
+  async createIdentityAccount(input: CreateIdentityAccountInput): Promise<CreatedIdentityAccount> {
     const identityAccountId = randomUUID();
     const passwordCredentialId = randomUUID();
 
     return this.storage.transaction(async (transaction) => {
-      const identityResult =
-        await transaction.query<IdentityAccountRow>(
-          `
+      const identityResult = await transaction.query<IdentityAccountRow>(
+        `
             INSERT INTO identity_accounts (
               id,
               user_id,
@@ -252,24 +232,17 @@ export class IdentityRepository {
               created_at,
               updated_at
           `,
-          [
-            identityAccountId,
-            input.userId,
-            input.normalizedEmail,
-          ],
-        );
+        [identityAccountId, input.userId, input.normalizedEmail],
+      );
 
       const identityRow = identityResult.rows[0];
 
       if (!identityRow) {
-        throw new Error(
-          "Failed to create identity account",
-        );
+        throw new Error("Failed to create identity account");
       }
 
-      const credentialResult =
-        await transaction.query<PasswordCredentialRow>(
-          `
+      const credentialResult = await transaction.query<PasswordCredentialRow>(
+        `
             INSERT INTO password_credentials (
               id,
               identity_account_id,
@@ -284,19 +257,13 @@ export class IdentityRepository {
               failed_attempt_count,
               locked_until
           `,
-          [
-            passwordCredentialId,
-            identityAccountId,
-            input.passwordHash,
-          ],
-        );
+        [passwordCredentialId, identityAccountId, input.passwordHash],
+      );
 
       const credentialRow = credentialResult.rows[0];
 
       if (!credentialRow) {
-        throw new Error(
-          "Failed to create password credential",
-        );
+        throw new Error("Failed to create password credential");
       }
 
       return {
@@ -307,9 +274,7 @@ export class IdentityRepository {
   }
 }
 
-function mapIdentityAccount(
-  row: IdentityAccountRow,
-): IdentityAccountRecord {
+function mapIdentityAccount(row: IdentityAccountRow): IdentityAccountRecord {
   return {
     id: row.id,
     userId: row.user_id,
@@ -320,9 +285,7 @@ function mapIdentityAccount(
   };
 }
 
-function mapPasswordCredential(
-  row: PasswordCredentialRow,
-): PasswordCredentialRecord {
+function mapPasswordCredential(row: PasswordCredentialRow): PasswordCredentialRecord {
   return {
     id: row.id,
     identityAccountId: row.identity_account_id,

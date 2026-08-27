@@ -1,12 +1,6 @@
-import {
-  generateRefreshToken,
-  hashRefreshToken,
-} from "./token.js";
+import { generateRefreshToken, hashRefreshToken } from "./token.js";
 
-import {
-  SessionRepository,
-  type AuthSessionRecord,
-} from "./session-repository.js";
+import { SessionRepository, type AuthSessionRecord } from "./session-repository.js";
 
 export interface RefreshSessionInput {
   refreshToken: string;
@@ -20,13 +14,9 @@ export interface RefreshedSession {
 }
 
 export class SessionService {
-  constructor(
-    private readonly sessionRepository: SessionRepository,
-  ) {}
+  constructor(private readonly sessionRepository: SessionRepository) {}
 
-  async refresh(
-    input: RefreshSessionInput,
-  ): Promise<RefreshedSession> {
+  async refresh(input: RefreshSessionInput): Promise<RefreshedSession> {
     if (input.refreshToken.length === 0) {
       throw new Error("Invalid refresh token");
     }
@@ -35,13 +25,9 @@ export class SessionService {
       throw new Error("Invalid idle timeout");
     }
 
-    const refreshTokenHash =
-      hashRefreshToken(input.refreshToken);
+    const refreshTokenHash = hashRefreshToken(input.refreshToken);
 
-    const currentSession =
-      await this.sessionRepository.findByRefreshTokenHash(
-        refreshTokenHash,
-      );
+    const currentSession = await this.sessionRepository.findByRefreshTokenHash(refreshTokenHash);
 
     if (!currentSession) {
       throw new Error("Invalid refresh token");
@@ -53,9 +39,7 @@ export class SessionService {
         currentSession.tokenFamilyId,
       );
 
-      throw new Error(
-        "Refresh token replay detected",
-      );
+      throw new Error("Refresh token replay detected");
     }
 
     if (currentSession.status !== "active") {
@@ -72,57 +56,31 @@ export class SessionService {
       throw new Error("Auth session is idle-expired");
     }
 
-    const replacementRefreshToken =
-      generateRefreshToken();
+    const replacementRefreshToken = generateRefreshToken();
 
-    const replacementRefreshTokenHash =
-      hashRefreshToken(
-        replacementRefreshToken,
-      );
+    const replacementRefreshTokenHash = hashRefreshToken(replacementRefreshToken);
 
-    const replacementIdleExpiresAt =
-      new Date(
-        Math.min(
-          currentSession.expiresAt.getTime(),
-          now.getTime() +
-            input.idleTimeoutMs,
-        ),
-      );
+    const replacementIdleExpiresAt = new Date(
+      Math.min(currentSession.expiresAt.getTime(), now.getTime() + input.idleTimeoutMs),
+    );
 
-    const rotated =
-      await this.sessionRepository.rotateSession(
-        currentSession.id,
-        {
-          userId: currentSession.userId,
-          deviceId: currentSession.deviceId,
-          tokenFamilyId:
-            currentSession.tokenFamilyId,
-          refreshTokenHash:
-            replacementRefreshTokenHash,
-          expiresAt:
-            currentSession.expiresAt,
-          idleExpiresAt:
-            replacementIdleExpiresAt,
-        },
-      );
+    const rotated = await this.sessionRepository.rotateSession(currentSession.id, {
+      userId: currentSession.userId,
+      deviceId: currentSession.deviceId,
+      tokenFamilyId: currentSession.tokenFamilyId,
+      refreshTokenHash: replacementRefreshTokenHash,
+      expiresAt: currentSession.expiresAt,
+      idleExpiresAt: replacementIdleExpiresAt,
+    });
 
     return {
-      previousSession:
-        rotated.previousSession,
-      session:
-        rotated.replacementSession,
-      refreshToken:
-        replacementRefreshToken,
+      previousSession: rotated.previousSession,
+      session: rotated.replacementSession,
+      refreshToken: replacementRefreshToken,
     };
   }
 
-  async revoke(
-    sessionId: string,
-    reason: string,
-  ): Promise<AuthSessionRecord | null> {
-    return this.sessionRepository.revokeSession(
-      sessionId,
-      reason,
-    );
+  async revoke(sessionId: string, reason: string): Promise<AuthSessionRecord | null> {
+    return this.sessionRepository.revokeSession(sessionId, reason);
   }
 }

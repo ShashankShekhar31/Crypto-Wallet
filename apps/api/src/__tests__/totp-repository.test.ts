@@ -9,9 +9,7 @@ import { TotpRepository } from "../identity/totp-repository.js";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for TOTP repository tests",
-  );
+  throw new Error("DATABASE_URL is required for TOTP repository tests");
 }
 
 describe("TotpRepository", () => {
@@ -46,20 +44,15 @@ describe("TotpRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `totp-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `totp-${randomUUID()}@example.com`],
       );
 
-      const created =
-        await repository.createFactor({
-          identityAccountId,
-          encryptedSecret,
-          secretNonce,
-          encryptionKeyVersion: "v1",
-        });
+      const created = await repository.createFactor({
+        identityAccountId,
+        encryptedSecret,
+        secretNonce,
+        encryptionKeyVersion: "v1",
+      });
 
       expect(created).toMatchObject({
         identityAccountId,
@@ -68,42 +61,25 @@ describe("TotpRepository", () => {
         disabledAt: null,
       });
 
-      expect(created.id).toEqual(
-        expect.any(String),
-      );
+      expect(created.id).toEqual(expect.any(String));
 
-      expect(created.encryptedSecret).toEqual(
-        encryptedSecret,
-      );
+      expect(created.encryptedSecret).toEqual(encryptedSecret);
 
-      expect(created.secretNonce).toEqual(
-        secretNonce,
-      );
+      expect(created.secretNonce).toEqual(secretNonce);
 
-      expect(created.createdAt).toBeInstanceOf(
-        Date,
-      );
+      expect(created.createdAt).toBeInstanceOf(Date);
 
-      const found =
-        await repository.findById(created.id);
+      const found = await repository.findById(created.id);
 
       expect(found).not.toBeNull();
 
-      expect(found?.identityAccountId).toBe(
-        identityAccountId,
-      );
+      expect(found?.identityAccountId).toBe(identityAccountId);
 
-      expect(found?.encryptedSecret).toEqual(
-        encryptedSecret,
-      );
+      expect(found?.encryptedSecret).toEqual(encryptedSecret);
 
-      expect(found?.secretNonce).toEqual(
-        secretNonce,
-      );
+      expect(found?.secretNonce).toEqual(secretNonce);
 
-      expect(found?.encryptionKeyVersion).toBe(
-        "v1",
-      );
+      expect(found?.encryptionKeyVersion).toBe("v1");
     } finally {
       await storage.query(
         `
@@ -124,10 +100,7 @@ describe("TotpRepository", () => {
     try {
       await storage.connect();
 
-      const result =
-        await repository.findById(
-          randomUUID(),
-        );
+      const result = await repository.findById(randomUUID());
 
       expect(result).toBeNull();
     } finally {
@@ -163,33 +136,23 @@ describe("TotpRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `enable-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `enable-${randomUUID()}@example.com`],
       );
 
-      const factor =
-        await repository.createFactor({
-          identityAccountId,
-          encryptedSecret: randomBytes(32),
-          secretNonce: randomBytes(12),
-          encryptionKeyVersion: "v1",
-        });
+      const factor = await repository.createFactor({
+        identityAccountId,
+        encryptedSecret: randomBytes(32),
+        secretNonce: randomBytes(12),
+        encryptionKeyVersion: "v1",
+      });
 
       expect(factor.enabledAt).toBeNull();
 
-      const enabled =
-        await repository.enableFactor(
-          factor.id,
-        );
+      const enabled = await repository.enableFactor(factor.id);
 
       expect(enabled).not.toBeNull();
 
-      expect(enabled?.enabledAt).toBeInstanceOf(
-        Date,
-      );
+      expect(enabled?.enabledAt).toBeInstanceOf(Date);
 
       expect(enabled?.disabledAt).toBeNull();
     } finally {
@@ -233,37 +196,25 @@ describe("TotpRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `active-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `active-${randomUUID()}@example.com`],
       );
 
-      const factor =
-        await repository.createFactor({
-          identityAccountId,
-          encryptedSecret: randomBytes(32),
-          secretNonce: randomBytes(12),
-          encryptionKeyVersion: "v1",
-        });
+      const factor = await repository.createFactor({
+        identityAccountId,
+        encryptedSecret: randomBytes(32),
+        secretNonce: randomBytes(12),
+        encryptionKeyVersion: "v1",
+      });
 
-      await repository.enableFactor(
-        factor.id,
-      );
+      await repository.enableFactor(factor.id);
 
-      const active =
-        await repository.findActiveByIdentityAccountId(
-          identityAccountId,
-        );
+      const active = await repository.findActiveByIdentityAccountId(identityAccountId);
 
       expect(active).not.toBeNull();
 
       expect(active?.id).toBe(factor.id);
 
-      expect(active?.enabledAt).toBeInstanceOf(
-        Date,
-      );
+      expect(active?.enabledAt).toBeInstanceOf(Date);
 
       expect(active?.disabledAt).toBeNull();
     } finally {
@@ -307,40 +258,25 @@ describe("TotpRepository", () => {
           )
           VALUES ($1, $2, $3, 'active')
         `,
-        [
-          identityAccountId,
-          userId,
-          `disable-${randomUUID()}@example.com`,
-        ],
+        [identityAccountId, userId, `disable-${randomUUID()}@example.com`],
       );
 
-      const factor =
-        await repository.createFactor({
-          identityAccountId,
-          encryptedSecret: randomBytes(32),
-          secretNonce: randomBytes(12),
-          encryptionKeyVersion: "v1",
-        });
+      const factor = await repository.createFactor({
+        identityAccountId,
+        encryptedSecret: randomBytes(32),
+        secretNonce: randomBytes(12),
+        encryptionKeyVersion: "v1",
+      });
 
-      await repository.enableFactor(
-        factor.id,
-      );
+      await repository.enableFactor(factor.id);
 
-      const disabled =
-        await repository.disableFactor(
-          factor.id,
-        );
+      const disabled = await repository.disableFactor(factor.id);
 
       expect(disabled).not.toBeNull();
 
-      expect(disabled?.disabledAt).toBeInstanceOf(
-        Date,
-      );
+      expect(disabled?.disabledAt).toBeInstanceOf(Date);
 
-      const active =
-        await repository.findActiveByIdentityAccountId(
-          identityAccountId,
-        );
+      const active = await repository.findActiveByIdentityAccountId(identityAccountId);
 
       expect(active).toBeNull();
     } finally {
@@ -370,9 +306,7 @@ describe("TotpRepository", () => {
           secretNonce: randomBytes(12),
           encryptionKeyVersion: "v1",
         }),
-      ).rejects.toThrow(
-        "Encrypted TOTP secret is required",
-      );
+      ).rejects.toThrow("Encrypted TOTP secret is required");
     } finally {
       await storage.disconnect();
     }
@@ -392,9 +326,7 @@ describe("TotpRepository", () => {
           secretNonce: randomBytes(12),
           encryptionKeyVersion: " ",
         }),
-      ).rejects.toThrow(
-        "TOTP encryption key version is required",
-      );
+      ).rejects.toThrow("TOTP encryption key version is required");
     } finally {
       await storage.disconnect();
     }

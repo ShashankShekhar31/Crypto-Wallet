@@ -34,32 +34,23 @@ export interface CreateTotpFactorInput {
 export class TotpRepository {
   constructor(private readonly storage: Storage) {}
 
-  async createFactor(
-    input: CreateTotpFactorInput,
-  ): Promise<TotpFactorRecord> {
+  async createFactor(input: CreateTotpFactorInput): Promise<TotpFactorRecord> {
     if (input.encryptedSecret.length === 0) {
-      throw new Error(
-        "Encrypted TOTP secret is required",
-      );
+      throw new Error("Encrypted TOTP secret is required");
     }
 
     if (input.secretNonce.length === 0) {
-      throw new Error(
-        "TOTP secret nonce is required",
-      );
+      throw new Error("TOTP secret nonce is required");
     }
 
     if (input.encryptionKeyVersion.trim().length === 0) {
-      throw new Error(
-        "TOTP encryption key version is required",
-      );
+      throw new Error("TOTP encryption key version is required");
     }
 
     const id = randomUUID();
 
-    const result =
-      await this.storage.query<TotpFactorRow>(
-        `
+    const result = await this.storage.query<TotpFactorRow>(
+      `
           INSERT INTO totp_factors (
             id,
             identity_account_id,
@@ -84,32 +75,27 @@ export class TotpRepository {
             enabled_at,
             disabled_at
         `,
-        [
-          id,
-          input.identityAccountId,
-          input.encryptedSecret,
-          input.secretNonce,
-          input.encryptionKeyVersion,
-        ],
-      );
+      [
+        id,
+        input.identityAccountId,
+        input.encryptedSecret,
+        input.secretNonce,
+        input.encryptionKeyVersion,
+      ],
+    );
 
     const row = result.rows[0];
 
     if (!row) {
-      throw new Error(
-        "Failed to create TOTP factor",
-      );
+      throw new Error("Failed to create TOTP factor");
     }
 
     return mapTotpFactor(row);
   }
 
-  async findById(
-    factorId: string,
-  ): Promise<TotpFactorRecord | null> {
-    const result =
-      await this.storage.query<TotpFactorRow>(
-        `
+  async findById(factorId: string): Promise<TotpFactorRecord | null> {
+    const result = await this.storage.query<TotpFactorRow>(
+      `
           SELECT
             id,
             identity_account_id,
@@ -123,8 +109,8 @@ export class TotpRepository {
           WHERE id = $1
           LIMIT 1
         `,
-        [factorId],
-      );
+      [factorId],
+    );
 
     const row = result.rows[0];
 
@@ -135,12 +121,9 @@ export class TotpRepository {
     return mapTotpFactor(row);
   }
 
-  async findActiveByIdentityAccountId(
-    identityAccountId: string,
-  ): Promise<TotpFactorRecord | null> {
-    const result =
-      await this.storage.query<TotpFactorRow>(
-        `
+  async findActiveByIdentityAccountId(identityAccountId: string): Promise<TotpFactorRecord | null> {
+    const result = await this.storage.query<TotpFactorRow>(
+      `
           SELECT
             id,
             identity_account_id,
@@ -157,8 +140,8 @@ export class TotpRepository {
           ORDER BY created_at DESC
           LIMIT 1
         `,
-        [identityAccountId],
-      );
+      [identityAccountId],
+    );
 
     const row = result.rows[0];
 
@@ -169,12 +152,9 @@ export class TotpRepository {
     return mapTotpFactor(row);
   }
 
-  async enableFactor(
-    factorId: string,
-  ): Promise<TotpFactorRecord | null> {
-    const result =
-      await this.storage.query<TotpFactorRow>(
-        `
+  async enableFactor(factorId: string): Promise<TotpFactorRecord | null> {
+    const result = await this.storage.query<TotpFactorRow>(
+      `
           UPDATE totp_factors
           SET
             enabled_at = COALESCE(enabled_at, NOW()),
@@ -190,8 +170,8 @@ export class TotpRepository {
             enabled_at,
             disabled_at
         `,
-        [factorId],
-      );
+      [factorId],
+    );
 
     const row = result.rows[0];
 
@@ -202,12 +182,9 @@ export class TotpRepository {
     return mapTotpFactor(row);
   }
 
-  async disableFactor(
-    factorId: string,
-  ): Promise<TotpFactorRecord | null> {
-    const result =
-      await this.storage.query<TotpFactorRow>(
-        `
+  async disableFactor(factorId: string): Promise<TotpFactorRecord | null> {
+    const result = await this.storage.query<TotpFactorRow>(
+      `
           UPDATE totp_factors
           SET
             disabled_at = COALESCE(disabled_at, NOW())
@@ -223,8 +200,8 @@ export class TotpRepository {
             enabled_at,
             disabled_at
         `,
-        [factorId],
-      );
+      [factorId],
+    );
 
     const row = result.rows[0];
 
@@ -236,19 +213,13 @@ export class TotpRepository {
   }
 }
 
-function mapTotpFactor(
-  row: TotpFactorRow,
-): TotpFactorRecord {
+function mapTotpFactor(row: TotpFactorRow): TotpFactorRecord {
   return {
     id: row.id,
-    identityAccountId:
-      row.identity_account_id,
-    encryptedSecret:
-      row.encrypted_secret,
-    secretNonce:
-      row.secret_nonce,
-    encryptionKeyVersion:
-      row.encryption_key_version,
+    identityAccountId: row.identity_account_id,
+    encryptedSecret: row.encrypted_secret,
+    secretNonce: row.secret_nonce,
+    encryptionKeyVersion: row.encryption_key_version,
     createdAt: row.created_at,
     enabledAt: row.enabled_at,
     disabledAt: row.disabled_at,

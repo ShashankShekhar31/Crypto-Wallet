@@ -4,16 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import { PostgresStorage } from "@crypto-wallet/storage";
 
-import {
-  AuthEventRepository,
-} from "../identity/auth-event-repository.js";
+import { AuthEventRepository } from "../identity/auth-event-repository.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for auth event repository tests",
-  );
+  throw new Error("DATABASE_URL is required for auth event repository tests");
 }
 
 describe("AuthEventRepository", () => {
@@ -51,12 +47,9 @@ describe("AuthEventRepository", () => {
         failureCode: null,
       });
 
-      expect(event.id).toEqual(
-        expect.any(String),
-      );
+      expect(event.id).toEqual(expect.any(String));
 
       expect(event.occurredAt).toBeInstanceOf(Date);
-
     } finally {
       await storage.query(
         `
@@ -104,9 +97,7 @@ describe("AuthEventRepository", () => {
         failureCode: "invalid_credentials",
       });
 
-      expect(event.id).toEqual(
-        expect.any(String),
-      );
+      expect(event.id).toEqual(expect.any(String));
 
       expect(event.occurredAt).toBeInstanceOf(Date);
 
@@ -216,12 +207,7 @@ describe("AuthEventRepository", () => {
           )
           VALUES ($1, $2, $3, $4)
         `,
-        [
-          deviceId,
-          userId,
-          "test",
-          "auth-event-repository-test",
-        ],
+        [deviceId, userId, "test", "auth-event-repository-test"],
       );
 
       const event = await repository.record({

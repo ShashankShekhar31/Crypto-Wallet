@@ -17,9 +17,7 @@ export interface Storage {
     values?: unknown[],
   ): Promise<QueryResult<T>>;
 
-  transaction<T>(
-    callback: (transaction: StorageTransaction) => Promise<T>,
-  ): Promise<T>;
+  transaction<T>(callback: (transaction: StorageTransaction) => Promise<T>): Promise<T>;
 }
 
 export { PostgresStorage } from "./postgres.js";

@@ -2,12 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { Storage } from "@crypto-wallet/storage";
 
-export type AuthSessionStatus =
-  | "active"
-  | "rotated"
-  | "revoked"
-  | "expired"
-  | "replay_detected";
+export type AuthSessionStatus = "active" | "rotated" | "revoked" | "expired" | "replay_detected";
 
 export interface AuthSessionRecord {
   id: string;
@@ -55,12 +50,9 @@ export interface CreateAuthSessionInput {
 export class SessionRepository {
   constructor(private readonly storage: Storage) {}
 
-  async createSession(
-    input: CreateAuthSessionInput,
-  ): Promise<AuthSessionRecord> {
+  async createSession(input: CreateAuthSessionInput): Promise<AuthSessionRecord> {
     const sessionId = randomUUID();
-    const tokenFamilyId =
-      input.tokenFamilyId ?? randomUUID();
+    const tokenFamilyId = input.tokenFamilyId ?? randomUUID();
 
     const result = await this.storage.query<AuthSessionRow>(
       `
@@ -120,9 +112,7 @@ export class SessionRepository {
     return mapAuthSession(row);
   }
 
-  async findByRefreshTokenHash(
-    refreshTokenHash: string,
-  ): Promise<AuthSessionRecord | null> {
+  async findByRefreshTokenHash(refreshTokenHash: string): Promise<AuthSessionRecord | null> {
     const result = await this.storage.query<AuthSessionRow>(
       `
         SELECT
@@ -156,10 +146,7 @@ export class SessionRepository {
     return mapAuthSession(row);
   }
 
-  async revokeSession(
-    sessionId: string,
-    reason: string,
-  ): Promise<AuthSessionRecord | null> {
+  async revokeSession(sessionId: string, reason: string): Promise<AuthSessionRecord | null> {
     const result = await this.storage.query<AuthSessionRow>(
       `
         UPDATE auth_sessions
@@ -197,14 +184,10 @@ export class SessionRepository {
     return mapAuthSession(row);
   }
 
-    async handleRefreshTokenReplay(
-    sessionId: string,
-    tokenFamilyId: string,
-  ): Promise<void> {
+  async handleRefreshTokenReplay(sessionId: string, tokenFamilyId: string): Promise<void> {
     await this.storage.transaction(async (transaction) => {
-      const replayResult =
-        await transaction.query<AuthSessionRow>(
-          `
+      const replayResult = await transaction.query<AuthSessionRow>(
+        `
             UPDATE auth_sessions
             SET
               status = 'replay_detected',
@@ -215,8 +198,8 @@ export class SessionRepository {
               AND status = 'rotated'
             RETURNING id
           `,
-          [sessionId, tokenFamilyId],
-        );
+        [sessionId, tokenFamilyId],
+      );
 
       if (replayResult.rows.length === 0) {
         return;
@@ -238,15 +221,14 @@ export class SessionRepository {
   }
 
   async rotateSession(
-  sessionId: string,
-  replacement: CreateAuthSessionInput,
-): Promise<{
-  previousSession: AuthSessionRecord;
-  replacementSession: AuthSessionRecord;
-}> {
-  return this.storage.transaction(async (transaction) => {
-    const previousResult =
-      await transaction.query<AuthSessionRow>(
+    sessionId: string,
+    replacement: CreateAuthSessionInput,
+  ): Promise<{
+    previousSession: AuthSessionRecord;
+    replacementSession: AuthSessionRecord;
+  }> {
+    return this.storage.transaction(async (transaction) => {
+      const previousResult = await transaction.query<AuthSessionRow>(
         `
           UPDATE auth_sessions
           SET
@@ -273,22 +255,17 @@ export class SessionRepository {
         [sessionId],
       );
 
-    const previousRow = previousResult.rows[0];
+      const previousRow = previousResult.rows[0];
 
-    if (!previousRow) {
-      throw new Error(
-        "Active auth session not found",
-      );
-    }
+      if (!previousRow) {
+        throw new Error("Active auth session not found");
+      }
 
-    const replacementSessionId = randomUUID();
+      const replacementSessionId = randomUUID();
 
-    const tokenFamilyId =
-      replacement.tokenFamilyId ??
-      previousRow.token_family_id;
+      const tokenFamilyId = replacement.tokenFamilyId ?? previousRow.token_family_id;
 
-    const replacementResult =
-      await transaction.query<AuthSessionRow>(
+      const replacementResult = await transaction.query<AuthSessionRow>(
         `
           INSERT INTO auth_sessions (
             id,
@@ -337,17 +314,13 @@ export class SessionRepository {
         ],
       );
 
-    const replacementRow =
-      replacementResult.rows[0];
+      const replacementRow = replacementResult.rows[0];
 
-    if (!replacementRow) {
-      throw new Error(
-        "Failed to create replacement auth session",
-      );
-    }
+      if (!replacementRow) {
+        throw new Error("Failed to create replacement auth session");
+      }
 
-    const linkedResult =
-      await transaction.query<AuthSessionRow>(
+      const linkedResult = await transaction.query<AuthSessionRow>(
         `
           UPDATE auth_sessions
           SET replaced_by_session_id = $2
@@ -368,32 +341,24 @@ export class SessionRepository {
             revoked_reason,
             replaced_by_session_id
         `,
-        [
-          sessionId,
-          replacementSessionId,
-        ],
+        [sessionId, replacementSessionId],
       );
 
-    const linkedRow = linkedResult.rows[0];
+      const linkedRow = linkedResult.rows[0];
 
-    if (!linkedRow) {
-      throw new Error(
-        "Failed to link rotated auth session",
-      );
-    }
+      if (!linkedRow) {
+        throw new Error("Failed to link rotated auth session");
+      }
 
-    return {
-      previousSession: mapAuthSession(linkedRow),
-      replacementSession:
-        mapAuthSession(replacementRow),
-    };
-  });
-}
+      return {
+        previousSession: mapAuthSession(linkedRow),
+        replacementSession: mapAuthSession(replacementRow),
+      };
+    });
+  }
 }
 
-function mapAuthSession(
-  row: AuthSessionRow,
-): AuthSessionRecord {
+function mapAuthSession(row: AuthSessionRow): AuthSessionRecord {
   return {
     id: row.id,
     userId: row.user_id,

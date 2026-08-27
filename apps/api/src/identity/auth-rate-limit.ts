@@ -13,13 +13,9 @@ export interface AuthRateLimitResult {
 }
 
 export class AuthRateLimiter {
-  constructor(
-    private readonly cacheClient: CacheClient,
-  ) {}
+  constructor(private readonly cacheClient: CacheClient) {}
 
-  async check(
-    input: AuthRateLimitInput,
-  ): Promise<AuthRateLimitResult> {
+  async check(input: AuthRateLimitInput): Promise<AuthRateLimitResult> {
     if (input.key.trim() === "") {
       throw new Error("Rate limit key is required");
     }
@@ -29,31 +25,20 @@ export class AuthRateLimiter {
     }
 
     if (input.windowSeconds <= 0) {
-      throw new Error(
-        "Rate limit window must be greater than zero",
-      );
+      throw new Error("Rate limit window must be greater than zero");
     }
 
-    const count = await this.cacheClient.incr(
-      input.key,
-    );
+    const count = await this.cacheClient.incr(input.key);
 
     if (count === 1) {
-      await this.cacheClient.expire(
-        input.key,
-        input.windowSeconds,
-      );
+      await this.cacheClient.expire(input.key, input.windowSeconds);
     }
 
-    const remaining = Math.max(
-      0,
-      input.limit - count,
-    );
+    const remaining = Math.max(0, input.limit - count);
 
     const allowed = count <= input.limit;
 
-    const ttl =
-      await this.cacheClient.ttl(input.key);
+    const ttl = await this.cacheClient.ttl(input.key);
 
     return {
       allowed,

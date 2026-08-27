@@ -7,9 +7,7 @@ import { PostgresStorage } from "@crypto-wallet/storage";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for storage transaction tests",
-  );
+  throw new Error("DATABASE_URL is required for storage transaction tests");
 }
 
 describe("PostgresStorage transactions", () => {

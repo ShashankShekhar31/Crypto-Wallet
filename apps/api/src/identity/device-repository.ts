@@ -21,17 +21,11 @@ interface DeviceRow {
 }
 
 export class DeviceRepository {
-  constructor(
-    private readonly storage: Storage,
-  ) {}
+  constructor(private readonly storage: Storage) {}
 
-  async findActiveDeviceForUser(
-    deviceId: string,
-    userId: string,
-  ): Promise<DeviceRecord | null> {
-    const result =
-      await this.storage.query<DeviceRow>(
-        `
+  async findActiveDeviceForUser(deviceId: string, userId: string): Promise<DeviceRecord | null> {
+    const result = await this.storage.query<DeviceRow>(
+      `
           SELECT
             id,
             user_id,
@@ -46,8 +40,8 @@ export class DeviceRepository {
             AND revoked_at IS NULL
           LIMIT 1
         `,
-        [deviceId, userId],
-      );
+      [deviceId, userId],
+    );
 
     const row = result.rows[0];
 
@@ -59,9 +53,7 @@ export class DeviceRepository {
   }
 }
 
-function mapDevice(
-  row: DeviceRow,
-): DeviceRecord {
+function mapDevice(row: DeviceRow): DeviceRecord {
   return {
     id: row.id,
     userId: row.user_id,

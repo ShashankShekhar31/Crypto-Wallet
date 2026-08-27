@@ -52,12 +52,7 @@ async function seed(): Promise<void> {
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (id) DO NOTHING
       `,
-      [
-        fixture.deviceId,
-        fixture.userId,
-        "test",
-        "Day 6 Test Device",
-      ],
+      [fixture.deviceId, fixture.userId, "test", "Day 6 Test Device"],
     );
 
     await client.query(
@@ -66,12 +61,7 @@ async function seed(): Promise<void> {
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (id) DO NOTHING
       `,
-      [
-        fixture.accountId,
-        fixture.walletId,
-        "Primary Test Account",
-        0,
-      ],
+      [fixture.accountId, fixture.walletId, "Primary Test Account", 0],
     );
 
     await client.query(
@@ -87,14 +77,7 @@ async function seed(): Promise<void> {
         VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (id) DO NOTHING
       `,
-      [
-        fixture.networkId,
-        "test-network",
-        "Test Network",
-        "test-chain",
-        "development",
-        999999,
-      ],
+      [fixture.networkId, "test-network", "Test Network", "test-chain", "development", 999999],
     );
 
     await client.query(
@@ -110,14 +93,7 @@ async function seed(): Promise<void> {
         VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (id) DO NOTHING
       `,
-      [
-        fixture.assetId,
-        fixture.networkId,
-        "TST",
-        "Test Asset",
-        18,
-        "native",
-      ],
+      [fixture.assetId, fixture.networkId, "TST", "Test Asset", 18, "native"],
     );
 
     await client.query(
@@ -133,14 +109,7 @@ async function seed(): Promise<void> {
         VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT (id) DO NOTHING
       `,
-      [
-        fixture.addressId,
-        fixture.accountId,
-        fixture.networkId,
-        "test-address-0001",
-        0,
-        false,
-      ],
+      [fixture.addressId, fixture.accountId, fixture.networkId, "test-address-0001", 0, false],
     );
 
     await client.query(

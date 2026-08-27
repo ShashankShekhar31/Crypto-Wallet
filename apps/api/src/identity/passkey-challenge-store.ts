@@ -2,9 +2,7 @@ import type { CacheClient } from "@crypto-wallet/cache";
 
 const CHALLENGE_TTL_SECONDS = 5 * 60;
 
-export type PasskeyChallengeType =
-  | "registration"
-  | "authentication";
+export type PasskeyChallengeType = "registration" | "authentication";
 
 export interface PasskeyChallenge {
   type: PasskeyChallengeType;
@@ -14,28 +12,14 @@ export interface PasskeyChallenge {
 }
 
 export class PasskeyChallengeStore {
-  constructor(
-    private readonly cache: CacheClient,
-  ) {}
+  constructor(private readonly cache: CacheClient) {}
 
-  async save(
-    ceremonyId: string,
-    value: PasskeyChallenge,
-  ): Promise<void> {
-    await this.cache.setEx(
-      this.key(ceremonyId),
-      CHALLENGE_TTL_SECONDS,
-      JSON.stringify(value),
-    );
+  async save(ceremonyId: string, value: PasskeyChallenge): Promise<void> {
+    await this.cache.setEx(this.key(ceremonyId), CHALLENGE_TTL_SECONDS, JSON.stringify(value));
   }
 
-  async get(
-    ceremonyId: string,
-  ): Promise<PasskeyChallenge | null> {
-    const value =
-      await this.cache.get(
-        this.key(ceremonyId),
-      );
+  async get(ceremonyId: string): Promise<PasskeyChallenge | null> {
+    const value = await this.cache.get(this.key(ceremonyId));
 
     if (!value) {
       return null;
@@ -48,19 +32,14 @@ export class PasskeyChallengeStore {
     }
   }
 
-  async consume(
-    ceremonyId: string,
-  ): Promise<PasskeyChallenge | null> {
-    const value =
-      await this.get(ceremonyId);
+  async consume(ceremonyId: string): Promise<PasskeyChallenge | null> {
+    const value = await this.get(ceremonyId);
 
     if (!value) {
       return null;
     }
 
-    await this.cache.del(
-      this.key(ceremonyId),
-    );
+    await this.cache.del(this.key(ceremonyId));
 
     return value;
   }

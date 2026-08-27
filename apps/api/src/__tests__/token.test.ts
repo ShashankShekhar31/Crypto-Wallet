@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  generateRefreshToken,
-  hashRefreshToken,
-} from "../identity/token.js";
+import { generateRefreshToken, hashRefreshToken } from "../identity/token.js";
 
 describe("refresh tokens", () => {
   it("generates non-empty random refresh tokens", () => {
@@ -32,11 +29,7 @@ describe("refresh tokens", () => {
     const firstToken = generateRefreshToken();
     const secondToken = generateRefreshToken();
 
-    expect(
-      hashRefreshToken(firstToken),
-    ).not.toBe(
-      hashRefreshToken(secondToken),
-    );
+    expect(hashRefreshToken(firstToken)).not.toBe(hashRefreshToken(secondToken));
   });
 
   it("does not return the raw token from the hash function", () => {

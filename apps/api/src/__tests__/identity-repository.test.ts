@@ -9,9 +9,7 @@ import { IdentityRepository } from "../identity/repository.js";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for identity repository tests",
-  );
+  throw new Error("DATABASE_URL is required for identity repository tests");
 }
 
 describe("IdentityRepository", () => {
@@ -80,9 +78,7 @@ describe("IdentityRepository", () => {
     try {
       await storage.connect();
 
-      const account = await repository.findByEmail(
-        `missing-${randomUUID()}@example.com`,
-      );
+      const account = await repository.findByEmail(`missing-${randomUUID()}@example.com`);
 
       expect(account).toBeNull();
     } finally {
@@ -133,17 +129,10 @@ describe("IdentityRepository", () => {
           )
           VALUES ($1, $2, $3, 0)
         `,
-        [
-          passwordCredentialId,
-          identityAccountId,
-          "test-scrypt-hash",
-        ],
+        [passwordCredentialId, identityAccountId, "test-scrypt-hash"],
       );
 
-      const credential =
-        await repository.findPasswordCredential(
-          identityAccountId,
-        );
+      const credential = await repository.findPasswordCredential(identityAccountId);
 
       expect(credential).not.toBeNull();
 
@@ -178,10 +167,7 @@ describe("IdentityRepository", () => {
     try {
       await storage.connect();
 
-      const credential =
-        await repository.findPasswordCredential(
-          missingIdentityAccountId,
-        );
+      const credential = await repository.findPasswordCredential(missingIdentityAccountId);
 
       expect(credential).toBeNull();
     } finally {
@@ -189,125 +175,119 @@ describe("IdentityRepository", () => {
     }
   });
   it("creates an identity account and password credential atomically", async () => {
-  const storage = new PostgresStorage(databaseUrl);
-  const repository = new IdentityRepository(storage);
+    const storage = new PostgresStorage(databaseUrl);
+    const repository = new IdentityRepository(storage);
 
-  const userId = randomUUID();
-  const email = `create-${randomUUID()}@example.com`;
+    const userId = randomUUID();
+    const email = `create-${randomUUID()}@example.com`;
 
-  try {
-    await storage.connect();
+    try {
+      await storage.connect();
 
-    await storage.query(
-      `
+      await storage.query(
+        `
         INSERT INTO users (id)
         VALUES ($1)
       `,
-      [userId],
-    );
+        [userId],
+      );
 
-    const result = await repository.createIdentityAccount({
-      userId,
-      normalizedEmail: email,
-      passwordHash: "test-scrypt-hash",
-    });
+      const result = await repository.createIdentityAccount({
+        userId,
+        normalizedEmail: email,
+        passwordHash: "test-scrypt-hash",
+      });
 
-    expect(result.identityAccount).toMatchObject({
-      userId,
-      normalizedEmail: email,
-      status: "active",
-    });
+      expect(result.identityAccount).toMatchObject({
+        userId,
+        normalizedEmail: email,
+        status: "active",
+      });
 
-    expect(result.identityAccount.id).toEqual(
-      expect.any(String),
-    );
+      expect(result.identityAccount.id).toEqual(expect.any(String));
 
-    expect(result.identityAccount.createdAt).toBeInstanceOf(Date);
-    expect(result.identityAccount.updatedAt).toBeInstanceOf(Date);
+      expect(result.identityAccount.createdAt).toBeInstanceOf(Date);
+      expect(result.identityAccount.updatedAt).toBeInstanceOf(Date);
 
-    expect(result.passwordCredential).toMatchObject({
-      identityAccountId: result.identityAccount.id,
-      passwordHash: "test-scrypt-hash",
-      failedAttemptCount: 0,
-      lockedUntil: null,
-    });
+      expect(result.passwordCredential).toMatchObject({
+        identityAccountId: result.identityAccount.id,
+        passwordHash: "test-scrypt-hash",
+        failedAttemptCount: 0,
+        lockedUntil: null,
+      });
 
-    expect(result.passwordCredential.id).toEqual(
-      expect.any(String),
-    );
+      expect(result.passwordCredential.id).toEqual(expect.any(String));
 
-    expect(
-      result.passwordCredential.passwordChangedAt,
-    ).toBeInstanceOf(Date);
+      expect(result.passwordCredential.passwordChangedAt).toBeInstanceOf(Date);
 
-    const identityRows = await storage.query(
-      `
+      const identityRows = await storage.query(
+        `
         SELECT id
         FROM identity_accounts
         WHERE id = $1
       `,
-      [result.identityAccount.id],
-    );
+        [result.identityAccount.id],
+      );
 
-    const credentialRows = await storage.query(
-      `
+      const credentialRows = await storage.query(
+        `
         SELECT id
         FROM password_credentials
         WHERE identity_account_id = $1
       `,
-      [result.identityAccount.id],
-    );
+        [result.identityAccount.id],
+      );
 
-    expect(identityRows.rows).toHaveLength(1);
-    expect(credentialRows.rows).toHaveLength(1);
-  } finally {
-    await storage.query(
-      `
+      expect(identityRows.rows).toHaveLength(1);
+      expect(credentialRows.rows).toHaveLength(1);
+    } finally {
+      await storage.query(
+        `
         DELETE FROM users
         WHERE id = $1
       `,
-      [userId],
-    );
+        [userId],
+      );
 
-    await storage.disconnect();
-  }
-});
+      await storage.disconnect();
+    }
+  });
 
-it("rejects a duplicate normalized email without creating another identity", async () => {
-  const storage = new PostgresStorage(databaseUrl);
-  const repository = new IdentityRepository(storage);
+  it("rejects a duplicate normalized email without creating another identity", async () => {
+    const storage = new PostgresStorage(databaseUrl);
+    const repository = new IdentityRepository(storage);
 
-  const firstUserId = randomUUID();
-  const secondUserId = randomUUID();
-  const email = `duplicate-${randomUUID()}@example.com`;
+    const firstUserId = randomUUID();
+    const secondUserId = randomUUID();
+    const email = `duplicate-${randomUUID()}@example.com`;
 
-  try {
-    await storage.connect();
+    try {
+      await storage.connect();
 
-    await storage.query(
-      `
+      await storage.query(
+        `
         INSERT INTO users (id)
         VALUES ($1), ($2)
       `,
-      [firstUserId, secondUserId],
-    );
+        [firstUserId, secondUserId],
+      );
 
-    const first = await repository.createIdentityAccount({
-      userId: firstUserId,
-      normalizedEmail: email,
-      passwordHash: "first-password-hash",
-    });
-
-    await expect(
-      repository.createIdentityAccount({
-        userId: secondUserId,
+      const first = await repository.createIdentityAccount({
+        userId: firstUserId,
         normalizedEmail: email,
-        passwordHash: "second-password-hash",
-      }),
-    ).rejects.toThrow();
+        passwordHash: "first-password-hash",
+      });
 
-    const identities = await storage.query(
-      `
+      await expect(
+        repository.createIdentityAccount({
+          userId: secondUserId,
+          normalizedEmail: email,
+          passwordHash: "second-password-hash",
+        }),
+      ).rejects.toThrow();
+
+      const identities = await storage.query(
+        `
         SELECT
           id,
           user_id,
@@ -315,11 +295,11 @@ it("rejects a duplicate normalized email without creating another identity", asy
         FROM identity_accounts
         WHERE normalized_email = $1
       `,
-      [email],
-    );
+        [email],
+      );
 
-    const credentials = await storage.query(
-      `
+      const credentials = await storage.query(
+        `
         SELECT
           id,
           identity_account_id,
@@ -327,31 +307,31 @@ it("rejects a duplicate normalized email without creating another identity", asy
         FROM password_credentials
         WHERE identity_account_id = $1
       `,
-      [first.identityAccount.id],
-    );
+        [first.identityAccount.id],
+      );
 
-    expect(identities.rows).toHaveLength(1);
-    expect(identities.rows[0]).toMatchObject({
-      id: first.identityAccount.id,
-      user_id: firstUserId,
-      normalized_email: email,
-    });
+      expect(identities.rows).toHaveLength(1);
+      expect(identities.rows[0]).toMatchObject({
+        id: first.identityAccount.id,
+        user_id: firstUserId,
+        normalized_email: email,
+      });
 
-    expect(credentials.rows).toHaveLength(1);
-    expect(credentials.rows[0]).toMatchObject({
-      identity_account_id: first.identityAccount.id,
-      password_hash: "first-password-hash",
-    });
-  } finally {
-    await storage.query(
-      `
+      expect(credentials.rows).toHaveLength(1);
+      expect(credentials.rows[0]).toMatchObject({
+        identity_account_id: first.identityAccount.id,
+        password_hash: "first-password-hash",
+      });
+    } finally {
+      await storage.query(
+        `
         DELETE FROM users
         WHERE id IN ($1, $2)
       `,
-      [firstUserId, secondUserId],
-    );
+        [firstUserId, secondUserId],
+      );
 
-    await storage.disconnect();
-  }
-});
+      await storage.disconnect();
+    }
+  });
 });

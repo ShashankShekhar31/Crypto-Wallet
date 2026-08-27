@@ -2,11 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { Storage } from "@crypto-wallet/storage";
 
-export type AuthEventOutcome =
-  | "success"
-  | "failure"
-  | "blocked"
-  | "suspicious";
+export type AuthEventOutcome = "success" | "failure" | "blocked" | "suspicious";
 
 export interface RecordAuthEventInput {
   userId?: string | null;
@@ -58,9 +54,7 @@ interface AuthEventRow {
 export class AuthEventRepository {
   constructor(private readonly storage: Storage) {}
 
-  async record(
-    input: RecordAuthEventInput,
-  ): Promise<AuthEventRecord> {
+  async record(input: RecordAuthEventInput): Promise<AuthEventRecord> {
     const id = randomUUID();
 
     const result = await this.storage.query<AuthEventRow>(
@@ -120,10 +114,7 @@ export class AuthEventRepository {
 
     return mapAuthEvent(row);
   }
-    async hasSuccessfulLoginForDevice(
-    userId: string,
-    deviceId: string,
-  ): Promise<boolean> {
+  async hasSuccessfulLoginForDevice(userId: string, deviceId: string): Promise<boolean> {
     const result = await this.storage.query<{ exists: boolean }>(
       `
         SELECT EXISTS (
@@ -141,10 +132,7 @@ export class AuthEventRepository {
     return result.rows[0]?.exists ?? false;
   }
 
-  async countRecentFailuresByIp(
-    sourceIpHash: string,
-    windowMs: number,
-  ): Promise<number> {
+  async countRecentFailuresByIp(sourceIpHash: string, windowMs: number): Promise<number> {
     if (windowMs <= 0) {
       throw new Error("Invalid auth event window");
     }

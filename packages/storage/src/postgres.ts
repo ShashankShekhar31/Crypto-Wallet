@@ -1,9 +1,4 @@
-import {
-  Pool,
-  type PoolClient,
-  type QueryResult,
-  type QueryResultRow,
-} from "pg";
+import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
 
 import type { Storage, StorageTransaction } from "./index.js";
 
@@ -40,9 +35,7 @@ export class PostgresStorage implements Storage {
     return this.pool.query<T>(text, values);
   }
 
-  async transaction<T>(
-    callback: (transaction: StorageTransaction) => Promise<T>,
-  ): Promise<T> {
+  async transaction<T>(callback: (transaction: StorageTransaction) => Promise<T>): Promise<T> {
     const client: PoolClient = await this.pool.connect();
 
     try {

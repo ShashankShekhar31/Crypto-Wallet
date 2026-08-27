@@ -1,13 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import {
-  afterAll,
-  beforeAll,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { PostgresStorage } from "@crypto-wallet/storage";
 
@@ -37,32 +30,24 @@ vi.mock("@simplewebauthn/server", () => ({
   verifyRegistrationResponse: vi.fn(),
 }));
 
-const mockedGenerateAuthenticationOptions =
-  vi.mocked(generateAuthenticationOptions);
+const mockedGenerateAuthenticationOptions = vi.mocked(generateAuthenticationOptions);
 
-const mockedGenerateRegistrationOptions =
-  vi.mocked(generateRegistrationOptions);
+const mockedGenerateRegistrationOptions = vi.mocked(generateRegistrationOptions);
 
-const mockedVerifyAuthenticationResponse =
-  vi.mocked(verifyAuthenticationResponse);
+const mockedVerifyAuthenticationResponse = vi.mocked(verifyAuthenticationResponse);
 
-const mockedVerifyRegistrationResponse =
-  vi.mocked(verifyRegistrationResponse);
+const mockedVerifyRegistrationResponse = vi.mocked(verifyRegistrationResponse);
 
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for passkey service tests",
-  );
+  throw new Error("DATABASE_URL is required for passkey service tests");
 }
 
 const redisUrl = process.env.REDIS_URL;
 
 if (!redisUrl) {
-  throw new Error(
-    "REDIS_URL is required for passkey service tests",
-  );
+  throw new Error("REDIS_URL is required for passkey service tests");
 }
 
 const RP_ID = "localhost";
@@ -102,8 +87,7 @@ describe("PasskeyService", () => {
     const userId = randomUUID();
     const identityAccountId = randomUUID();
 
-    const email =
-      `passkey-${randomUUID()}@example.com`;
+    const email = `passkey-${randomUUID()}@example.com`;
 
     await storage.query(
       `
@@ -123,12 +107,7 @@ describe("PasskeyService", () => {
         )
         VALUES ($1, $2, $3, $4)
       `,
-      [
-        identityAccountId,
-        userId,
-        email,
-        status,
-      ],
+      [identityAccountId, userId, email, status],
     );
 
     return {
@@ -138,10 +117,7 @@ describe("PasskeyService", () => {
     };
   }
 
-  async function deleteUser(
-    storage: PostgresStorage,
-    userId: string,
-  ) {
+  async function deleteUser(storage: PostgresStorage, userId: string) {
     await storage.query(
       `
         DELETE FROM users
@@ -157,57 +133,39 @@ describe("PasskeyService", () => {
     try {
       await storage.connect();
 
-      const identity = await createIdentity(
-        storage,
-      );
+      const identity = await createIdentity(storage);
 
-      mockedGenerateRegistrationOptions.mockResolvedValueOnce(
-        {
-          challenge: "registration-challenge",
-          rp: {
-            id: RP_ID,
-            name: RP_NAME,
-          },
-          user: {
-            id: Buffer.from(
-              identity.identityAccountId.replace(
-                /-/g,
-                "",
-              ),
-              "hex",
-            ).toString("base64url"),
-            name: identity.email,
-            displayName: identity.email,
-          },
-          pubKeyCredParams: [],
-          timeout: 60000,
-          attestation: "none",
-        } as never,
-      );
+      mockedGenerateRegistrationOptions.mockResolvedValueOnce({
+        challenge: "registration-challenge",
+        rp: {
+          id: RP_ID,
+          name: RP_NAME,
+        },
+        user: {
+          id: Buffer.from(identity.identityAccountId.replace(/-/g, ""), "hex").toString(
+            "base64url",
+          ),
+          name: identity.email,
+          displayName: identity.email,
+        },
+        pubKeyCredParams: [],
+        timeout: 60000,
+        attestation: "none",
+      } as never);
 
       const service = createService(storage);
 
-      const result =
-        await service.startRegistration({
-          identityAccountId:
-            identity.identityAccountId,
-        });
+      const result = await service.startRegistration({
+        identityAccountId: identity.identityAccountId,
+      });
 
-      expect(result.ceremonyId).toEqual(
-        expect.any(String),
-      );
+      expect(result.ceremonyId).toEqual(expect.any(String));
 
-      expect(result.options.challenge).toBe(
-        "registration-challenge",
-      );
+      expect(result.options.challenge).toBe("registration-challenge");
 
-      expect(
-        mockedGenerateRegistrationOptions,
-      ).toHaveBeenCalledOnce();
+      expect(mockedGenerateRegistrationOptions).toHaveBeenCalledOnce();
 
-      const call =
-        mockedGenerateRegistrationOptions.mock
-          .calls[0]?.[0];
+      const call = mockedGenerateRegistrationOptions.mock.calls[0]?.[0];
 
       expect(call).toMatchObject({
         rpName: RP_NAME,
@@ -220,9 +178,7 @@ describe("PasskeyService", () => {
         },
       });
 
-      expect(
-        call?.excludeCredentials,
-      ).toEqual([]);
+      expect(call?.excludeCredentials).toEqual([]);
     } finally {
       await storage.query(
         `
@@ -251,9 +207,7 @@ describe("PasskeyService", () => {
         service.startRegistration({
           identityAccountId: randomUUID(),
         }),
-      ).rejects.toThrow(
-        "Identity account not found",
-      );
+      ).rejects.toThrow("Identity account not found");
     } finally {
       await storage.disconnect();
     }
@@ -265,26 +219,17 @@ describe("PasskeyService", () => {
     try {
       await storage.connect();
 
-      const identity = await createIdentity(
-        storage,
-        "disabled",
-      );
+      const identity = await createIdentity(storage, "disabled");
 
       const service = createService(storage);
 
       await expect(
         service.startRegistration({
-          identityAccountId:
-            identity.identityAccountId,
+          identityAccountId: identity.identityAccountId,
         }),
-      ).rejects.toThrow(
-        "Identity account is not active",
-      );
+      ).rejects.toThrow("Identity account is not active");
 
-      await deleteUser(
-        storage,
-        identity.userId,
-      );
+      await deleteUser(storage, identity.userId);
     } finally {
       await storage.disconnect();
     }
@@ -296,25 +241,17 @@ describe("PasskeyService", () => {
     try {
       await storage.connect();
 
-      const identity = await createIdentity(
-        storage,
-      );
+      const identity = await createIdentity(storage);
 
       const service = createService(storage);
 
       await expect(
         service.startAuthentication({
-          identityAccountId:
-            identity.identityAccountId,
+          identityAccountId: identity.identityAccountId,
         }),
-      ).rejects.toThrow(
-        "No active passkey found",
-      );
+      ).rejects.toThrow("No active passkey found");
 
-      await deleteUser(
-        storage,
-        identity.userId,
-      );
+      await deleteUser(storage, identity.userId);
     } finally {
       await storage.disconnect();
     }
@@ -326,87 +263,55 @@ describe("PasskeyService", () => {
     try {
       await storage.connect();
 
-      const identity = await createIdentity(
-        storage,
-      );
+      const identity = await createIdentity(storage);
 
-      const repository =
-        new PasskeyRepository(storage);
+      const repository = new PasskeyRepository(storage);
 
-      const credentialId = Buffer.from(
-        `credential-${randomUUID()}`,
-      );
+      const credentialId = Buffer.from(`credential-${randomUUID()}`);
 
       await repository.createCredential({
-        identityAccountId:
-          identity.identityAccountId,
+        identityAccountId: identity.identityAccountId,
         credentialId,
-        publicKey: Buffer.from(
-          `public-key-${randomUUID()}`,
-        ),
+        publicKey: Buffer.from(`public-key-${randomUUID()}`),
       });
 
-      mockedGenerateAuthenticationOptions.mockResolvedValueOnce(
-        {
-          challenge:
-            "authentication-challenge",
-          rpId: RP_ID,
-          allowCredentials: [
-            {
-              id: credentialId.toString(
-                "base64url",
-              ),
-              type: "public-key",
-            },
-          ],
-          userVerification: "required",
-          timeout: 60000,
-        } as never,
-      );
+      mockedGenerateAuthenticationOptions.mockResolvedValueOnce({
+        challenge: "authentication-challenge",
+        rpId: RP_ID,
+        allowCredentials: [
+          {
+            id: credentialId.toString("base64url"),
+            type: "public-key",
+          },
+        ],
+        userVerification: "required",
+        timeout: 60000,
+      } as never);
 
       const service = createService(storage);
 
-      const result =
-        await service.startAuthentication({
-          identityAccountId:
-            identity.identityAccountId,
-        });
+      const result = await service.startAuthentication({
+        identityAccountId: identity.identityAccountId,
+      });
 
-      expect(result.ceremonyId).toEqual(
-        expect.any(String),
-      );
+      expect(result.ceremonyId).toEqual(expect.any(String));
 
-      expect(result.options.challenge).toBe(
-        "authentication-challenge",
-      );
+      expect(result.options.challenge).toBe("authentication-challenge");
 
-      expect(
-        mockedGenerateAuthenticationOptions,
-      ).toHaveBeenCalledOnce();
+      expect(mockedGenerateAuthenticationOptions).toHaveBeenCalledOnce();
 
-      const call =
-        mockedGenerateAuthenticationOptions
-          .mock.calls[0]?.[0];
+      const call = mockedGenerateAuthenticationOptions.mock.calls[0]?.[0];
 
       expect(call).toMatchObject({
         rpID: RP_ID,
         userVerification: "required",
       });
 
-      expect(
-        call?.allowCredentials,
-      ).toHaveLength(1);
+      expect(call?.allowCredentials).toHaveLength(1);
 
-      expect(
-        call?.allowCredentials?.[0]?.id,
-      ).toBe(
-        credentialId.toString("base64url"),
-      );
+      expect(call?.allowCredentials?.[0]?.id).toBe(credentialId.toString("base64url"));
 
-      await deleteUser(
-        storage,
-        identity.userId,
-      );
+      await deleteUser(storage, identity.userId);
     } finally {
       await storage.disconnect();
     }
@@ -427,9 +332,7 @@ describe("PasskeyService", () => {
             id: "missing",
           } as never,
         }),
-      ).rejects.toThrow(
-        "Passkey challenge not found or expired",
-      );
+      ).rejects.toThrow("Passkey challenge not found or expired");
     } finally {
       await storage.disconnect();
     }
@@ -441,38 +344,27 @@ describe("PasskeyService", () => {
     try {
       await storage.connect();
 
-      const identity = await createIdentity(
-        storage,
-      );
+      const identity = await createIdentity(storage);
 
-      const challengeStore =
-        new PasskeyChallengeStore(cache);
+      const challengeStore = new PasskeyChallengeStore(cache);
 
       const ceremonyId = randomUUID();
 
-      await challengeStore.save(
-        ceremonyId,
-        {
-          type: "registration",
-          identityAccountId:
-            identity.identityAccountId,
-          deviceId: null,
-          challenge:
-            "registration-challenge",
-        },
-      );
+      await challengeStore.save(ceremonyId, {
+        type: "registration",
+        identityAccountId: identity.identityAccountId,
+        deviceId: null,
+        challenge: "registration-challenge",
+      });
 
-      const service =
-        new PasskeyService({
-          identityRepository:
-            new IdentityRepository(storage),
-          passkeyRepository:
-            new PasskeyRepository(storage),
-          challengeStore,
-          rpId: RP_ID,
-          rpName: RP_NAME,
-          origin: ORIGIN,
-        });
+      const service = new PasskeyService({
+        identityRepository: new IdentityRepository(storage),
+        passkeyRepository: new PasskeyRepository(storage),
+        challengeStore,
+        rpId: RP_ID,
+        rpName: RP_NAME,
+        origin: ORIGIN,
+      });
 
       await expect(
         service.finishAuthentication({
@@ -481,14 +373,9 @@ describe("PasskeyService", () => {
             id: "anything",
           } as never,
         }),
-      ).rejects.toThrow(
-        "Invalid passkey ceremony type",
-      );
+      ).rejects.toThrow("Invalid passkey ceremony type");
 
-      await deleteUser(
-        storage,
-        identity.userId,
-      );
+      await deleteUser(storage, identity.userId);
     } finally {
       await storage.disconnect();
     }
@@ -500,56 +387,38 @@ describe("PasskeyService", () => {
     try {
       await storage.connect();
 
-      const identity = await createIdentity(
-        storage,
-      );
+      const identity = await createIdentity(storage);
 
-      const challengeStore =
-        new PasskeyChallengeStore(cache);
+      const challengeStore = new PasskeyChallengeStore(cache);
 
       const ceremonyId = randomUUID();
 
-      await challengeStore.save(
-        ceremonyId,
-        {
-          type: "authentication",
-          identityAccountId:
-            identity.identityAccountId,
-          deviceId: null,
-          challenge:
-            "authentication-challenge",
-        },
-      );
+      await challengeStore.save(ceremonyId, {
+        type: "authentication",
+        identityAccountId: identity.identityAccountId,
+        deviceId: null,
+        challenge: "authentication-challenge",
+      });
 
-      const service =
-        new PasskeyService({
-          identityRepository:
-            new IdentityRepository(storage),
-          passkeyRepository:
-            new PasskeyRepository(storage),
-          challengeStore,
-          rpId: RP_ID,
-          rpName: RP_NAME,
-          origin: ORIGIN,
-        });
+      const service = new PasskeyService({
+        identityRepository: new IdentityRepository(storage),
+        passkeyRepository: new PasskeyRepository(storage),
+        challengeStore,
+        rpId: RP_ID,
+        rpName: RP_NAME,
+        origin: ORIGIN,
+      });
 
       await expect(
         service.finishAuthentication({
           ceremonyId,
           response: {
-            id: Buffer.from(
-              `missing-${randomUUID()}`,
-            ).toString("base64url"),
+            id: Buffer.from(`missing-${randomUUID()}`).toString("base64url"),
           } as never,
         }),
-      ).rejects.toThrow(
-        "Passkey credential not found",
-      );
+      ).rejects.toThrow("Passkey credential not found");
 
-      await deleteUser(
-        storage,
-        identity.userId,
-      );
+      await deleteUser(storage, identity.userId);
     } finally {
       await storage.disconnect();
     }
@@ -561,121 +430,80 @@ describe("PasskeyService", () => {
     try {
       await storage.connect();
 
-      const identity = await createIdentity(
-        storage,
-      );
+      const identity = await createIdentity(storage);
 
-      const repository =
-        new PasskeyRepository(storage);
+      const repository = new PasskeyRepository(storage);
 
-      const credentialId = Buffer.from(
-        `credential-${randomUUID()}`,
-      );
+      const credentialId = Buffer.from(`credential-${randomUUID()}`);
 
-      const publicKey = Buffer.from(
-        `public-key-${randomUUID()}`,
-      );
+      const publicKey = Buffer.from(`public-key-${randomUUID()}`);
 
-      const credential =
-        await repository.createCredential({
-          identityAccountId:
-            identity.identityAccountId,
-          credentialId,
-          publicKey,
-          signCount: 3,
-        });
+      const credential = await repository.createCredential({
+        identityAccountId: identity.identityAccountId,
+        credentialId,
+        publicKey,
+        signCount: 3,
+      });
 
-      const challengeStore =
-        new PasskeyChallengeStore(cache);
+      const challengeStore = new PasskeyChallengeStore(cache);
 
       const ceremonyId = randomUUID();
 
-      await challengeStore.save(
-        ceremonyId,
-        {
-          type: "authentication",
-          identityAccountId:
-            identity.identityAccountId,
-          deviceId: null,
-          challenge:
-            "authentication-challenge",
+      await challengeStore.save(ceremonyId, {
+        type: "authentication",
+        identityAccountId: identity.identityAccountId,
+        deviceId: null,
+        challenge: "authentication-challenge",
+      });
+
+      mockedVerifyAuthenticationResponse.mockResolvedValueOnce({
+        verified: true,
+        authenticationInfo: {
+          newCounter: 4,
         },
-      );
+      } as never);
 
-      mockedVerifyAuthenticationResponse.mockResolvedValueOnce(
-        {
-          verified: true,
-          authenticationInfo: {
-            newCounter: 4,
-          },
+      const service = new PasskeyService({
+        identityRepository: new IdentityRepository(storage),
+        passkeyRepository: repository,
+        challengeStore,
+        rpId: RP_ID,
+        rpName: RP_NAME,
+        origin: ORIGIN,
+      });
+
+      const result = await service.finishAuthentication({
+        ceremonyId,
+        response: {
+          id: credentialId.toString("base64url"),
         } as never,
-      );
+      });
 
-      const service =
-        new PasskeyService({
-          identityRepository:
-            new IdentityRepository(storage),
-          passkeyRepository: repository,
-          challengeStore,
-          rpId: RP_ID,
-          rpName: RP_NAME,
-          origin: ORIGIN,
-        });
-
-      const result =
-        await service.finishAuthentication({
-          ceremonyId,
-          response: {
-            id: credentialId.toString(
-              "base64url",
-            ),
-          } as never,
-        });
-
-      expect(
-        result.identityAccountId,
-      ).toBe(identity.identityAccountId);
+      expect(result.identityAccountId).toBe(identity.identityAccountId);
 
       expect(result.passkey).not.toBeNull();
 
-      expect(result.passkey?.signCount).toBe(
-        4,
-      );
+      expect(result.passkey?.signCount).toBe(4);
 
-      expect(
-        result.passkey?.lastUsedAt,
-      ).toBeInstanceOf(Date);
+      expect(result.passkey?.lastUsedAt).toBeInstanceOf(Date);
 
-      expect(
-        mockedVerifyAuthenticationResponse,
-      ).toHaveBeenCalledOnce();
+      expect(mockedVerifyAuthenticationResponse).toHaveBeenCalledOnce();
 
-      const verificationInput =
-        mockedVerifyAuthenticationResponse
-          .mock.calls[0]?.[0];
+      const verificationInput = mockedVerifyAuthenticationResponse.mock.calls[0]?.[0];
 
       expect(verificationInput).toMatchObject({
-        expectedChallenge:
-          "authentication-challenge",
+        expectedChallenge: "authentication-challenge",
         expectedOrigin: ORIGIN,
         expectedRPID: RP_ID,
         requireUserVerification: true,
       });
 
-      const stored =
-        await repository.findByCredentialId(
-          credentialId,
-        );
+      const stored = await repository.findByCredentialId(credentialId);
 
       expect(stored?.signCount).toBe(4);
-      expect(
-        stored?.lastUsedAt,
-      ).toBeInstanceOf(Date);
+      expect(stored?.lastUsedAt).toBeInstanceOf(Date);
 
-      await deleteUser(
-        storage,
-        identity.userId,
-      );
+      await deleteUser(storage, identity.userId);
     } finally {
       await storage.disconnect();
     }
@@ -687,88 +515,57 @@ describe("PasskeyService", () => {
     try {
       await storage.connect();
 
-      const identity = await createIdentity(
-        storage,
-      );
+      const identity = await createIdentity(storage);
 
-      const repository =
-        new PasskeyRepository(storage);
+      const repository = new PasskeyRepository(storage);
 
-      const credential =
-        await repository.createCredential({
-          identityAccountId:
-            identity.identityAccountId,
-          credentialId: Buffer.from(
-            `credential-${randomUUID()}`,
-          ),
-          publicKey: Buffer.from(
-            `public-key-${randomUUID()}`,
-          ),
-          signCount: 2,
-        });
+      const credential = await repository.createCredential({
+        identityAccountId: identity.identityAccountId,
+        credentialId: Buffer.from(`credential-${randomUUID()}`),
+        publicKey: Buffer.from(`public-key-${randomUUID()}`),
+        signCount: 2,
+      });
 
-      const challengeStore =
-        new PasskeyChallengeStore(cache);
+      const challengeStore = new PasskeyChallengeStore(cache);
 
       const ceremonyId = randomUUID();
 
-      await challengeStore.save(
-        ceremonyId,
-        {
-          type: "authentication",
-          identityAccountId:
-            identity.identityAccountId,
-          deviceId: null,
-          challenge:
-            "authentication-challenge",
-        },
-      );
+      await challengeStore.save(ceremonyId, {
+        type: "authentication",
+        identityAccountId: identity.identityAccountId,
+        deviceId: null,
+        challenge: "authentication-challenge",
+      });
 
-      mockedVerifyAuthenticationResponse.mockResolvedValueOnce(
-        {
-          verified: false,
-          authenticationInfo: undefined,
-        } as never,
-      );
+      mockedVerifyAuthenticationResponse.mockResolvedValueOnce({
+        verified: false,
+        authenticationInfo: undefined,
+      } as never);
 
-      const service =
-        new PasskeyService({
-          identityRepository:
-            new IdentityRepository(storage),
-          passkeyRepository: repository,
-          challengeStore,
-          rpId: RP_ID,
-          rpName: RP_NAME,
-          origin: ORIGIN,
-        });
+      const service = new PasskeyService({
+        identityRepository: new IdentityRepository(storage),
+        passkeyRepository: repository,
+        challengeStore,
+        rpId: RP_ID,
+        rpName: RP_NAME,
+        origin: ORIGIN,
+      });
 
       await expect(
         service.finishAuthentication({
           ceremonyId,
           response: {
-            id: credential.credentialId.toString(
-              "base64url",
-            ),
+            id: credential.credentialId.toString("base64url"),
           } as never,
         }),
-      ).rejects.toThrow(
-        "Passkey authentication verification failed",
-      );
+      ).rejects.toThrow("Passkey authentication verification failed");
 
-      const stored =
-        await repository.findByCredentialId(
-          credential.credentialId,
-        );
+      const stored = await repository.findByCredentialId(credential.credentialId);
 
       expect(stored?.signCount).toBe(2);
-      expect(
-        stored?.lastUsedAt,
-      ).toBeNull();
+      expect(stored?.lastUsedAt).toBeNull();
 
-      await deleteUser(
-        storage,
-        identity.userId,
-      );
+      await deleteUser(storage, identity.userId);
     } finally {
       await storage.disconnect();
     }
@@ -780,79 +577,50 @@ describe("PasskeyService", () => {
     try {
       await storage.connect();
 
-      const identityA = await createIdentity(
-        storage,
-      );
+      const identityA = await createIdentity(storage);
 
-      const identityB = await createIdentity(
-        storage,
-      );
+      const identityB = await createIdentity(storage);
 
-      const repository =
-        new PasskeyRepository(storage);
+      const repository = new PasskeyRepository(storage);
 
-      const credential =
-        await repository.createCredential({
-          identityAccountId:
-            identityB.identityAccountId,
-          credentialId: Buffer.from(
-            `credential-${randomUUID()}`,
-          ),
-          publicKey: Buffer.from(
-            `public-key-${randomUUID()}`,
-          ),
-        });
+      const credential = await repository.createCredential({
+        identityAccountId: identityB.identityAccountId,
+        credentialId: Buffer.from(`credential-${randomUUID()}`),
+        publicKey: Buffer.from(`public-key-${randomUUID()}`),
+      });
 
-      const challengeStore =
-        new PasskeyChallengeStore(cache);
+      const challengeStore = new PasskeyChallengeStore(cache);
 
       const ceremonyId = randomUUID();
 
-      await challengeStore.save(
-        ceremonyId,
-        {
-          type: "authentication",
-          identityAccountId:
-            identityA.identityAccountId,
-          deviceId: null,
-          challenge:
-            "authentication-challenge",
-        },
-      );
+      await challengeStore.save(ceremonyId, {
+        type: "authentication",
+        identityAccountId: identityA.identityAccountId,
+        deviceId: null,
+        challenge: "authentication-challenge",
+      });
 
-      const service =
-        new PasskeyService({
-          identityRepository:
-            new IdentityRepository(storage),
-          passkeyRepository: repository,
-          challengeStore,
-          rpId: RP_ID,
-          rpName: RP_NAME,
-          origin: ORIGIN,
-        });
+      const service = new PasskeyService({
+        identityRepository: new IdentityRepository(storage),
+        passkeyRepository: repository,
+        challengeStore,
+        rpId: RP_ID,
+        rpName: RP_NAME,
+        origin: ORIGIN,
+      });
 
       await expect(
         service.finishAuthentication({
           ceremonyId,
           response: {
-            id: credential.credentialId.toString(
-              "base64url",
-            ),
+            id: credential.credentialId.toString("base64url"),
           } as never,
         }),
-      ).rejects.toThrow(
-        "Passkey credential does not belong to identity account",
-      );
+      ).rejects.toThrow("Passkey credential does not belong to identity account");
 
-      await deleteUser(
-        storage,
-        identityA.userId,
-      );
+      await deleteUser(storage, identityA.userId);
 
-      await deleteUser(
-        storage,
-        identityB.userId,
-      );
+      await deleteUser(storage, identityB.userId);
     } finally {
       await storage.disconnect();
     }
@@ -864,38 +632,27 @@ describe("PasskeyService", () => {
     try {
       await storage.connect();
 
-      const identity = await createIdentity(
-        storage,
-      );
+      const identity = await createIdentity(storage);
 
-      const challengeStore =
-        new PasskeyChallengeStore(cache);
+      const challengeStore = new PasskeyChallengeStore(cache);
 
       const ceremonyId = randomUUID();
 
-      await challengeStore.save(
-        ceremonyId,
-        {
-          type: "authentication",
-          identityAccountId:
-            identity.identityAccountId,
-          deviceId: null,
-          challenge:
-            "authentication-challenge",
-        },
-      );
+      await challengeStore.save(ceremonyId, {
+        type: "authentication",
+        identityAccountId: identity.identityAccountId,
+        deviceId: null,
+        challenge: "authentication-challenge",
+      });
 
-      const service =
-        new PasskeyService({
-          identityRepository:
-            new IdentityRepository(storage),
-          passkeyRepository:
-            new PasskeyRepository(storage),
-          challengeStore,
-          rpId: RP_ID,
-          rpName: RP_NAME,
-          origin: ORIGIN,
-        });
+      const service = new PasskeyService({
+        identityRepository: new IdentityRepository(storage),
+        passkeyRepository: new PasskeyRepository(storage),
+        challengeStore,
+        rpId: RP_ID,
+        rpName: RP_NAME,
+        origin: ORIGIN,
+      });
 
       await expect(
         service.finishAuthentication({
@@ -904,9 +661,7 @@ describe("PasskeyService", () => {
             id: "anything",
           } as never,
         }),
-      ).rejects.toThrow(
-        "Passkey credential not found",
-      );
+      ).rejects.toThrow("Passkey credential not found");
 
       await expect(
         service.finishAuthentication({
@@ -915,14 +670,9 @@ describe("PasskeyService", () => {
             id: "anything",
           } as never,
         }),
-      ).rejects.toThrow(
-        "Passkey challenge not found or expired",
-      );
+      ).rejects.toThrow("Passkey challenge not found or expired");
 
-      await deleteUser(
-        storage,
-        identity.userId,
-      );
+      await deleteUser(storage, identity.userId);
     } finally {
       await storage.disconnect();
     }

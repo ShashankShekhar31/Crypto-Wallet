@@ -81,37 +81,24 @@ function secretKeyEnv(name: string): string {
   const key = Buffer.from(value, "base64");
 
   if (key.length !== 32) {
-    throw new Error(
-      `Environment variable ${name} must decode to exactly 32 bytes`,
-    );
+    throw new Error(`Environment variable ${name} must decode to exactly 32 bytes`);
   }
 
   return value;
 }
 
 function passkeyRpIdEnv(): string {
-  const value =
-    process.env.PASSKEY_RP_ID?.trim() ||
-    "localhost";
+  const value = process.env.PASSKEY_RP_ID?.trim() || "localhost";
 
-  if (
-    value.length === 0 ||
-    value.includes("/") ||
-    value.includes(":") ||
-    value.includes("://")
-  ) {
-    throw new Error(
-      "Environment variable PASSKEY_RP_ID must be a valid RP ID",
-    );
+  if (value.length === 0 || value.includes("/") || value.includes(":") || value.includes("://")) {
+    throw new Error("Environment variable PASSKEY_RP_ID must be a valid RP ID");
   }
 
   return value;
 }
 
 function passkeyOriginEnv(): string {
-  const value =
-    process.env.PASSKEY_ORIGIN?.trim() ||
-    "http://localhost:3000";
+  const value = process.env.PASSKEY_ORIGIN?.trim() || "http://localhost:3000";
 
   try {
     const url = new URL(value);
@@ -120,19 +107,14 @@ function passkeyOriginEnv(): string {
       throw new Error();
     }
   } catch {
-    throw new Error(
-      "Environment variable PASSKEY_ORIGIN must be a valid origin",
-    );
+    throw new Error("Environment variable PASSKEY_ORIGIN must be a valid origin");
   }
 
   return value;
 }
 
 function passkeyRpNameEnv(): string {
-  return (
-    process.env.PASSKEY_RP_NAME?.trim() ||
-    "Crypto Wallet"
-  );
+  return process.env.PASSKEY_RP_NAME?.trim() || "Crypto Wallet";
 }
 
 export function loadConfig(): AppConfig {
@@ -166,12 +148,8 @@ export function loadConfig(): AppConfig {
 
     security: {
       logLevel: logLevelEnv(),
-      totpEncryptionKey: secretKeyEnv(
-        "TOTP_ENCRYPTION_KEY",
-      ),
-      totpEncryptionKeyVersion:
-        process.env.TOTP_ENCRYPTION_KEY_VERSION?.trim() ||
-        "v1",
+      totpEncryptionKey: secretKeyEnv("TOTP_ENCRYPTION_KEY"),
+      totpEncryptionKeyVersion: process.env.TOTP_ENCRYPTION_KEY_VERSION?.trim() || "v1",
       passkeyRpId: passkeyRpIdEnv(),
 
       passkeyRpName: passkeyRpNameEnv(),
