@@ -14,7 +14,7 @@ assurance.
 
 ---
 
-## 1. CloudTrail — Audit Logging
+## 1. CloudTrail ï¿½ Audit Logging
 
 ### Production Requirement
 
@@ -64,7 +64,7 @@ deployment capability.
 
 ---
 
-## 2. GuardDuty — Threat Detection
+## 2. GuardDuty ï¿½ Threat Detection
 
 ### Production Requirement
 
@@ -108,7 +108,7 @@ GuardDuty remains a future production adapter.
 
 ---
 
-## 3. Security Hub — Security Findings
+## 3. Security Hub ï¿½ Security Findings
 
 ### Production Requirement
 
@@ -200,3 +200,145 @@ It must not be represented as equivalent to:
 - Enterprise security operations
 
 Those capabilities remain future production requirements.
+
+## 7. Identity and Device Security
+
+### Production Requirement
+
+The identity boundary must provide secure authentication,
+session management, device binding, recovery controls, and
+authentication-risk detection without exposing wallet private keys
+or self-custody wallet secrets.
+
+### Free / Local Implementation
+
+The current implementation provides:
+
+- Password-based authentication
+- Password failure tracking and credential lockout
+- Session creation with refresh tokens
+- Refresh-token hashing
+- Session expiration and idle expiration
+- Session revocation and logout
+- Device-bound authentication
+- Device revocation checks
+- Suspicious-login detection
+- Authentication rate limiting
+- Passkey/WebAuthn-ready authentication
+- TOTP-based authentication fallback
+- Recovery-code controls
+- Structured authentication security events
+
+### Passkey / WebAuthn Boundary
+
+Passkey authentication is implemented behind a dedicated identity
+service boundary.
+
+Passkey credentials contain:
+
+- Credential identifiers
+- Public keys
+- Sign counters
+- Backup state
+- Creation timestamps
+- Last-used timestamps
+- Revocation state
+
+Passkey private authentication material must never be stored by the
+server.
+
+Passkey ceremonies use short-lived challenges stored in the cache
+layer.
+
+Registration and authentication ceremonies are explicitly separated.
+
+Authentication ceremonies require:
+
+- A valid non-expired challenge
+- The correct ceremony type
+- A valid identity account
+- A valid passkey credential
+- Successful cryptographic verification
+- Sign-counter validation where applicable
+
+Authentication ceremonies are single-use and must not be accepted
+after the challenge has been consumed.
+
+### Device Security
+
+Authentication sessions are bound to registered devices.
+
+Authentication must reject:
+
+- Unknown devices
+- Devices belonging to another user
+- Revoked devices
+
+Suspicious authentication activity is recorded through structured
+authentication events.
+
+Examples include:
+
+- First login from a new device
+- Invalid authentication attempts
+- Invalid device attempts
+- Suspicious login detection
+- Password credential lockout
+- Session security changes
+
+### Session Security
+
+Sessions use server-side records and hashed refresh-token material.
+
+Security controls include:
+
+- Refresh-token rotation
+- Session expiration
+- Idle session expiration
+- Session revocation
+- Device/session association
+- Authentication event recording
+
+Raw refresh tokens must not be persisted as server-side credential
+material.
+
+### Recovery and MFA
+
+TOTP and recovery controls provide additional authentication paths
+without coupling authentication credentials to wallet private keys.
+
+Recovery mechanisms must not expose:
+
+- Seed phrases
+- Private keys
+- Wallet secrets
+
+Recovery and authentication secrets remain within the identity
+security boundary.
+
+### Wallet Security Boundary
+
+Identity authentication is completely separate from wallet key
+material.
+
+Authentication credentials, sessions, passkeys, TOTP secrets, and
+recovery mechanisms must never become a storage mechanism for:
+
+- Wallet seed phrases
+- Private keys
+- Wallet signing secrets
+
+The self-custody wallet security model remains independent from the
+identity authentication boundary.
+
+### Limitation
+
+The free/local implementation provides the application-level
+security controls required for this architecture phase.
+
+It does not provide the managed assurance, hardware-backed key
+protection, centralized identity operations, or enterprise security
+monitoring that may be required in a production deployment.
+
+Production identity infrastructure may introduce additional managed
+security capabilities without changing the wallet security boundary.
