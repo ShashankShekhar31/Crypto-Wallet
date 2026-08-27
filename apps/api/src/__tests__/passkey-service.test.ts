@@ -15,7 +15,6 @@ import {
   generateAuthenticationOptions,
   generateRegistrationOptions,
   verifyAuthenticationResponse,
-  verifyRegistrationResponse,
 } from "@simplewebauthn/server";
 
 import { IdentityRepository } from "../identity/repository.js";
@@ -35,8 +34,6 @@ const mockedGenerateAuthenticationOptions = vi.mocked(generateAuthenticationOpti
 const mockedGenerateRegistrationOptions = vi.mocked(generateRegistrationOptions);
 
 const mockedVerifyAuthenticationResponse = vi.mocked(verifyAuthenticationResponse);
-
-const mockedVerifyRegistrationResponse = vi.mocked(verifyRegistrationResponse);
 
 const databaseUrl = process.env.DATABASE_URL;
 

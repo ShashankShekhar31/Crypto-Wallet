@@ -2,8 +2,6 @@ import Fastify, { type FastifyInstance } from "fastify";
 
 import { describe, expect, it, vi } from "vitest";
 
-import { ApiError } from "../errors.js";
-
 import { createPasskeyRoutes } from "../routes/passkey.js";
 
 import type { PasskeyService } from "../identity/passkey-service.js";
