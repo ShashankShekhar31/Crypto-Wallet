@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+    createWalletVault,
     MemorySecureStorageAdapter,
     WalletVault,
     WebCryptoVaultCipher,
@@ -52,6 +53,25 @@ describe("MemorySecureStorageAdapter", () => {
 
     expect(vault.state.locked).toBe(true);
   });
+
+  it("creates a vault with the production Web Crypto cipher", async () => {
+  const adapter = new MemorySecureStorageAdapter();
+
+  const vault = createWalletVault(adapter, {
+    inactivityTimeoutMs: 1_000,
+  });
+
+  await vault.unlock("strong-test-password");
+
+  vault.set(
+    "wallet-secret",
+    new Uint8Array([10, 20, 30]),
+  );
+
+  await vault.persist();
+
+  expect(await adapter.get("wallet-vault")).not.toBeNull();
+});
 
   it("stores, returns, and removes values in memory", async () => {
   const adapter = new MemorySecureStorageAdapter();
