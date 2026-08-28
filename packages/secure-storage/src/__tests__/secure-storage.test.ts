@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  WalletVault,
-  WebCryptoVaultCipher,
-  type SecureStorageAdapter,
-  type VaultCipher,
+    MemorySecureStorageAdapter,
+    WalletVault,
+    WebCryptoVaultCipher,
+    type SecureStorageAdapter,
+    type VaultCipher,
 } from "../index.js";
 
 class MemoryAdapter implements SecureStorageAdapter {
@@ -41,7 +42,7 @@ class TestCipher implements VaultCipher {
   }
 }
 
-describe("WalletVault", () => {
+describe("MemorySecureStorageAdapter", () => {
   it("starts locked", () => {
     const vault = new WalletVault(
       new MemoryAdapter(),
@@ -51,6 +52,57 @@ describe("WalletVault", () => {
 
     expect(vault.state.locked).toBe(true);
   });
+
+  it("stores, returns, and removes values in memory", async () => {
+  const adapter = new MemorySecureStorageAdapter();
+
+  const value = new Uint8Array([1, 2, 3]);
+
+  await adapter.set("wallet-secret", value);
+
+  value[0] = 99;
+
+  expect(await adapter.get("wallet-secret")).toEqual(
+    new Uint8Array([1, 2, 3]),
+  );
+
+  await adapter.remove("wallet-secret");
+
+  expect(await adapter.get("wallet-secret")).toBeNull();
+});
+
+it("clears all values from memory storage", async () => {
+  const adapter = new MemorySecureStorageAdapter();
+
+  await adapter.set("secret-one", new Uint8Array([1]));
+  await adapter.set("secret-two", new Uint8Array([2]));
+
+  await adapter.clear();
+
+  expect(await adapter.get("secret-one")).toBeNull();
+  expect(await adapter.get("secret-two")).toBeNull();
+});
+
+it("returns defensive copies from memory storage", async () => {
+  const adapter = new MemorySecureStorageAdapter();
+
+  await adapter.set(
+    "wallet-secret",
+    new Uint8Array([1, 2, 3]),
+  );
+
+  const value = await adapter.get("wallet-secret");
+
+  expect(value).not.toBeNull();
+
+  if (value !== null) {
+    value[0] = 99;
+  }
+
+  expect(await adapter.get("wallet-secret")).toEqual(
+    new Uint8Array([1, 2, 3]),
+  );
+});
 
   it("unlocks an empty vault", async () => {
     const vault = new WalletVault(
