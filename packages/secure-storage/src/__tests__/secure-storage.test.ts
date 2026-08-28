@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   WalletVault,
+  WebCryptoVaultCipher,
   type SecureStorageAdapter,
   type VaultCipher,
 } from "../index.js";
@@ -316,5 +317,74 @@ it("clears the active session when automatically locked", async () => {
   expect(() => vault.get("wallet-secret")).toThrow(
     "Wallet vault is locked",
   );
+});
+it("persists and restores vault data using real Web Crypto", async () => {
+  const adapter = new MemoryAdapter();
+  const cipher = new WebCryptoVaultCipher();
+
+  const firstVault = new WalletVault(
+    adapter,
+    cipher,
+    { inactivityTimeoutMs: 1_000 },
+  );
+
+  await firstVault.unlock("strong-test-password");
+
+  firstVault.set(
+    "wallet-secret",
+    new Uint8Array([10, 20, 30, 40]),
+  );
+
+  await firstVault.persist();
+
+  const persisted = await adapter.get("wallet-vault");
+
+  expect(persisted).not.toBeNull();
+
+  firstVault.lock();
+
+  const secondVault = new WalletVault(
+    adapter,
+    cipher,
+    { inactivityTimeoutMs: 1_000 },
+  );
+
+  await secondVault.unlock("strong-test-password");
+
+  expect(secondVault.get("wallet-secret")).toEqual(
+    new Uint8Array([10, 20, 30, 40]),
+  );
+});
+it("does not unlock with the wrong password", async () => {
+  const adapter = new MemoryAdapter();
+  const cipher = new WebCryptoVaultCipher();
+
+  const firstVault = new WalletVault(
+    adapter,
+    cipher,
+    { inactivityTimeoutMs: 1_000 },
+  );
+
+  await firstVault.unlock("correct-password");
+
+  firstVault.set(
+    "wallet-secret",
+    new Uint8Array([1, 2, 3]),
+  );
+
+  await firstVault.persist();
+  firstVault.lock();
+
+  const secondVault = new WalletVault(
+    adapter,
+    cipher,
+    { inactivityTimeoutMs: 1_000 },
+  );
+
+  await expect(
+    secondVault.unlock("wrong-password"),
+  ).rejects.toThrow("Vault decryption failed");
+
+  expect(secondVault.state.locked).toBe(true);
 });
 });

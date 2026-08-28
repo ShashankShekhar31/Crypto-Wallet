@@ -346,6 +346,10 @@ importers:
   packages/crypto: {}
 
   packages/secure-storage:
+    dependencies:
+      '@crypto-wallet/crypto':
+        specifier: workspace:*
+        version: link:../crypto
     devDependencies:
       vitest:
         specifier: ^4.1.11
