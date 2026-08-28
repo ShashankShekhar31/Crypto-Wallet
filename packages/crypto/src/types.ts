@@ -13,6 +13,24 @@ export interface KeyDerivationParams {
   keyLength: number;
 }
 
+export interface EncryptionParams {
+  nonce: Uint8Array;
+}
+
+export interface EncryptionProvider {
+  encrypt(
+    key: CryptoKeyMaterial,
+    plaintext: Uint8Array,
+    params: EncryptionParams,
+  ): Promise<Uint8Array>;
+
+  decrypt(
+    key: CryptoKeyMaterial,
+    ciphertext: Uint8Array,
+    params: EncryptionParams,
+  ): Promise<Uint8Array>;
+}
+
 export interface CryptoKeyMaterial {
   readonly bytes: Uint8Array;
 }
