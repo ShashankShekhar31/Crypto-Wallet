@@ -85,6 +85,11 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Database migrations
+        run: pnpm --filter @crypto-wallet/storage migrate
+        env:
+          DATABASE_URL: postgresql://wallet_admin:ci-postgres-password@localhost:5432/crypto_wallet
+
       - name: Test
         run: pnpm test
         env:
