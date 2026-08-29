@@ -379,6 +379,9 @@ importers:
       '@crypto-wallet/secure-storage':
         specifier: workspace:*
         version: link:../secure-storage
+      '@crypto-wallet/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
     devDependencies:
       vitest:
         specifier: ^4.1.11
