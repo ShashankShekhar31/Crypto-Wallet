@@ -386,6 +386,9 @@ importers:
 
   packages/wallet-core:
     dependencies:
+      '@crypto-wallet/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@crypto-wallet/secure-storage':
         specifier: workspace:*
         version: link:../secure-storage

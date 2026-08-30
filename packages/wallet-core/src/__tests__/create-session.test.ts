@@ -1,14 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { WalletCrypto } from "@crypto-wallet/crypto";
 
-import {
-  createWalletSession,
-  type WalletSession,
-} from "../index.js";
+import { createWalletSession, type WalletSession } from "../index.js";
 
-import type {
-  SecureVault,
-  VaultState,
-} from "@crypto-wallet/secure-storage";
+import type { SecureVault, VaultState } from "@crypto-wallet/secure-storage";
 
 class TestVault implements SecureVault {
   private locked = true;
@@ -46,10 +41,34 @@ describe("createWalletSession", () => {
   it("creates a wallet session backed by the supplied vault", () => {
     const vault = new TestVault();
 
-    const session: WalletSession = createWalletSession(vault);
+    const crypto: WalletCrypto = {
+      mnemonic: {
+        generate: () => "test mnemonic",
+        validate: () => true,
+        toSeed: async () => {
+          throw new Error("not implemented in create-session tests");
+        },
+      },
+      deriver: {
+        fromSeed: () => {
+          throw new Error("not implemented in create-session tests");
+        },
+        derive: () => {
+          throw new Error("not implemented in create-session tests");
+        },
+      },
+      signer: {
+        signDigest: () => {
+          throw new Error("not implemented in create-session tests");
+        },
+      },
+    };
+
+    const session: WalletSession = createWalletSession(vault, crypto);
 
     expect(session).toBeDefined();
     expect(session.vault).toBe(vault);
+    expect(session.crypto).toBe(crypto);
     expect(session.state).toEqual(vault.state);
   });
 });

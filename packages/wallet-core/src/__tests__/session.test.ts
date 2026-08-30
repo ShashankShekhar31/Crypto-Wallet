@@ -1,14 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { WalletCrypto } from "@crypto-wallet/crypto";
 
-import {
-  DefaultWalletSession,
-  type WalletSession,
-} from "../index.js";
+import { DefaultWalletSession, type WalletSession } from "../index.js";
 
-import type {
-  SecureVault,
-  VaultState,
-} from "@crypto-wallet/secure-storage";
+import type { SecureVault, VaultState } from "@crypto-wallet/secure-storage";
 
 class TestVault implements SecureVault {
   private locked = true;
@@ -52,7 +47,7 @@ class TestVault implements SecureVault {
 describe("DefaultWalletSession", () => {
   it("delegates unlock and lock to the vault", async () => {
     const vault = new TestVault();
-    const session: WalletSession = new DefaultWalletSession(vault);
+    const session: WalletSession = new DefaultWalletSession(vault, crypto);
 
     expect(session.vault).toBe(vault);
     expect(vault.state.locked).toBe(true);
@@ -66,27 +61,57 @@ describe("DefaultWalletSession", () => {
     expect(vault.state.locked).toBe(true);
   });
 
+  const crypto: WalletCrypto = {
+    mnemonic: {
+      generate: () => "test mnemonic",
+      validate: () => true,
+      toSeed: async () => {
+        throw new Error("not implemented in session tests");
+      },
+    },
+    deriver: {
+      fromSeed: () => {
+        throw new Error("not implemented in session tests");
+      },
+      derive: () => {
+        throw new Error("not implemented in session tests");
+      },
+    },
+    signer: {
+      signDigest: () => {
+        throw new Error("not implemented in session tests");
+      },
+    },
+  };
+
+  it("exposes the configured wallet crypto service", () => {
+    const vault = new TestVault();
+    const session = new DefaultWalletSession(vault, crypto);
+
+    expect(session.crypto).toBe(crypto);
+  });
+
   it("exposes the vault state", async () => {
-        const vault = new TestVault();
-        const session = new DefaultWalletSession(vault);
+    const vault = new TestVault();
+    const session = new DefaultWalletSession(vault, crypto);
 
-        expect(session.state.locked).toBe(true);
+    expect(session.state.locked).toBe(true);
 
-        await session.unlock("test-password");
+    await session.unlock("test-password");
 
-        expect(session.state.locked).toBe(false);
+    expect(session.state.locked).toBe(false);
 
-        session.lock();
+    session.lock();
 
-        expect(session.state.locked).toBe(true);
-    });
+    expect(session.state.locked).toBe(true);
+  });
 
-    it("delegates persistence to the vault", async () => {
-        const vault = new TestVault();
-        const session = new DefaultWalletSession(vault);
+  it("delegates persistence to the vault", async () => {
+    const vault = new TestVault();
+    const session = new DefaultWalletSession(vault, crypto);
 
-        await session.persist();
+    await session.persist();
 
-        expect(vault.wasPersisted()).toBe(true);
-    });
+    expect(vault.wasPersisted()).toBe(true);
+  });
 });

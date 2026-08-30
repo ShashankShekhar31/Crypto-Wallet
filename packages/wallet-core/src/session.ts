@@ -1,4 +1,7 @@
 import type {
+  WalletCrypto,
+} from "@crypto-wallet/crypto";
+import type {
   SecureVault,
   VaultState,
 } from "@crypto-wallet/secure-storage";
@@ -8,6 +11,7 @@ import type { WalletSession } from "./types.js";
 export class DefaultWalletSession implements WalletSession {
   constructor(
     readonly vault: SecureVault,
+    readonly crypto: WalletCrypto,
   ) {}
 
   get state(): VaultState {
