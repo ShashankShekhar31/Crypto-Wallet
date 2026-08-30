@@ -15,5 +15,9 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@scure/bip32": "2.2.0",
+    "@scure/bip39": "2.2.0"
   }
 }
