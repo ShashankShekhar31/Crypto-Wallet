@@ -13,10 +13,7 @@ export interface MnemonicService {
 
   validate(mnemonic: string): boolean;
 
-  toSeed(
-    mnemonic: string,
-    passphrase?: string,
-  ): Promise<SecretBytes>;
+  toSeed(mnemonic: string, passphrase?: string): Promise<SecretBytes>;
 }
 
 export interface SecretBytes {
@@ -41,6 +38,54 @@ export interface SecretBytes {
 
 export interface DerivationPath {
   readonly value: string;
+}
+
+export function createDerivationPath(value: string): DerivationPath {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    throw new Error("Derivation path is required");
+  }
+
+  if (!/^m(?:\/[0-9]+'?)*$/.test(normalized)) {
+    throw new Error("Invalid BIP-32 derivation path");
+  }
+
+  return Object.freeze({
+    value: normalized,
+  });
+}
+
+export interface Bip44DerivationPath extends DerivationPath {
+  readonly value: `m/${number}'/${number}'/${number}'/${number}/${number}`;
+}
+
+export function createBip44DerivationPath(
+  purpose: number,
+  coinType: number,
+  account: number,
+  change: number,
+  addressIndex: number,
+): Bip44DerivationPath {
+  const components = [purpose, coinType, account, change, addressIndex];
+
+  for (const component of components) {
+    if (!Number.isInteger(component) || component < 0) {
+      throw new Error("BIP-44 path components must be non-negative integers");
+    }
+
+    if (component >= 2 ** 31) {
+      throw new Error("BIP-44 path component exceeds BIP-32 index range");
+    }
+  }
+
+  if (change > 1) {
+    throw new Error("BIP-44 change must be 0 or 1");
+  }
+
+  const value = `m/${purpose}'/${coinType}'/${account}'/${change}/${addressIndex}` as const;
+
+  return Object.freeze({ value });
 }
 
 export interface DerivedKey {

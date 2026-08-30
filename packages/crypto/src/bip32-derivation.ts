@@ -56,10 +56,16 @@ export class Bip32WalletKeyDeriver implements WalletKeyDeriver {
       throw new Error("Unsupported derived key implementation");
     }
 
-    if (!path.value.trim()) {
+    const normalizedPath = path.value.trim();
+
+    if (!normalizedPath) {
       throw new Error("Derivation path is required");
     }
 
-    return new ScureDerivedKey(parent.underlying.derive(path.value));
+    if (!/^m(?:\/[0-9]+'?)*$/.test(normalizedPath)) {
+      throw new Error("Invalid BIP-32 derivation path");
+    }
+
+    return new ScureDerivedKey(parent.underlying.derive(normalizedPath));
   }
 }
