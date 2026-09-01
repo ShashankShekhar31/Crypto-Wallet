@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "test": "vitest run src",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -14,5 +15,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@crypto-wallet/crypto": "workspace:*",
+    "@noble/hashes": "^2.4.0"
   }
 }

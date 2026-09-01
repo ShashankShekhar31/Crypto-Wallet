@@ -11,9 +11,7 @@ describe("Secp256k1WalletSigner", () => {
 
   it("signs a 32-byte digest", () => {
     const seed = new ManagedSecretBytes(
-      Uint8Array.from(
-        Array.from({ length: 32 }, (_, index) => index),
-      ),
+      Uint8Array.from(Array.from({ length: 32 }, (_, index) => index)),
     );
 
     const key = deriver.fromSeed(seed);
@@ -23,7 +21,9 @@ describe("Secp256k1WalletSigner", () => {
 
     const signature = signer.signDigest(key, digest);
 
-    expect(signature).toHaveLength(64);
+    expect(signature.compact).toHaveLength(64);
+    expect(signature.recovery).toBeGreaterThanOrEqual(0);
+    expect(signature.recovery).toBeLessThanOrEqual(3);
 
     key.wipe();
     seed.wipe();
@@ -31,9 +31,7 @@ describe("Secp256k1WalletSigner", () => {
 
   it("produces a signature that verifies with the derived public key", () => {
     const seed = new ManagedSecretBytes(
-      Uint8Array.from(
-        Array.from({ length: 32 }, (_, index) => index),
-      ),
+      Uint8Array.from(Array.from({ length: 32 }, (_, index) => index)),
     );
 
     const key = deriver.fromSeed(seed);
@@ -45,8 +43,20 @@ describe("Secp256k1WalletSigner", () => {
     const publicKey = key.publicKey();
 
     expect(
-      secp256k1.verify(signature, digest, publicKey),
+      secp256k1.verify(signature.compact, digest, publicKey, {
+        prehash: false,
+      }),
     ).toBe(true);
+
+    const recoveredPublicKey = secp256k1.recoverPublicKey(
+      Uint8Array.from([signature.recovery, ...signature.compact]),
+      digest,
+      {
+        prehash: false,
+      },
+    );
+
+    expect(recoveredPublicKey).toEqual(publicKey);
 
     key.wipe();
     seed.wipe();
@@ -54,9 +64,7 @@ describe("Secp256k1WalletSigner", () => {
 
   it("produces deterministic signatures for the same key and digest", () => {
     const seed = new ManagedSecretBytes(
-      Uint8Array.from(
-        Array.from({ length: 32 }, (_, index) => index),
-      ),
+      Uint8Array.from(Array.from({ length: 32 }, (_, index) => index)),
     );
 
     const key = deriver.fromSeed(seed);
@@ -67,7 +75,8 @@ describe("Secp256k1WalletSigner", () => {
     const first = signer.signDigest(key, digest);
     const second = signer.signDigest(key, digest);
 
-    expect(first).toEqual(second);
+    expect(first.compact).toEqual(second.compact);
+    expect(first.recovery).toBe(second.recovery);
 
     key.wipe();
     seed.wipe();
@@ -75,20 +84,18 @@ describe("Secp256k1WalletSigner", () => {
 
   it("rejects digests that are not exactly 32 bytes", () => {
     const seed = new ManagedSecretBytes(
-      Uint8Array.from(
-        Array.from({ length: 32 }, (_, index) => index),
-      ),
+      Uint8Array.from(Array.from({ length: 32 }, (_, index) => index)),
     );
 
     const key = deriver.fromSeed(seed);
 
-    expect(() =>
-      signer.signDigest(key, new Uint8Array(31)),
-    ).toThrow("Digest must be exactly 32 bytes");
+    expect(() => signer.signDigest(key, new Uint8Array(31))).toThrow(
+      "Digest must be exactly 32 bytes",
+    );
 
-    expect(() =>
-      signer.signDigest(key, new Uint8Array(33)),
-    ).toThrow("Digest must be exactly 32 bytes");
+    expect(() => signer.signDigest(key, new Uint8Array(33))).toThrow(
+      "Digest must be exactly 32 bytes",
+    );
 
     key.wipe();
     seed.wipe();
@@ -96,9 +103,7 @@ describe("Secp256k1WalletSigner", () => {
 
   it("does not expose the private key through the signature", () => {
     const seed = new ManagedSecretBytes(
-      Uint8Array.from(
-        Array.from({ length: 32 }, (_, index) => index),
-      ),
+      Uint8Array.from(Array.from({ length: 32 }, (_, index) => index)),
     );
 
     const key = deriver.fromSeed(seed);
@@ -109,7 +114,7 @@ describe("Secp256k1WalletSigner", () => {
     const signature = signer.signDigest(key, digest);
     const privateKey = key.privateKey().copy();
 
-    expect(signature).not.toEqual(privateKey);
+    expect(signature.compact).not.toEqual(privateKey);
 
     privateKey.fill(0);
     key.wipe();

@@ -335,7 +335,14 @@ importers:
         specifier: ^26.2.0
         version: 26.2.0
 
-  packages/chain-core: {}
+  packages/chain-core:
+    dependencies:
+      '@crypto-wallet/crypto':
+        specifier: workspace:*
+        version: link:../crypto
+      '@noble/hashes':
+        specifier: ^2.4.0
+        version: 2.4.0
 
   packages/config:
     devDependencies:

@@ -119,11 +119,26 @@ export interface WalletKeyDeriver {
   derive(parent: DerivedKey, path: DerivationPath): DerivedKey;
 }
 
+export interface WalletSignature {
+  /**
+   * Compact secp256k1 signature: r || s.
+   */
+  readonly compact: Uint8Array;
+
+  /**
+   * Recovery identifier used to recover the signing public key.
+   */
+  readonly recovery: number;
+}
+
 export interface WalletSigner {
   /**
    * Signs a 32-byte message digest using the supplied derived key.
    */
-  signDigest(key: DerivedKey, digest: Uint8Array): Uint8Array;
+  signDigest(
+    key: DerivedKey,
+    digest: Uint8Array,
+  ): WalletSignature;
 }
 
 export interface WalletCrypto {
