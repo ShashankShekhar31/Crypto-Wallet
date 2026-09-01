@@ -7,6 +7,7 @@ export type TransactionStatus =
 
 export interface WalletAccount {
   id: string;
+  userId: string;
   name: string;
   type: WalletType;
   createdAt: string;
