@@ -1,18 +1,35 @@
 import type {
   WalletCrypto,
 } from "@crypto-wallet/crypto";
+
 import type {
   SecureVault,
   VaultState,
 } from "@crypto-wallet/secure-storage";
 
-import type { WalletSession } from "./types.js";
+import {
+  DefaultWalletLifecycle,
+  type WalletLifecycle,
+} from "./wallet-lifecycle.js";
 
-export class DefaultWalletSession implements WalletSession {
+import type {
+  WalletSession,
+} from "./types.js";
+
+export class DefaultWalletSession
+  implements WalletSession
+{
+  readonly lifecycle: WalletLifecycle;
+
   constructor(
     readonly vault: SecureVault,
     readonly crypto: WalletCrypto,
-  ) {}
+  ) {
+    this.lifecycle = new DefaultWalletLifecycle(
+      vault,
+      crypto,
+    );
+  }
 
   get state(): VaultState {
     return this.vault.state;

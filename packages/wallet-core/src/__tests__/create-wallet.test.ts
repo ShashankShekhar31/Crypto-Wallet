@@ -28,6 +28,7 @@ describe("createWallet", () => {
 
     expect(session).toBeDefined();
     expect(session.vault).toBeDefined();
+    expect(session.lifecycle).toBeDefined();
     expect(session.crypto).toBeInstanceOf(DefaultWalletCrypto);
     expect(session.state.locked).toBe(true);
   });

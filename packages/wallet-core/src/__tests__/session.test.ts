@@ -50,6 +50,7 @@ describe("DefaultWalletSession", () => {
     const session: WalletSession = new DefaultWalletSession(vault, crypto);
 
     expect(session.vault).toBe(vault);
+    expect(session.lifecycle).toBeDefined();
     expect(vault.state.locked).toBe(true);
 
     await session.unlock("test-password");
@@ -113,5 +114,21 @@ describe("DefaultWalletSession", () => {
     await session.persist();
 
     expect(vault.wasPersisted()).toBe(true);
+  });
+    it("exposes the wallet lifecycle service", () => {
+    const vault = new TestVault();
+
+    const session = new DefaultWalletSession(
+      vault,
+      crypto,
+    );
+
+    expect(session.lifecycle).toBeDefined();
+    expect(session.lifecycle.create).toBeTypeOf(
+      "function",
+    );
+    expect(session.lifecycle.restore).toBeTypeOf(
+      "function",
+    );
   });
 });
