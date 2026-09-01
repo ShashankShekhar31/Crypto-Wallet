@@ -1,17 +1,11 @@
-import {
-  DefaultWalletCrypto,
-  type WalletCrypto,
-} from "@crypto-wallet/crypto";
+import { DefaultWalletCrypto, type WalletCrypto } from "@crypto-wallet/crypto";
 import {
   MemorySecureStorageAdapter,
   type SecureStorageOptions,
 } from "@crypto-wallet/secure-storage";
 import { describe, expect, it } from "vitest";
 
-import {
-  createWallet,
-  type WalletSession,
-} from "../index.js";
+import { createWallet, type WalletSession } from "../index.js";
 
 describe("createWallet", () => {
   const options: SecureStorageOptions = {
@@ -21,10 +15,7 @@ describe("createWallet", () => {
   it("creates a wallet session backed by secure storage", () => {
     const adapter = new MemorySecureStorageAdapter();
 
-    const session: WalletSession = createWallet(
-      adapter,
-      options,
-    );
+    const session: WalletSession = createWallet(adapter, options);
 
     expect(session).toBeDefined();
     expect(session.vault).toBeDefined();
@@ -59,11 +50,7 @@ describe("createWallet", () => {
       },
     };
 
-    const session = createWallet(
-      adapter,
-      options,
-      crypto,
-    );
+    const session = createWallet(adapter, options, crypto);
 
     expect(session.crypto).toBe(crypto);
   });

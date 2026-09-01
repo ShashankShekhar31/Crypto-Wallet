@@ -1,8 +1,4 @@
-import type {
-  CryptoProvider,
-  KeyDerivationParams,
-  CryptoKeyMaterial,
-} from "./types.js";
+import type { CryptoProvider, KeyDerivationParams, CryptoKeyMaterial } from "./types.js";
 
 export class WebCryptoProvider implements CryptoProvider {
   randomBytes(length: number): Uint8Array {
@@ -16,25 +12,16 @@ export class WebCryptoProvider implements CryptoProvider {
     return bytes;
   }
 
-  async hash(
-    algorithm: "SHA-256" | "SHA-512",
-    data: Uint8Array,
-  ): Promise<Uint8Array> {
+  async hash(algorithm: "SHA-256" | "SHA-512", data: Uint8Array): Promise<Uint8Array> {
     const buffer = new ArrayBuffer(data.byteLength);
     new Uint8Array(buffer).set(data);
 
-    const digest = await globalThis.crypto.subtle.digest(
-      algorithm,
-      buffer,
-    );
+    const digest = await globalThis.crypto.subtle.digest(algorithm, buffer);
 
     return new Uint8Array(digest);
   }
 
-  async deriveKey(
-    password: string,
-    params: KeyDerivationParams,
-  ): Promise<CryptoKeyMaterial> {
+  async deriveKey(password: string, params: KeyDerivationParams): Promise<CryptoKeyMaterial> {
     if (!password) {
       throw new Error("Password is required");
     }
@@ -56,13 +43,9 @@ export class WebCryptoProvider implements CryptoProvider {
     const passwordBuffer = new ArrayBuffer(passwordBytes.byteLength);
     new Uint8Array(passwordBuffer).set(passwordBytes);
 
-    const key = await globalThis.crypto.subtle.importKey(
-      "raw",
-      passwordBuffer,
-      "PBKDF2",
-      false,
-      ["deriveBits"],
-    );
+    const key = await globalThis.crypto.subtle.importKey("raw", passwordBuffer, "PBKDF2", false, [
+      "deriveBits",
+    ]);
 
     const saltBuffer = new ArrayBuffer(params.salt.byteLength);
     new Uint8Array(saltBuffer).set(params.salt);

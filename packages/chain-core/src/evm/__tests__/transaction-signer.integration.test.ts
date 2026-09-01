@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  DefaultWalletCrypto,
-  Secp256k1WalletSigner,
-} from "@crypto-wallet/crypto";
+import { DefaultWalletCrypto, Secp256k1WalletSigner } from "@crypto-wallet/crypto";
 
 import { DefaultEvmTransactionSigner } from "../transaction-signer.js";
 
@@ -31,22 +28,19 @@ describe("EVM transaction signing integration", () => {
   const to = "0x0000000000000000000000000000000000000002";
 
   async function createTestKey() {
-  const walletCrypto =
-    new DefaultWalletCrypto();
+    const walletCrypto = new DefaultWalletCrypto();
 
-  const seed =
-    await walletCrypto.mnemonic.toSeed(
+    const seed = await walletCrypto.mnemonic.toSeed(
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
     );
 
-  const key =
-    walletCrypto.deriver.fromSeed(seed);
+    const key = walletCrypto.deriver.fromSeed(seed);
 
-  return {
-    seed,
-    key,
-  };
-}
+    return {
+      seed,
+      key,
+    };
+  }
 
   it("signs and encodes an EIP-1559 transaction end-to-end", async () => {
     const { seed, key } = await createTestKey();

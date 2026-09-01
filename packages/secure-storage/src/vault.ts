@@ -22,15 +22,10 @@ export class WalletVault implements SecureVault {
   private lockedAt: number | null = null;
   private values = new Map<SecureStorageKey, Uint8Array>();
 
-  constructor(
-    adapter: SecureStorageAdapter,
-    cipher: VaultCipher,
-    options: SecureStorageOptions,
-  ) {
+  constructor(adapter: SecureStorageAdapter, cipher: VaultCipher, options: SecureStorageOptions) {
     this.adapter = adapter;
     this.cipher = cipher;
-    this.inactivityTimeoutMs =
-      options.inactivityTimeoutMs ?? DEFAULT_INACTIVITY_TIMEOUT_MS;
+    this.inactivityTimeoutMs = options.inactivityTimeoutMs ?? DEFAULT_INACTIVITY_TIMEOUT_MS;
     this.now = options.now ?? Date.now;
   }
 
@@ -86,7 +81,7 @@ export class WalletVault implements SecureVault {
     const encrypted = await this.session.encrypt(plaintext);
 
     await this.adapter.set("wallet-vault", encrypted);
-}
+  }
 
   get(key: SecureStorageKey): Uint8Array | null {
     this.assertUnlocked();
@@ -143,20 +138,13 @@ function copyBytes(value: Uint8Array): Uint8Array {
   return new Uint8Array(value);
 }
 
-function serializeValues(
-  values: Map<SecureStorageKey, Uint8Array>,
-): Uint8Array {
-  const entries = [...values.entries()].map(([key, value]) => [
-    key,
-    Array.from(value),
-  ]);
+function serializeValues(values: Map<SecureStorageKey, Uint8Array>): Uint8Array {
+  const entries = [...values.entries()].map(([key, value]) => [key, Array.from(value)]);
 
   return new TextEncoder().encode(JSON.stringify(entries));
 }
 
-function deserializeValues(
-  plaintext: Uint8Array,
-): Map<SecureStorageKey, Uint8Array> {
+function deserializeValues(plaintext: Uint8Array): Map<SecureStorageKey, Uint8Array> {
   const parsed: unknown = JSON.parse(new TextDecoder().decode(plaintext));
 
   if (!Array.isArray(parsed)) {
@@ -177,10 +165,7 @@ function deserializeValues(
       !Array.isArray(rawValue) ||
       !rawValue.every(
         (item): item is number =>
-          typeof item === "number" &&
-          Number.isInteger(item) &&
-          item >= 0 &&
-          item <= 255,
+          typeof item === "number" && Number.isInteger(item) && item >= 0 && item <= 255,
       )
     ) {
       throw new Error("Invalid wallet vault entry");

@@ -15,10 +15,7 @@ describe("crypto contracts", () => {
         return new Uint8Array(length);
       },
 
-      async hash(
-        _algorithm: "SHA-256" | "SHA-512",
-        _data: Uint8Array,
-      ): Promise<Uint8Array> {
+      async hash(_algorithm: "SHA-256" | "SHA-512", _data: Uint8Array): Promise<Uint8Array> {
         return new Uint8Array();
       },
     };
@@ -28,10 +25,7 @@ describe("crypto contracts", () => {
 
   it("defines a key-derivation provider", async () => {
     const provider: KeyDerivationProvider = {
-      async deriveKey(
-        _password: string,
-        params,
-      ) {
+      async deriveKey(_password: string, params) {
         return {
           bytes: new Uint8Array(params.keyLength),
         };
@@ -47,305 +41,253 @@ describe("crypto contracts", () => {
     expect(key.bytes).toHaveLength(32);
   });
   it("generates cryptographically random bytes", () => {
-  const provider = new WebCryptoProvider();
+    const provider = new WebCryptoProvider();
 
-  const first = provider.randomBytes(32);
-  const second = provider.randomBytes(32);
+    const first = provider.randomBytes(32);
+    const second = provider.randomBytes(32);
 
-  expect(first).toHaveLength(32);
-  expect(second).toHaveLength(32);
-  expect(first).not.toEqual(second);
-});
+    expect(first).toHaveLength(32);
+    expect(second).toHaveLength(32);
+    expect(first).not.toEqual(second);
+  });
 
-it("hashes data with SHA-256", async () => {
-  const provider = new WebCryptoProvider();
+  it("hashes data with SHA-256", async () => {
+    const provider = new WebCryptoProvider();
 
-  const data = new TextEncoder().encode("crypto-wallet");
+    const data = new TextEncoder().encode("crypto-wallet");
 
-  const digest = await provider.hash("SHA-256", data);
+    const digest = await provider.hash("SHA-256", data);
 
-  expect(digest).toHaveLength(32);
-});
+    expect(digest).toHaveLength(32);
+  });
 
-it("hashes data with SHA-512", async () => {
-  const provider = new WebCryptoProvider();
+  it("hashes data with SHA-512", async () => {
+    const provider = new WebCryptoProvider();
 
-  const data = new TextEncoder().encode("crypto-wallet");
+    const data = new TextEncoder().encode("crypto-wallet");
 
-  const digest = await provider.hash("SHA-512", data);
+    const digest = await provider.hash("SHA-512", data);
 
-  expect(digest).toHaveLength(64);
-});
+    expect(digest).toHaveLength(64);
+  });
 
-it("rejects invalid random byte lengths", () => {
-  const provider = new WebCryptoProvider();
+  it("rejects invalid random byte lengths", () => {
+    const provider = new WebCryptoProvider();
 
-  expect(() => provider.randomBytes(0)).toThrow(
-    "Random byte length must be a positive integer",
-  );
+    expect(() => provider.randomBytes(0)).toThrow("Random byte length must be a positive integer");
 
-  expect(() => provider.randomBytes(-1)).toThrow(
-    "Random byte length must be a positive integer",
-  );
-});
-it("derives a deterministic key for the same inputs", async () => {
-  const provider = new WebCryptoProvider();
+    expect(() => provider.randomBytes(-1)).toThrow("Random byte length must be a positive integer");
+  });
+  it("derives a deterministic key for the same inputs", async () => {
+    const provider = new WebCryptoProvider();
 
-  const params = {
-    salt: new Uint8Array(16),
-    iterations: 1_000,
-    keyLength: 32,
-  };
-
-  const first = await provider.deriveKey("test-password", params);
-  const second = await provider.deriveKey("test-password", params);
-
-  expect(first.bytes).toEqual(second.bytes);
-  expect(first.bytes).toHaveLength(32);
-});
-
-it("produces different keys for different passwords", async () => {
-  const provider = new WebCryptoProvider();
-
-  const params = {
-    salt: new Uint8Array(16),
-    iterations: 1_000,
-    keyLength: 32,
-  };
-
-  const first = await provider.deriveKey("password-one", params);
-  const second = await provider.deriveKey("password-two", params);
-
-  expect(first.bytes).not.toEqual(second.bytes);
-});
-
-it("rejects invalid PBKDF2 parameters", async () => {
-  const provider = new WebCryptoProvider();
-
-  await expect(
-    provider.deriveKey("test-password", {
+    const params = {
       salt: new Uint8Array(16),
-      iterations: 0,
-      keyLength: 32,
-    }),
-  ).rejects.toThrow("PBKDF2 iterations");
-
-  await expect(
-    provider.deriveKey("test-password", {
-      salt: new Uint8Array(),
       iterations: 1_000,
       keyLength: 32,
-    }),
-  ).rejects.toThrow("PBKDF2 salt");
-});
-it("encrypts and decrypts with AES-GCM", async () => {
-  const provider = new WebCryptoProvider();
+    };
 
-  const key = await provider.deriveKey("test-password", {
-    salt: new Uint8Array(16),
-    iterations: 1_000,
-    keyLength: 32,
+    const first = await provider.deriveKey("test-password", params);
+    const second = await provider.deriveKey("test-password", params);
+
+    expect(first.bytes).toEqual(second.bytes);
+    expect(first.bytes).toHaveLength(32);
   });
 
-  const nonce = provider.randomBytes(12);
-  const plaintext = new TextEncoder().encode("wallet-secret");
+  it("produces different keys for different passwords", async () => {
+    const provider = new WebCryptoProvider();
 
-  const ciphertext = await encryptAesGcm(
-    key,
-    plaintext,
-    { nonce },
-  );
+    const params = {
+      salt: new Uint8Array(16),
+      iterations: 1_000,
+      keyLength: 32,
+    };
 
-  const decrypted = await decryptAesGcm(
-    key,
-    ciphertext,
-    { nonce },
-  );
+    const first = await provider.deriveKey("password-one", params);
+    const second = await provider.deriveKey("password-two", params);
 
-  expect(decrypted).toEqual(plaintext);
-  expect(ciphertext).not.toEqual(plaintext);
-});
-
-it("rejects tampered AES-GCM ciphertext", async () => {
-  const provider = new WebCryptoProvider();
-
-  const key = await provider.deriveKey("test-password", {
-    salt: new Uint8Array(16),
-    iterations: 1_000,
-    keyLength: 32,
+    expect(first.bytes).not.toEqual(second.bytes);
   });
 
-  const nonce = provider.randomBytes(12);
-  const plaintext = new TextEncoder().encode("wallet-secret");
+  it("rejects invalid PBKDF2 parameters", async () => {
+    const provider = new WebCryptoProvider();
 
-  const ciphertext = await encryptAesGcm(
-    key,
-    plaintext,
-    { nonce },
-  );
+    await expect(
+      provider.deriveKey("test-password", {
+        salt: new Uint8Array(16),
+        iterations: 0,
+        keyLength: 32,
+      }),
+    ).rejects.toThrow("PBKDF2 iterations");
 
-  ciphertext[0] = (ciphertext[0] ?? 0) ^ 1;
+    await expect(
+      provider.deriveKey("test-password", {
+        salt: new Uint8Array(),
+        iterations: 1_000,
+        keyLength: 32,
+      }),
+    ).rejects.toThrow("PBKDF2 salt");
+  });
+  it("encrypts and decrypts with AES-GCM", async () => {
+    const provider = new WebCryptoProvider();
 
-  await expect(
-    decryptAesGcm(key, ciphertext, { nonce }),
-  ).rejects.toThrow("AES-GCM decryption failed");
-});
+    const key = await provider.deriveKey("test-password", {
+      salt: new Uint8Array(16),
+      iterations: 1_000,
+      keyLength: 32,
+    });
 
-it("rejects invalid AES-GCM nonce lengths", async () => {
-  const provider = new WebCryptoProvider();
+    const nonce = provider.randomBytes(12);
+    const plaintext = new TextEncoder().encode("wallet-secret");
 
-  const key = await provider.deriveKey("test-password", {
-    salt: new Uint8Array(16),
-    iterations: 1_000,
-    keyLength: 32,
+    const ciphertext = await encryptAesGcm(key, plaintext, { nonce });
+
+    const decrypted = await decryptAesGcm(key, ciphertext, { nonce });
+
+    expect(decrypted).toEqual(plaintext);
+    expect(ciphertext).not.toEqual(plaintext);
   });
 
-  await expect(
-    encryptAesGcm(
-      key,
-      new Uint8Array([1, 2, 3]),
-      { nonce: new Uint8Array(11) },
-    ),
-  ).rejects.toThrow("AES-GCM nonce must be 12 bytes");
-});
-it("produces different ciphertexts for different nonces", async () => {
-  const provider = new WebCryptoProvider();
+  it("rejects tampered AES-GCM ciphertext", async () => {
+    const provider = new WebCryptoProvider();
 
-  const key = await provider.deriveKey("test-password", {
-    salt: new Uint8Array(16),
-    iterations: 1_000,
-    keyLength: 32,
+    const key = await provider.deriveKey("test-password", {
+      salt: new Uint8Array(16),
+      iterations: 1_000,
+      keyLength: 32,
+    });
+
+    const nonce = provider.randomBytes(12);
+    const plaintext = new TextEncoder().encode("wallet-secret");
+
+    const ciphertext = await encryptAesGcm(key, plaintext, { nonce });
+
+    ciphertext[0] = (ciphertext[0] ?? 0) ^ 1;
+
+    await expect(decryptAesGcm(key, ciphertext, { nonce })).rejects.toThrow(
+      "AES-GCM decryption failed",
+    );
   });
 
-  const plaintext = new TextEncoder().encode("wallet-secret");
+  it("rejects invalid AES-GCM nonce lengths", async () => {
+    const provider = new WebCryptoProvider();
 
-  const ciphertextOne = await encryptAesGcm(
-    key,
-    plaintext,
-    { nonce: provider.randomBytes(12) },
-  );
+    const key = await provider.deriveKey("test-password", {
+      salt: new Uint8Array(16),
+      iterations: 1_000,
+      keyLength: 32,
+    });
 
-  const ciphertextTwo = await encryptAesGcm(
-    key,
-    plaintext,
-    { nonce: provider.randomBytes(12) },
-  );
+    await expect(
+      encryptAesGcm(key, new Uint8Array([1, 2, 3]), { nonce: new Uint8Array(11) }),
+    ).rejects.toThrow("AES-GCM nonce must be 12 bytes");
+  });
+  it("produces different ciphertexts for different nonces", async () => {
+    const provider = new WebCryptoProvider();
 
-  expect(ciphertextOne).not.toEqual(ciphertextTwo);
-});
+    const key = await provider.deriveKey("test-password", {
+      salt: new Uint8Array(16),
+      iterations: 1_000,
+      keyLength: 32,
+    });
 
-it("rejects AES-GCM decryption with the wrong key", async () => {
-  const provider = new WebCryptoProvider();
+    const plaintext = new TextEncoder().encode("wallet-secret");
 
-  const salt = new Uint8Array(16);
+    const ciphertextOne = await encryptAesGcm(key, plaintext, { nonce: provider.randomBytes(12) });
 
-  const correctKey = await provider.deriveKey("correct-password", {
-    salt,
-    iterations: 1_000,
-    keyLength: 32,
+    const ciphertextTwo = await encryptAesGcm(key, plaintext, { nonce: provider.randomBytes(12) });
+
+    expect(ciphertextOne).not.toEqual(ciphertextTwo);
   });
 
-  const wrongKey = await provider.deriveKey("wrong-password", {
-    salt,
-    iterations: 1_000,
-    keyLength: 32,
+  it("rejects AES-GCM decryption with the wrong key", async () => {
+    const provider = new WebCryptoProvider();
+
+    const salt = new Uint8Array(16);
+
+    const correctKey = await provider.deriveKey("correct-password", {
+      salt,
+      iterations: 1_000,
+      keyLength: 32,
+    });
+
+    const wrongKey = await provider.deriveKey("wrong-password", {
+      salt,
+      iterations: 1_000,
+      keyLength: 32,
+    });
+
+    const nonce = provider.randomBytes(12);
+    const plaintext = new TextEncoder().encode("wallet-secret");
+
+    const ciphertext = await encryptAesGcm(correctKey, plaintext, { nonce });
+
+    await expect(decryptAesGcm(wrongKey, ciphertext, { nonce })).rejects.toThrow(
+      "AES-GCM decryption failed",
+    );
   });
 
-  const nonce = provider.randomBytes(12);
-  const plaintext = new TextEncoder().encode("wallet-secret");
+  it("rejects AES-GCM decryption with the wrong nonce", async () => {
+    const provider = new WebCryptoProvider();
 
-  const ciphertext = await encryptAesGcm(
-    correctKey,
-    plaintext,
-    { nonce },
-  );
+    const key = await provider.deriveKey("test-password", {
+      salt: new Uint8Array(16),
+      iterations: 1_000,
+      keyLength: 32,
+    });
 
-  await expect(
-    decryptAesGcm(wrongKey, ciphertext, { nonce }),
-  ).rejects.toThrow("AES-GCM decryption failed");
-});
+    const nonce = provider.randomBytes(12);
+    const wrongNonce = provider.randomBytes(12);
+    const plaintext = new TextEncoder().encode("wallet-secret");
 
-it("rejects AES-GCM decryption with the wrong nonce", async () => {
-  const provider = new WebCryptoProvider();
+    const ciphertext = await encryptAesGcm(key, plaintext, { nonce });
 
-  const key = await provider.deriveKey("test-password", {
-    salt: new Uint8Array(16),
-    iterations: 1_000,
-    keyLength: 32,
+    await expect(decryptAesGcm(key, ciphertext, { nonce: wrongNonce })).rejects.toThrow(
+      "AES-GCM decryption failed",
+    );
   });
 
-  const nonce = provider.randomBytes(12);
-  const wrongNonce = provider.randomBytes(12);
-  const plaintext = new TextEncoder().encode("wallet-secret");
+  it("encrypts and decrypts empty plaintext", async () => {
+    const provider = new WebCryptoProvider();
 
-  const ciphertext = await encryptAesGcm(
-    key,
-    plaintext,
-    { nonce },
-  );
+    const key = await provider.deriveKey("test-password", {
+      salt: new Uint8Array(16),
+      iterations: 1_000,
+      keyLength: 32,
+    });
 
-  await expect(
-    decryptAesGcm(key, ciphertext, { nonce: wrongNonce }),
-  ).rejects.toThrow("AES-GCM decryption failed");
-});
+    const nonce = provider.randomBytes(12);
+    const plaintext = new Uint8Array();
 
-it("encrypts and decrypts empty plaintext", async () => {
-  const provider = new WebCryptoProvider();
+    const ciphertext = await encryptAesGcm(key, plaintext, { nonce });
 
-  const key = await provider.deriveKey("test-password", {
-    salt: new Uint8Array(16),
-    iterations: 1_000,
-    keyLength: 32,
+    const decrypted = await decryptAesGcm(key, ciphertext, { nonce });
+
+    expect(decrypted).toEqual(plaintext);
   });
 
-  const nonce = provider.randomBytes(12);
-  const plaintext = new Uint8Array();
+  it("encrypts and decrypts large plaintext", async () => {
+    const provider = new WebCryptoProvider();
 
-  const ciphertext = await encryptAesGcm(
-    key,
-    plaintext,
-    { nonce },
-  );
+    const key = await provider.deriveKey("test-password", {
+      salt: new Uint8Array(16),
+      iterations: 1_000,
+      keyLength: 32,
+    });
 
-  const decrypted = await decryptAesGcm(
-    key,
-    ciphertext,
-    { nonce },
-  );
+    const nonce = provider.randomBytes(12);
 
-  expect(decrypted).toEqual(plaintext);
-});
+    const plaintext = new Uint8Array(64 * 1024);
 
-it("encrypts and decrypts large plaintext", async () => {
-  const provider = new WebCryptoProvider();
+    for (let index = 0; index < plaintext.length; index += 1) {
+      plaintext[index] = index % 256;
+    }
 
-  const key = await provider.deriveKey("test-password", {
-    salt: new Uint8Array(16),
-    iterations: 1_000,
-    keyLength: 32,
+    const ciphertext = await encryptAesGcm(key, plaintext, { nonce });
+
+    const decrypted = await decryptAesGcm(key, ciphertext, { nonce });
+
+    expect(decrypted).toEqual(plaintext);
+    expect(ciphertext).not.toEqual(plaintext);
   });
-
-  const nonce = provider.randomBytes(12);
-
-  const plaintext = new Uint8Array(64 * 1024);
-
-  for (let index = 0; index < plaintext.length; index += 1) {
-    plaintext[index] = index % 256;
-  }
-
-  const ciphertext = await encryptAesGcm(
-    key,
-    plaintext,
-    { nonce },
-  );
-
-  const decrypted = await decryptAesGcm(
-    key,
-    ciphertext,
-    { nonce },
-  );
-
-  expect(decrypted).toEqual(plaintext);
-  expect(ciphertext).not.toEqual(plaintext);
-});
 });

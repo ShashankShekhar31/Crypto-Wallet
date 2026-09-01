@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  createEvmNetworkConfig,
-  parseEvmChainId,
-  validateEvmChainId,
-} from "../network.js";
+import { createEvmNetworkConfig, parseEvmChainId, validateEvmChainId } from "../network.js";
 
 describe("EVM network configuration", () => {
   const validConfig = {
@@ -16,10 +12,7 @@ describe("EVM network configuration", () => {
       symbol: "ETH",
       decimals: 18,
     },
-    rpcUrls: [
-      "https://rpc.example.com",
-      "https://backup.example.com",
-    ],
+    rpcUrls: ["https://rpc.example.com", "https://backup.example.com"],
   };
 
   it("creates a valid EVM network configuration", () => {
@@ -27,10 +20,7 @@ describe("EVM network configuration", () => {
 
     expect(config.id).toBe("ethereum-mainnet");
     expect(config.chainId).toBe(1n);
-    expect(config.rpcUrls).toEqual([
-      "https://rpc.example.com",
-      "https://backup.example.com",
-    ]);
+    expect(config.rpcUrls).toEqual(["https://rpc.example.com", "https://backup.example.com"]);
   });
 
   it("trims configuration strings", () => {
@@ -38,9 +28,7 @@ describe("EVM network configuration", () => {
       ...validConfig,
       id: " ethereum-mainnet ",
       name: " Ethereum Mainnet ",
-      rpcUrls: [
-        " https://rpc.example.com ",
-      ],
+      rpcUrls: [" https://rpc.example.com "],
       nativeCurrency: {
         ...validConfig.nativeCurrency,
         name: " Ether ",
@@ -98,13 +86,9 @@ describe("EVM network configuration", () => {
   });
 
   it("rejects malformed chain IDs", () => {
-    expect(() => parseEvmChainId("1")).toThrow(
-      "Invalid EVM chain ID",
-    );
+    expect(() => parseEvmChainId("1")).toThrow("Invalid EVM chain ID");
 
-    expect(() => parseEvmChainId("ethereum")).toThrow(
-      "Invalid EVM chain ID",
-    );
+    expect(() => parseEvmChainId("ethereum")).toThrow("Invalid EVM chain ID");
   });
 
   it("accepts a matching RPC chain ID", () => {
@@ -125,15 +109,11 @@ describe("EVM network configuration", () => {
     expect(Object.isFrozen(config.rpcUrls)).toBe(true);
   });
   it("accepts a local EVM test node RPC URL", () => {
-  const config = createEvmNetworkConfig({
-    ...validConfig,
-    rpcUrls: [
-      "http://127.0.0.1:8545",
-    ],
-  });
+    const config = createEvmNetworkConfig({
+      ...validConfig,
+      rpcUrls: ["http://127.0.0.1:8545"],
+    });
 
-  expect(config.rpcUrls).toEqual([
-    "http://127.0.0.1:8545",
-  ]);
-});
+    expect(config.rpcUrls).toEqual(["http://127.0.0.1:8545"]);
+  });
 });

@@ -23,15 +23,14 @@ export class DefaultSolanaBlockhashReader {
   }
 
   async getLatestBlockhash(): Promise<SolanaLatestBlockhash> {
-    const response =
-      await this.provider.request<SolanaLatestBlockhashRpcResponse>(
-        "getLatestBlockhash",
-        [
-          {
-            commitment: "confirmed",
-          },
-        ],
-      );
+    const response = await this.provider.request<SolanaLatestBlockhashRpcResponse>(
+      "getLatestBlockhash",
+      [
+        {
+          commitment: "confirmed",
+        },
+      ],
+    );
 
     if (
       typeof response !== "object" ||
@@ -39,33 +38,23 @@ export class DefaultSolanaBlockhashReader {
       typeof response.value !== "object" ||
       response.value === null
     ) {
-      throw new Error(
-        "Invalid Solana latest blockhash response",
-      );
+      throw new Error("Invalid Solana latest blockhash response");
     }
 
     const blockhash = response.value.blockhash;
 
-    if (
-      typeof blockhash !== "string" ||
-      !blockhash.trim()
-    ) {
-      throw new Error(
-        "Invalid Solana latest blockhash value",
-      );
+    if (typeof blockhash !== "string" || !blockhash.trim()) {
+      throw new Error("Invalid Solana latest blockhash value");
     }
 
-    const lastValidBlockHeight =
-      response.value.lastValidBlockHeight;
+    const lastValidBlockHeight = response.value.lastValidBlockHeight;
 
     if (
       typeof lastValidBlockHeight !== "number" ||
       !Number.isSafeInteger(lastValidBlockHeight) ||
       lastValidBlockHeight < 0
     ) {
-      throw new Error(
-        "Invalid Solana last valid block height",
-      );
+      throw new Error("Invalid Solana last valid block height");
     }
 
     return Object.freeze({

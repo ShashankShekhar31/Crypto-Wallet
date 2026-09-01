@@ -135,10 +135,7 @@ export interface WalletSigner {
   /**
    * Signs a 32-byte message digest using the supplied derived key.
    */
-  signDigest(
-    key: DerivedKey,
-    digest: Uint8Array,
-  ): WalletSignature;
+  signDigest(key: DerivedKey, digest: Uint8Array): WalletSignature;
 }
 
 export interface WalletCrypto {

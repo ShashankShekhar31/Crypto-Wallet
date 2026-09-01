@@ -39,7 +39,7 @@ export class DefaultWalletLifecycle implements WalletLifecycle {
    *
    * The mnemonic is returned to the caller exactly so it can be
    * presented to the user for backup and verification.
-  */
+   */
 
   async create(password: string): Promise<WalletCreationResult> {
     await this.vault.unlock(password);
@@ -63,7 +63,7 @@ export class DefaultWalletLifecycle implements WalletLifecycle {
    * Restores a wallet from a BIP-39 recovery mnemonic.
    *
    * The mnemonic is validated before it is written to the vault.
-  */
+   */
 
   async restore(password: string, mnemonic: string): Promise<void> {
     if (!this.crypto.mnemonic.validate(mnemonic)) {

@@ -88,8 +88,7 @@ describe("DefaultErc20BalanceReader", () => {
         params: [
           {
             to: tokenAddress,
-            data: 
-                `0x70a08231${"0".repeat(24)}${ownerAddress.slice(2)}`,
+            data: `0x70a08231${"0".repeat(24)}${ownerAddress.slice(2)}`,
           },
           "latest",
         ],
@@ -119,8 +118,7 @@ describe("DefaultErc20BalanceReader", () => {
     expect(receivedParams).toEqual([
       {
         to: tokenAddress,
-        data:
-            `0x70a08231${"0".repeat(24)}${ownerAddress.slice(2)}`,
+        data: `0x70a08231${"0".repeat(24)}${ownerAddress.slice(2)}`,
       },
       "0x123456",
     ]);

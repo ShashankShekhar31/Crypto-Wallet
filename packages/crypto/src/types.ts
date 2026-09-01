@@ -1,10 +1,7 @@
 export interface CryptoProvider {
   randomBytes(length: number): Uint8Array;
 
-  hash(
-    algorithm: "SHA-256" | "SHA-512",
-    data: Uint8Array,
-  ): Promise<Uint8Array>;
+  hash(algorithm: "SHA-256" | "SHA-512", data: Uint8Array): Promise<Uint8Array>;
 }
 
 export interface KeyDerivationParams {
@@ -36,8 +33,5 @@ export interface CryptoKeyMaterial {
 }
 
 export interface KeyDerivationProvider {
-  deriveKey(
-    password: string,
-    params: KeyDerivationParams,
-  ): Promise<CryptoKeyMaterial>;
+  deriveKey(password: string, params: KeyDerivationParams): Promise<CryptoKeyMaterial>;
 }

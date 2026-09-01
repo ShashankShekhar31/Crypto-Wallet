@@ -1,9 +1,5 @@
 export interface EvmRpcTransport {
-  request<TResponse>(
-    url: string,
-    method: string,
-    params?: readonly unknown[],
-  ): Promise<TResponse>;
+  request<TResponse>(url: string, method: string, params?: readonly unknown[]): Promise<TResponse>;
 }
 
 export interface EvmRpcProviderOptions {
@@ -13,8 +9,5 @@ export interface EvmRpcProviderOptions {
 export interface EvmRpcProvider {
   readonly networkId: string;
 
-  request<TResponse>(
-    method: string,
-    params?: readonly unknown[],
-  ): Promise<TResponse>;
+  request<TResponse>(method: string, params?: readonly unknown[]): Promise<TResponse>;
 }

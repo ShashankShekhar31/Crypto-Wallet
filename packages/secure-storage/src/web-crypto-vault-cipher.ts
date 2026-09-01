@@ -1,13 +1,6 @@
-import {
-  decryptAesGcm,
-  encryptAesGcm,
-  WebCryptoProvider,
-} from "@crypto-wallet/crypto";
+import { decryptAesGcm, encryptAesGcm, WebCryptoProvider } from "@crypto-wallet/crypto";
 
-import type {
-  VaultCipher,
-  VaultCipherSession,
-} from "./types.js";
+import type { VaultCipher, VaultCipherSession } from "./types.js";
 
 const PBKDF2_ITERATIONS = 100_000;
 const KEY_LENGTH = 32;
@@ -34,9 +27,9 @@ export class WebCryptoVaultCipher implements VaultCipher {
 
   async createSession(password: string): Promise<VaultCipherSession> {
     if (password.length === 0) {
-        throw new Error("Vault password must not be empty");
+      throw new Error("Vault password must not be empty");
     }
-    
+
     return new WebCryptoVaultCipherSession(this.crypto, password);
   }
 }
@@ -58,11 +51,7 @@ class WebCryptoVaultCipherSession implements VaultCipherSession {
 
     const nonce = this.crypto.randomBytes(NONCE_LENGTH);
 
-    const ciphertext = await encryptAesGcm(
-      key,
-      plaintext,
-      { nonce },
-    );
+    const ciphertext = await encryptAesGcm(key, plaintext, { nonce });
 
     const envelope: VaultEnvelope = {
       version: 1,
@@ -82,9 +71,7 @@ class WebCryptoVaultCipherSession implements VaultCipherSession {
     let envelope: unknown;
 
     try {
-      envelope = JSON.parse(
-        new TextDecoder().decode(ciphertext),
-      );
+      envelope = JSON.parse(new TextDecoder().decode(ciphertext));
     } catch {
       throw new Error("Invalid encrypted vault payload");
     }
@@ -100,13 +87,9 @@ class WebCryptoVaultCipherSession implements VaultCipherSession {
     });
 
     try {
-      return await decryptAesGcm(
-        key,
-        Uint8Array.from(envelope.ciphertext),
-        {
-          nonce: Uint8Array.from(envelope.nonce),
-        },
-      );
+      return await decryptAesGcm(key, Uint8Array.from(envelope.ciphertext), {
+        nonce: Uint8Array.from(envelope.nonce),
+      });
     } catch {
       throw new Error("Vault decryption failed");
     }
@@ -146,10 +129,7 @@ function isByteArray(value: unknown): value is number[] {
     Array.isArray(value) &&
     value.every(
       (item): item is number =>
-        typeof item === "number" &&
-        Number.isInteger(item) &&
-        item >= 0 &&
-        item <= 255,
+        typeof item === "number" && Number.isInteger(item) && item >= 0 && item <= 255,
     )
   );
 }

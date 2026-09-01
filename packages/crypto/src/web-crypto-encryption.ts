@@ -1,7 +1,4 @@
-import type {
-  CryptoKeyMaterial,
-  EncryptionParams,
-} from "./types.js";
+import type { CryptoKeyMaterial, EncryptionParams } from "./types.js";
 
 export async function encryptAesGcm(
   keyMaterial: CryptoKeyMaterial,

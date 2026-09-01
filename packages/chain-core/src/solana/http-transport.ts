@@ -64,9 +64,7 @@ export class SolanaJsonRpcHttpTransport {
 
   private requestId = 0;
 
-  constructor(
-    options: SolanaJsonRpcHttpTransportOptions = {},
-  ) {
+  constructor(options: SolanaJsonRpcHttpTransportOptions = {}) {
     this.fetch = options.fetch ?? defaultFetch;
   }
 
@@ -108,34 +106,25 @@ export class SolanaJsonRpcHttpTransport {
     }
 
     if (!response.ok) {
-      throw new Error(
-        `Solana RPC HTTP request failed with status ${response.status}`,
-      );
+      throw new Error(`Solana RPC HTTP request failed with status ${response.status}`);
     }
 
     let payload: SolanaJsonRpcResponse<TResponse>;
 
     try {
-      payload =
-        (await response.json()) as SolanaJsonRpcResponse<TResponse>;
+      payload = (await response.json()) as SolanaJsonRpcResponse<TResponse>;
     } catch (error) {
       throw new Error("Invalid Solana RPC JSON response", {
         cause: error,
       });
     }
 
-    if (
-      typeof payload !== "object" ||
-      payload === null ||
-      payload.jsonrpc !== "2.0"
-    ) {
+    if (typeof payload !== "object" || payload === null || payload.jsonrpc !== "2.0") {
       throw new Error("Invalid Solana RPC response");
     }
 
     if (payload.error !== undefined) {
-      throw new Error(
-        `Solana RPC error ${payload.error.code}: ${payload.error.message}`,
-      );
+      throw new Error(`Solana RPC error ${payload.error.code}: ${payload.error.message}`);
     }
 
     if (!("result" in payload)) {

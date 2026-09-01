@@ -1,19 +1,12 @@
-import {
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { describe, expect, it } from "vitest";
 
-import {
-  estimateEvmTransactionFees,
-} from "../fee.js";
+import { estimateEvmTransactionFees } from "../fee.js";
 
 import type { EvmRpcProvider } from "../rpc.js";
 
 describe("estimateEvmTransactionFees", () => {
   const transaction = {
-    to:
-      "0x0000000000000000000000000000000000000002",
+    to: "0x0000000000000000000000000000000000000002",
     value: 100n,
     data: "0x",
     nonce: 1n,
@@ -31,10 +24,7 @@ describe("estimateEvmTransactionFees", () => {
     const provider: EvmRpcProvider = {
       networkId: "ethereum-mainnet",
 
-      async request<TResponse>(
-        method: string,
-        params: readonly unknown[],
-      ): Promise<TResponse> {
+      async request<TResponse>(method: string, params: readonly unknown[]): Promise<TResponse> {
         requests.push({
           method,
           params,
@@ -50,11 +40,7 @@ describe("estimateEvmTransactionFees", () => {
       },
     };
 
-    const estimate =
-      await estimateEvmTransactionFees(
-        provider,
-        transaction,
-      );
+    const estimate = await estimateEvmTransactionFees(provider, transaction);
 
     expect(estimate).toEqual({
       gasLimit: 21000n,
@@ -89,9 +75,7 @@ describe("estimateEvmTransactionFees", () => {
     const provider: EvmRpcProvider = {
       networkId: "ethereum-mainnet",
 
-      async request<TResponse>(
-        method: string,
-      ): Promise<TResponse> {
+      async request<TResponse>(method: string): Promise<TResponse> {
         const responses: Record<string, string> = {
           eth_estimateGas: "0x5208",
           eth_gasPrice: "0x64",
@@ -102,31 +86,22 @@ describe("estimateEvmTransactionFees", () => {
       },
     };
 
-    const estimate =
-      await estimateEvmTransactionFees(
-        provider,
-        {
-          ...transaction,
-          value: 0n,
-        },
-      );
+    const estimate = await estimateEvmTransactionFees(provider, {
+      ...transaction,
+      value: 0n,
+    });
 
     expect(estimate.gasLimit).toBe(21000n);
     expect(estimate.maxFeePerGas).toBe(100n);
   });
 
   it("passes transaction data to eth_estimateGas", async () => {
-    let receivedParams:
-      | readonly unknown[]
-      | undefined;
+    let receivedParams: readonly unknown[] | undefined;
 
     const provider: EvmRpcProvider = {
       networkId: "ethereum-mainnet",
 
-      async request<TResponse>(
-        method: string,
-        params: readonly unknown[],
-      ): Promise<TResponse> {
+      async request<TResponse>(method: string, params: readonly unknown[]): Promise<TResponse> {
         if (method === "eth_estimateGas") {
           receivedParams = params;
         }
@@ -141,13 +116,10 @@ describe("estimateEvmTransactionFees", () => {
       },
     };
 
-    await estimateEvmTransactionFees(
-      provider,
-      {
-        ...transaction,
-        data: "0xabcdef",
-      },
-    );
+    await estimateEvmTransactionFees(provider, {
+      ...transaction,
+      data: "0xabcdef",
+    });
 
     expect(receivedParams).toEqual([
       {
@@ -167,12 +139,7 @@ describe("estimateEvmTransactionFees", () => {
       },
     };
 
-    await expect(
-      estimateEvmTransactionFees(
-        provider,
-        transaction,
-      ),
-    ).rejects.toThrow(
+    await expect(estimateEvmTransactionFees(provider, transaction)).rejects.toThrow(
       "EVM gas estimate must be greater than zero",
     );
   });
@@ -181,9 +148,7 @@ describe("estimateEvmTransactionFees", () => {
     const provider: EvmRpcProvider = {
       networkId: "ethereum-mainnet",
 
-      async request<TResponse>(
-        method: string,
-      ): Promise<TResponse> {
+      async request<TResponse>(method: string): Promise<TResponse> {
         if (method === "eth_estimateGas") {
           return "0x5208" as TResponse;
         }
@@ -196,12 +161,7 @@ describe("estimateEvmTransactionFees", () => {
       },
     };
 
-    await expect(
-      estimateEvmTransactionFees(
-        provider,
-        transaction,
-      ),
-    ).rejects.toThrow(
+    await expect(estimateEvmTransactionFees(provider, transaction)).rejects.toThrow(
       "EVM gas price must be greater than zero",
     );
   });
@@ -210,9 +170,7 @@ describe("estimateEvmTransactionFees", () => {
     const provider: EvmRpcProvider = {
       networkId: "ethereum-mainnet",
 
-      async request<TResponse>(
-        method: string,
-      ): Promise<TResponse> {
+      async request<TResponse>(method: string): Promise<TResponse> {
         if (method === "eth_estimateGas") {
           return "0x5208" as TResponse;
         }
@@ -225,20 +183,13 @@ describe("estimateEvmTransactionFees", () => {
       },
     };
 
-    await expect(
-      estimateEvmTransactionFees(
-        provider,
-        transaction,
-      ),
-    ).rejects.toThrow(
+    await expect(estimateEvmTransactionFees(provider, transaction)).rejects.toThrow(
       "EVM priority fee cannot exceed gas price",
     );
   });
 
   it("propagates RPC errors", async () => {
-    const rpcError = new Error(
-      "RPC unavailable",
-    );
+    const rpcError = new Error("RPC unavailable");
 
     const provider: EvmRpcProvider = {
       networkId: "ethereum-mainnet",
@@ -248,11 +199,6 @@ describe("estimateEvmTransactionFees", () => {
       },
     };
 
-    await expect(
-      estimateEvmTransactionFees(
-        provider,
-        transaction,
-      ),
-    ).rejects.toBe(rpcError);
+    await expect(estimateEvmTransactionFees(provider, transaction)).rejects.toBe(rpcError);
   });
 });

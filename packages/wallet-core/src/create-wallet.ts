@@ -1,7 +1,4 @@
-import {
-  DefaultWalletCrypto,
-  type WalletCrypto,
-} from "@crypto-wallet/crypto";
+import { DefaultWalletCrypto, type WalletCrypto } from "@crypto-wallet/crypto";
 import {
   createWalletVault,
   type SecureStorageAdapter,

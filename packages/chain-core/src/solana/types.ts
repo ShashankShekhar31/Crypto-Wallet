@@ -6,7 +6,4 @@ export interface SolanaNetworkConfig {
   readonly genesisHash: string;
 }
 
-export type SolanaCommitment =
-  | "processed"
-  | "confirmed"
-  | "finalized";
+export type SolanaCommitment = "processed" | "confirmed" | "finalized";

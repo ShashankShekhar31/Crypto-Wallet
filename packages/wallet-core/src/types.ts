@@ -1,15 +1,8 @@
-import type {
-  WalletCrypto,
-} from "@crypto-wallet/crypto";
+import type { WalletCrypto } from "@crypto-wallet/crypto";
 
-import type {
-  SecureVault,
-  VaultState,
-} from "@crypto-wallet/secure-storage";
+import type { SecureVault, VaultState } from "@crypto-wallet/secure-storage";
 
-import type {
-  WalletLifecycle,
-} from "./wallet-lifecycle.js";
+import type { WalletLifecycle } from "./wallet-lifecycle.js";
 
 export interface WalletSession {
   readonly vault: SecureVault;

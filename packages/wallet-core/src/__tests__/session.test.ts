@@ -115,20 +115,13 @@ describe("DefaultWalletSession", () => {
 
     expect(vault.wasPersisted()).toBe(true);
   });
-    it("exposes the wallet lifecycle service", () => {
+  it("exposes the wallet lifecycle service", () => {
     const vault = new TestVault();
 
-    const session = new DefaultWalletSession(
-      vault,
-      crypto,
-    );
+    const session = new DefaultWalletSession(vault, crypto);
 
     expect(session.lifecycle).toBeDefined();
-    expect(session.lifecycle.create).toBeTypeOf(
-      "function",
-    );
-    expect(session.lifecycle.restore).toBeTypeOf(
-      "function",
-    );
+    expect(session.lifecycle.create).toBeTypeOf("function");
+    expect(session.lifecycle.restore).toBeTypeOf("function");
   });
 });

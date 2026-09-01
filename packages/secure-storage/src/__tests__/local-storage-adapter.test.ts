@@ -69,9 +69,7 @@ describe("LocalStorageSecureStorageAdapter", () => {
       first[0] = 99;
     }
 
-    expect(await adapter.get("wallet-vault")).toEqual(
-      new Uint8Array([1, 2, 3]),
-    );
+    expect(await adapter.get("wallet-vault")).toEqual(new Uint8Array([1, 2, 3]));
   });
 
   it("removes only the requested key", async () => {
@@ -84,9 +82,7 @@ describe("LocalStorageSecureStorageAdapter", () => {
     await adapter.remove("wallet-vault");
 
     expect(await adapter.get("wallet-vault")).toBeNull();
-    expect(await adapter.get("other-secret")).toEqual(
-      new Uint8Array([2]),
-    );
+    expect(await adapter.get("other-secret")).toEqual(new Uint8Array([2]));
   });
 
   it("clears secure-storage data without clearing unrelated storage", async () => {
@@ -114,8 +110,6 @@ describe("LocalStorageSecureStorageAdapter", () => {
 
     await adapter.set("wallet-vault", value);
 
-    expect(await adapter.get("wallet-vault")).toEqual(
-      new Uint8Array(),
-    );
+    expect(await adapter.get("wallet-vault")).toEqual(new Uint8Array());
   });
 });

@@ -5,9 +5,6 @@ import { DefaultWalletSession } from "./session.js";
 
 import type { WalletSession } from "./types.js";
 
-export function createWalletSession(
-  vault: SecureVault,
-  crypto: WalletCrypto,
-): WalletSession {
+export function createWalletSession(vault: SecureVault, crypto: WalletCrypto): WalletSession {
   return new DefaultWalletSession(vault, crypto);
 }

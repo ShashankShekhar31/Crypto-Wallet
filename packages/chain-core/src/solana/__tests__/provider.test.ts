@@ -1,24 +1,13 @@
-import {
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { DefaultSolanaRpcProvider } from "../provider.js";
 
-import type {
-  SolanaRpcTransport,
-} from "../rpc.js";
+import type { SolanaRpcTransport } from "../rpc.js";
 
-import type {
-  SolanaNetworkConfig,
-} from "../types.js";
+import type { SolanaNetworkConfig } from "../types.js";
 
 function createNetwork(
-  rpcUrls: readonly string[] = [
-    "https://rpc-one.example",
-    "https://rpc-two.example",
-  ],
+  rpcUrls: readonly string[] = ["https://rpc-one.example", "https://rpc-two.example"],
 ): SolanaNetworkConfig {
   return Object.freeze({
     id: "solana-testnet",
@@ -42,11 +31,7 @@ function createTransport(
       method: string,
       params?: readonly unknown[],
     ): Promise<TResponse> {
-      return (await handler(
-        url,
-        method,
-        params,
-      )) as TResponse;
+      return (await handler(url, method, params)) as TResponse;
     },
   };
 }
@@ -59,33 +44,21 @@ describe("DefaultSolanaRpcProvider", () => {
       params: readonly unknown[] | undefined;
     }> = [];
 
-    const transport = createTransport(
-      async (
+    const transport = createTransport(async (url, method, params) => {
+      calls.push({
         url,
         method,
         params,
-      ) => {
-        calls.push({
-          url,
-          method,
-          params,
-        });
+      });
 
-        return "test-genesis-hash";
-      },
-    );
+      return "test-genesis-hash";
+    });
 
-    const provider =
-      await DefaultSolanaRpcProvider.create(
-        createNetwork(),
-        {
-          transport,
-        },
-      );
+    const provider = await DefaultSolanaRpcProvider.create(createNetwork(), {
+      transport,
+    });
 
-    expect(provider.networkId).toBe(
-      "solana-testnet",
-    );
+    expect(provider.networkId).toBe("solana-testnet");
 
     expect(calls).toHaveLength(1);
     expect(calls[0]).toEqual({
@@ -98,150 +71,83 @@ describe("DefaultSolanaRpcProvider", () => {
   it("fails over when the first endpoint fails", async () => {
     const calls: string[] = [];
 
-    const transport = createTransport(
-      async (
-        url,
-      ) => {
-        calls.push(url);
+    const transport = createTransport(async (url) => {
+      calls.push(url);
 
-        if (
-          url ===
-          "https://rpc-one.example"
-        ) {
-          throw new Error(
-            "first endpoint failed",
-          );
-        }
+      if (url === "https://rpc-one.example") {
+        throw new Error("first endpoint failed");
+      }
 
-        return "test-genesis-hash";
-      },
-    );
+      return "test-genesis-hash";
+    });
 
-    const provider =
-      await DefaultSolanaRpcProvider.create(
-        createNetwork(),
-        {
-          transport,
-        },
-      );
+    const provider = await DefaultSolanaRpcProvider.create(createNetwork(), {
+      transport,
+    });
 
-    expect(provider.networkId).toBe(
-      "solana-testnet",
-    );
+    expect(provider.networkId).toBe("solana-testnet");
 
-    expect(calls).toEqual([
-      "https://rpc-one.example",
-      "https://rpc-two.example",
-    ]);
+    expect(calls).toEqual(["https://rpc-one.example", "https://rpc-two.example"]);
   });
 
   it("fails over when the first endpoint has the wrong genesis hash", async () => {
     const calls: string[] = [];
 
-    const transport = createTransport(
-      async (
-        url,
-      ) => {
-        calls.push(url);
+    const transport = createTransport(async (url) => {
+      calls.push(url);
 
-        if (
-          url ===
-          "https://rpc-one.example"
-        ) {
-          return "wrong-genesis-hash";
-        }
+      if (url === "https://rpc-one.example") {
+        return "wrong-genesis-hash";
+      }
 
-        return "test-genesis-hash";
-      },
-    );
+      return "test-genesis-hash";
+    });
 
-    const provider =
-      await DefaultSolanaRpcProvider.create(
-        createNetwork(),
-        {
-          transport,
-        },
-      );
+    const provider = await DefaultSolanaRpcProvider.create(createNetwork(), {
+      transport,
+    });
 
-    expect(provider.networkId).toBe(
-      "solana-testnet",
-    );
+    expect(provider.networkId).toBe("solana-testnet");
 
-    expect(calls).toEqual([
-      "https://rpc-one.example",
-      "https://rpc-two.example",
-    ]);
+    expect(calls).toEqual(["https://rpc-one.example", "https://rpc-two.example"]);
   });
 
   it("rejects an invalid genesis hash response", async () => {
-    const transport = createTransport(
-      async () => "",
-    );
+    const transport = createTransport(async () => "");
 
     await expect(
-      DefaultSolanaRpcProvider.create(
-        createNetwork([
-          "https://rpc.example",
-        ]),
-        {
-          transport,
-        },
-      ),
-    ).rejects.toThrow(
-      "No Solana RPC endpoint passed network identity validation",
-    );
+      DefaultSolanaRpcProvider.create(createNetwork(["https://rpc.example"]), {
+        transport,
+      }),
+    ).rejects.toThrow("No Solana RPC endpoint passed network identity validation");
   });
 
   it("rejects when all endpoints fail identity validation", async () => {
     const calls: string[] = [];
 
-    const transport = createTransport(
-      async (
-        url,
-      ) => {
-        calls.push(url);
+    const transport = createTransport(async (url) => {
+      calls.push(url);
 
-        return "wrong-genesis-hash";
-      },
-    );
+      return "wrong-genesis-hash";
+    });
 
     await expect(
-      DefaultSolanaRpcProvider.create(
-        createNetwork(),
-        {
-          transport,
-        },
-      ),
-    ).rejects.toThrow(
-      "No Solana RPC endpoint passed network identity validation",
-    );
+      DefaultSolanaRpcProvider.create(createNetwork(), {
+        transport,
+      }),
+    ).rejects.toThrow("No Solana RPC endpoint passed network identity validation");
 
-    expect(calls).toEqual([
-      "https://rpc-one.example",
-      "https://rpc-two.example",
-    ]);
+    expect(calls).toEqual(["https://rpc-one.example", "https://rpc-two.example"]);
   });
 
   it("rejects an empty RPC method", async () => {
-    const transport = createTransport(
-      async () => "test-genesis-hash",
-    );
+    const transport = createTransport(async () => "test-genesis-hash");
 
-    const provider =
-      await DefaultSolanaRpcProvider.create(
-        createNetwork([
-          "https://rpc.example",
-        ]),
-        {
-          transport,
-        },
-      );
+    const provider = await DefaultSolanaRpcProvider.create(createNetwork(["https://rpc.example"]), {
+      transport,
+    });
 
-    await expect(
-      provider.request("   "),
-    ).rejects.toThrow(
-      "Solana RPC method is required",
-    );
+    await expect(provider.request("   ")).rejects.toThrow("Solana RPC method is required");
   });
 
   it("forwards RPC requests to the validated endpoint", async () => {
@@ -251,47 +157,29 @@ describe("DefaultSolanaRpcProvider", () => {
       params: readonly unknown[] | undefined;
     }> = [];
 
-    const transport = createTransport(
-      async (
+    const transport = createTransport(async (url, method, params) => {
+      calls.push({
         url,
         method,
         params,
-      ) => {
-        calls.push({
-          url,
-          method,
-          params,
-        });
+      });
 
-        if (
-          method === "getGenesisHash"
-        ) {
-          return "test-genesis-hash";
-        }
+      if (method === "getGenesisHash") {
+        return "test-genesis-hash";
+      }
 
-        return {
-          value: 123,
-        };
-      },
-    );
+      return {
+        value: 123,
+      };
+    });
 
-    const provider =
-      await DefaultSolanaRpcProvider.create(
-        createNetwork([
-          "https://rpc.example",
-        ]),
-        {
-          transport,
-        },
-      );
+    const provider = await DefaultSolanaRpcProvider.create(createNetwork(["https://rpc.example"]), {
+      transport,
+    });
 
-    const result =
-      await provider.request<{
-        value: number;
-      }>(
-        "getBalance",
-        ["address"],
-      );
+    const result = await provider.request<{
+      value: number;
+    }>("getBalance", ["address"]);
 
     expect(result).toEqual({
       value: 123,

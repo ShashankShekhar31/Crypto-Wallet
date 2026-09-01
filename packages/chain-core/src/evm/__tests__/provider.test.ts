@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  DefaultEvmRpcProvider,
-} from "../provider.js";
+import { DefaultEvmRpcProvider } from "../provider.js";
 
 import type { EvmRpcTransport } from "../rpc.js";
 
@@ -16,10 +14,7 @@ describe("DefaultEvmRpcProvider", () => {
       symbol: "ETH",
       decimals: 18,
     },
-    rpcUrls: [
-      "https://rpc.example.com",
-      "https://backup.example.com",
-    ],
+    rpcUrls: ["https://rpc.example.com", "https://backup.example.com"],
   };
 
   it("creates a provider when the first RPC reports the expected chain", async () => {
@@ -41,10 +36,7 @@ describe("DefaultEvmRpcProvider", () => {
       },
     };
 
-    const provider = await DefaultEvmRpcProvider.create(
-      network,
-      { transport },
-    );
+    const provider = await DefaultEvmRpcProvider.create(network, { transport });
 
     expect(provider.networkId).toBe("ethereum-mainnet");
 
@@ -61,10 +53,7 @@ describe("DefaultEvmRpcProvider", () => {
     const requests: string[] = [];
 
     const transport: EvmRpcTransport = {
-      async request<TResponse>(
-        url: string,
-        _method: string,
-      ): Promise<TResponse> {
+      async request<TResponse>(url: string, _method: string): Promise<TResponse> {
         requests.push(url);
 
         return "0x1" as TResponse;
@@ -73,18 +62,14 @@ describe("DefaultEvmRpcProvider", () => {
 
     await DefaultEvmRpcProvider.create(network, { transport });
 
-    expect(requests).toEqual([
-      "https://rpc.example.com",
-    ]);
+    expect(requests).toEqual(["https://rpc.example.com"]);
   });
 
   it("fails over when the first RPC has a transport failure", async () => {
     const requests: string[] = [];
 
     const transport: EvmRpcTransport = {
-      async request<TResponse>(
-        url: string,
-      ): Promise<TResponse> {
+      async request<TResponse>(url: string): Promise<TResponse> {
         requests.push(url);
 
         if (url === "https://rpc.example.com") {
@@ -95,26 +80,18 @@ describe("DefaultEvmRpcProvider", () => {
       },
     };
 
-    const provider = await DefaultEvmRpcProvider.create(
-      network,
-      { transport },
-    );
+    const provider = await DefaultEvmRpcProvider.create(network, { transport });
 
     expect(provider.networkId).toBe("ethereum-mainnet");
 
-    expect(requests).toEqual([
-      "https://rpc.example.com",
-      "https://backup.example.com",
-    ]);
+    expect(requests).toEqual(["https://rpc.example.com", "https://backup.example.com"]);
   });
 
   it("fails over when the first RPC reports the wrong chain", async () => {
     const requests: string[] = [];
 
     const transport: EvmRpcTransport = {
-      async request<TResponse>(
-        url: string,
-      ): Promise<TResponse> {
+      async request<TResponse>(url: string): Promise<TResponse> {
         requests.push(url);
 
         if (url === "https://rpc.example.com") {
@@ -125,42 +102,29 @@ describe("DefaultEvmRpcProvider", () => {
       },
     };
 
-    const provider = await DefaultEvmRpcProvider.create(
-      network,
-      { transport },
-    );
+    const provider = await DefaultEvmRpcProvider.create(network, { transport });
 
     expect(provider.networkId).toBe("ethereum-mainnet");
 
-    expect(requests).toEqual([
-      "https://rpc.example.com",
-      "https://backup.example.com",
-    ]);
+    expect(requests).toEqual(["https://rpc.example.com", "https://backup.example.com"]);
   });
 
   it("rejects when all RPC endpoints fail", async () => {
     const requests: string[] = [];
 
     const transport: EvmRpcTransport = {
-      async request<TResponse>(
-        url: string,
-      ): Promise<TResponse> {
+      async request<TResponse>(url: string): Promise<TResponse> {
         requests.push(url);
 
         throw new Error(`RPC unavailable: ${url}`);
       },
     };
 
-    await expect(
-      DefaultEvmRpcProvider.create(network, { transport }),
-    ).rejects.toThrow(
+    await expect(DefaultEvmRpcProvider.create(network, { transport })).rejects.toThrow(
       "No EVM RPC endpoint passed chain identity validation",
     );
 
-    expect(requests).toEqual([
-      "https://rpc.example.com",
-      "https://backup.example.com",
-    ]);
+    expect(requests).toEqual(["https://rpc.example.com", "https://backup.example.com"]);
   });
 
   it("uses the selected fallback RPC for subsequent requests", async () => {
@@ -190,15 +154,9 @@ describe("DefaultEvmRpcProvider", () => {
       },
     };
 
-    const provider = await DefaultEvmRpcProvider.create(
-      network,
-      { transport },
-    );
+    const provider = await DefaultEvmRpcProvider.create(network, { transport });
 
-    const result = await provider.request<string>(
-      "eth_blockNumber",
-      [],
-    );
+    const result = await provider.request<string>("eth_blockNumber", []);
 
     expect(result).toBe("0x123");
 
@@ -228,9 +186,7 @@ describe("DefaultEvmRpcProvider", () => {
       },
     };
 
-    await expect(
-      DefaultEvmRpcProvider.create(network, { transport }),
-    ).rejects.toThrow(
+    await expect(DefaultEvmRpcProvider.create(network, { transport })).rejects.toThrow(
       "No EVM RPC endpoint passed chain identity validation",
     );
   });
@@ -242,13 +198,8 @@ describe("DefaultEvmRpcProvider", () => {
       },
     };
 
-    const provider = await DefaultEvmRpcProvider.create(
-      network,
-      { transport },
-    );
+    const provider = await DefaultEvmRpcProvider.create(network, { transport });
 
-    await expect(provider.request(" ")).rejects.toThrow(
-      "EVM RPC method is required",
-    );
+    await expect(provider.request(" ")).rejects.toThrow("EVM RPC method is required");
   });
 });

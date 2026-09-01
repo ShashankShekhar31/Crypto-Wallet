@@ -17,39 +17,25 @@ interface SolanaGetBalanceResponse {
   readonly value: number;
 }
 
-export class DefaultSolanaBalanceReader
-  implements SolanaBalanceReader
-{
+export class DefaultSolanaBalanceReader implements SolanaBalanceReader {
   private readonly provider: SolanaRpcProvider;
 
   constructor(provider: SolanaRpcProvider) {
     this.provider = provider;
   }
 
-  async getBalance(
-    address: string,
-  ): Promise<SolanaBalance> {
-    const normalizedAddress =
-      validateSolanaAddress(address);
+  async getBalance(address: string): Promise<SolanaBalance> {
+    const normalizedAddress = validateSolanaAddress(address);
 
-    const response =
-      await this.provider.request<SolanaGetBalanceResponse>(
-        "getBalance",
-        [
-          normalizedAddress,
-          {
-            commitment: "confirmed",
-          },
-        ],
-      );
+    const response = await this.provider.request<SolanaGetBalanceResponse>("getBalance", [
+      normalizedAddress,
+      {
+        commitment: "confirmed",
+      },
+    ]);
 
-    if (
-      !response ||
-      typeof response !== "object"
-    ) {
-      throw new Error(
-        "Invalid Solana balance response",
-      );
+    if (!response || typeof response !== "object") {
+      throw new Error("Invalid Solana balance response");
     }
 
     if (
@@ -58,9 +44,7 @@ export class DefaultSolanaBalanceReader
       !Number.isSafeInteger(response.context.slot) ||
       response.context.slot < 0
     ) {
-      throw new Error(
-        "Invalid Solana balance response context",
-      );
+      throw new Error("Invalid Solana balance response context");
     }
 
     if (
@@ -68,9 +52,7 @@ export class DefaultSolanaBalanceReader
       !Number.isSafeInteger(response.value) ||
       response.value < 0
     ) {
-      throw new Error(
-        "Invalid Solana balance response value",
-      );
+      throw new Error("Invalid Solana balance response value");
     }
 
     return Object.freeze({

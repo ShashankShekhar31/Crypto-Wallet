@@ -15,9 +15,7 @@ class TestWalletRepository implements WalletRepository {
   }
 
   async listByUserId(userId: string): Promise<WalletAccount[]> {
-    return [...this.wallets.values()].filter(
-      (wallet) => wallet.userId === userId,
-    );
+    return [...this.wallets.values()].filter((wallet) => wallet.userId === userId);
   }
 
   async delete(id: string): Promise<void> {
@@ -41,17 +39,13 @@ describe("WalletRepository", () => {
 
     await expect(repository.getById(wallet.id)).resolves.toEqual(wallet);
 
-    await expect(repository.listByUserId(wallet.userId)).resolves.toEqual([
-      wallet,
-    ]);
+    await expect(repository.listByUserId(wallet.userId)).resolves.toEqual([wallet]);
   });
 
   it("returns null for an unknown wallet", async () => {
     const repository: WalletRepository = new TestWalletRepository();
 
-    await expect(
-      repository.getById("missing-wallet"),
-    ).resolves.toBeNull();
+    await expect(repository.getById("missing-wallet")).resolves.toBeNull();
   });
 
   it("deletes a wallet", async () => {

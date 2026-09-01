@@ -1,21 +1,12 @@
-import {
-  describe,
-  expect,
-  it,
-} from "vitest";
+import { describe, expect, it } from "vitest";
 
-import {
-  createSolanaUnsignedTransaction,
-} from "../transaction.js";
+import { createSolanaUnsignedTransaction } from "../transaction.js";
 
-const VALID_ADDRESS =
-  "11111111111111111111111111111111";
+const VALID_ADDRESS = "11111111111111111111111111111111";
 
-const SECOND_ADDRESS =
-  "SysvarRent111111111111111111111111111111111";
+const SECOND_ADDRESS = "SysvarRent111111111111111111111111111111111";
 
-const BLOCKHASH =
-  "EkSn1Z7w3qK6s7J7wVYQW7fY6Y9J5u4p";
+const BLOCKHASH = "EkSn1Z7w3qK6s7J7wVYQW7fY6Y9J5u4p";
 
 function createInstruction() {
   return {
@@ -27,93 +18,64 @@ function createInstruction() {
 
 describe("Solana transaction construction", () => {
   it("creates an unsigned transaction", () => {
-    const transaction =
-      createSolanaUnsignedTransaction({
-        feePayer: VALID_ADDRESS,
-        recentBlockhash: BLOCKHASH,
-        instructions: [
-          createInstruction(),
-        ],
-      });
+    const transaction = createSolanaUnsignedTransaction({
+      feePayer: VALID_ADDRESS,
+      recentBlockhash: BLOCKHASH,
+      instructions: [createInstruction()],
+    });
 
-    expect(transaction.feePayer).toBe(
-      VALID_ADDRESS,
-    );
+    expect(transaction.feePayer).toBe(VALID_ADDRESS);
 
-    expect(transaction.recentBlockhash).toBe(
-      BLOCKHASH,
-    );
+    expect(transaction.recentBlockhash).toBe(BLOCKHASH);
 
-    expect(transaction.instructions).toHaveLength(
-      1,
-    );
+    expect(transaction.instructions).toHaveLength(1);
 
-    expect(
-      transaction.instructions[0]?.programId,
-    ).toBe(VALID_ADDRESS);
+    expect(transaction.instructions[0]?.programId).toBe(VALID_ADDRESS);
 
-    expect(
-      transaction.instructions[0]?.accounts,
-    ).toEqual([SECOND_ADDRESS]);
+    expect(transaction.instructions[0]?.accounts).toEqual([SECOND_ADDRESS]);
 
-    expect(
-      transaction.instructions[0]?.data,
-    ).toEqual(new Uint8Array([1, 2, 3]));
+    expect(transaction.instructions[0]?.data).toEqual(new Uint8Array([1, 2, 3]));
   });
 
   it("trims the fee payer and blockhash", () => {
-    const transaction =
-      createSolanaUnsignedTransaction({
-        feePayer: `  ${VALID_ADDRESS}  `,
-        recentBlockhash: `  ${BLOCKHASH}  `,
-        instructions: [
-          {
-            ...createInstruction(),
-            programId: `  ${VALID_ADDRESS}  `,
-            accounts: [
-              `  ${SECOND_ADDRESS}  `,
-            ],
-          },
-        ],
-      });
+    const transaction = createSolanaUnsignedTransaction({
+      feePayer: `  ${VALID_ADDRESS}  `,
+      recentBlockhash: `  ${BLOCKHASH}  `,
+      instructions: [
+        {
+          ...createInstruction(),
+          programId: `  ${VALID_ADDRESS}  `,
+          accounts: [`  ${SECOND_ADDRESS}  `],
+        },
+      ],
+    });
 
-    expect(transaction.feePayer).toBe(
-      VALID_ADDRESS,
-    );
+    expect(transaction.feePayer).toBe(VALID_ADDRESS);
 
-    expect(transaction.recentBlockhash).toBe(
-      BLOCKHASH,
-    );
+    expect(transaction.recentBlockhash).toBe(BLOCKHASH);
 
-    expect(
-      transaction.instructions[0]?.programId,
-    ).toBe(VALID_ADDRESS);
+    expect(transaction.instructions[0]?.programId).toBe(VALID_ADDRESS);
 
-    expect(
-      transaction.instructions[0]?.accounts,
-    ).toEqual([SECOND_ADDRESS]);
+    expect(transaction.instructions[0]?.accounts).toEqual([SECOND_ADDRESS]);
   });
 
   it("copies instruction data", () => {
     const data = new Uint8Array([1, 2, 3]);
 
-    const transaction =
-      createSolanaUnsignedTransaction({
-        feePayer: VALID_ADDRESS,
-        recentBlockhash: BLOCKHASH,
-        instructions: [
-          {
-            ...createInstruction(),
-            data,
-          },
-        ],
-      });
+    const transaction = createSolanaUnsignedTransaction({
+      feePayer: VALID_ADDRESS,
+      recentBlockhash: BLOCKHASH,
+      instructions: [
+        {
+          ...createInstruction(),
+          data,
+        },
+      ],
+    });
 
     data[0] = 99;
 
-    expect(
-      transaction.instructions[0]?.data,
-    ).toEqual(new Uint8Array([1, 2, 3]));
+    expect(transaction.instructions[0]?.data).toEqual(new Uint8Array([1, 2, 3]));
   });
 
   it("rejects an empty recent blockhash", () => {
@@ -121,13 +83,9 @@ describe("Solana transaction construction", () => {
       createSolanaUnsignedTransaction({
         feePayer: VALID_ADDRESS,
         recentBlockhash: "   ",
-        instructions: [
-          createInstruction(),
-        ],
+        instructions: [createInstruction()],
       }),
-    ).toThrow(
-      "Solana recent blockhash is required",
-    );
+    ).toThrow("Solana recent blockhash is required");
   });
 
   it("rejects a transaction without instructions", () => {
@@ -137,9 +95,7 @@ describe("Solana transaction construction", () => {
         recentBlockhash: BLOCKHASH,
         instructions: [],
       }),
-    ).toThrow(
-      "Solana transaction must have at least one instruction",
-    );
+    ).toThrow("Solana transaction must have at least one instruction");
   });
 
   it("rejects an invalid fee payer", () => {
@@ -147,9 +103,7 @@ describe("Solana transaction construction", () => {
       createSolanaUnsignedTransaction({
         feePayer: "not-a-solana-address",
         recentBlockhash: BLOCKHASH,
-        instructions: [
-          createInstruction(),
-        ],
+        instructions: [createInstruction()],
       }),
     ).toThrow("Invalid Solana address");
   });
@@ -181,9 +135,7 @@ describe("Solana transaction construction", () => {
           },
         ],
       }),
-    ).toThrow(
-      "Solana instruction must have at least one account",
-    );
+    ).toThrow("Solana instruction must have at least one account");
   });
 
   it("rejects an invalid instruction account", () => {
@@ -210,24 +162,17 @@ describe("Solana transaction construction", () => {
       },
     ];
 
-    const transaction =
-      createSolanaUnsignedTransaction({
-        feePayer: VALID_ADDRESS,
-        recentBlockhash: BLOCKHASH,
-        instructions,
-      });
+    const transaction = createSolanaUnsignedTransaction({
+      feePayer: VALID_ADDRESS,
+      recentBlockhash: BLOCKHASH,
+      instructions,
+    });
 
     accounts.push(VALID_ADDRESS);
-    instructions.push(
-      createInstruction(),
-    );
+    instructions.push(createInstruction());
 
-    expect(
-      transaction.instructions,
-    ).toHaveLength(1);
+    expect(transaction.instructions).toHaveLength(1);
 
-    expect(
-      transaction.instructions[0]?.accounts,
-    ).toEqual([SECOND_ADDRESS]);
+    expect(transaction.instructions[0]?.accounts).toEqual([SECOND_ADDRESS]);
   });
 });

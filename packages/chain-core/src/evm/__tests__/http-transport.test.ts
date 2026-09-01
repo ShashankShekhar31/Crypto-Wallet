@@ -1,12 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  EvmJsonRpcHttpTransport,
-  type EvmFetch,
-} from "../http-transport.js";
+import { EvmJsonRpcHttpTransport, type EvmFetch } from "../http-transport.js";
 
 describe("EvmJsonRpcHttpTransport", () => {
-    const rpcUrl = "https://rpc.example.com";
+  const rpcUrl = "https://rpc.example.com";
   it("sends a valid JSON-RPC POST request", async () => {
     let receivedInput = "";
     let receivedInit:
@@ -36,11 +33,7 @@ describe("EvmJsonRpcHttpTransport", () => {
 
     const transport = new EvmJsonRpcHttpTransport({ fetch });
 
-    const result = await transport.request<string>(
-        rpcUrl,
-      "eth_chainId",
-      [],
-    );
+    const result = await transport.request<string>(rpcUrl, "eth_chainId", []);
 
     expect(result).toBe("0x1");
     expect(receivedInput).toBe("https://rpc.example.com");
@@ -80,11 +73,7 @@ describe("EvmJsonRpcHttpTransport", () => {
 
     const transport = new EvmJsonRpcHttpTransport({ fetch });
 
-    await transport.request<string>(
-        rpcUrl,
-        "eth_getBalance",
-        ["0xabc", "latest"],
-    );
+    await transport.request<string>(rpcUrl, "eth_getBalance", ["0xabc", "latest"]);
 
     expect(JSON.parse(receivedBody)).toEqual({
       jsonrpc: "2.0",
@@ -105,9 +94,7 @@ describe("EvmJsonRpcHttpTransport", () => {
 
     const transport = new EvmJsonRpcHttpTransport({ fetch });
 
-    await expect(
-      transport.request(rpcUrl, "eth_chainId", []),
-    ).rejects.toThrow(
+    await expect(transport.request(rpcUrl, "eth_chainId", [])).rejects.toThrow(
       "EVM RPC HTTP request failed with status 503",
     );
   });
@@ -125,9 +112,9 @@ describe("EvmJsonRpcHttpTransport", () => {
 
     const transport = new EvmJsonRpcHttpTransport({ fetch });
 
-    await expect(
-      transport.request(rpcUrl, "eth_chainId", []),
-    ).rejects.toThrow("Invalid EVM JSON-RPC response");
+    await expect(transport.request(rpcUrl, "eth_chainId", [])).rejects.toThrow(
+      "Invalid EVM JSON-RPC response",
+    );
   });
 
   it("rejects an invalid JSON-RPC version", async () => {
@@ -145,9 +132,9 @@ describe("EvmJsonRpcHttpTransport", () => {
 
     const transport = new EvmJsonRpcHttpTransport({ fetch });
 
-    await expect(
-      transport.request(rpcUrl, "eth_chainId", []),
-    ).rejects.toThrow("Invalid EVM JSON-RPC response");
+    await expect(transport.request(rpcUrl, "eth_chainId", [])).rejects.toThrow(
+      "Invalid EVM JSON-RPC response",
+    );
   });
 
   it("rejects an invalid JSON-RPC id", async () => {
@@ -165,9 +152,9 @@ describe("EvmJsonRpcHttpTransport", () => {
 
     const transport = new EvmJsonRpcHttpTransport({ fetch });
 
-    await expect(
-      transport.request(rpcUrl, "eth_chainId", []),
-    ).rejects.toThrow("Invalid EVM JSON-RPC response");
+    await expect(transport.request(rpcUrl, "eth_chainId", [])).rejects.toThrow(
+      "Invalid EVM JSON-RPC response",
+    );
   });
 
   it("rejects a JSON-RPC error response", async () => {
@@ -188,9 +175,7 @@ describe("EvmJsonRpcHttpTransport", () => {
 
     const transport = new EvmJsonRpcHttpTransport({ fetch });
 
-    await expect(
-      transport.request(rpcUrl, "eth_call", []),
-    ).rejects.toThrow(
+    await expect(transport.request(rpcUrl, "eth_call", [])).rejects.toThrow(
       "EVM RPC error -32000: execution reverted",
     );
   });
@@ -213,9 +198,7 @@ describe("EvmJsonRpcHttpTransport", () => {
 
     const transport = new EvmJsonRpcHttpTransport({ fetch });
 
-    await expect(
-      transport.request(rpcUrl, "eth_unknownMethod", []),
-    ).rejects.toThrow(
+    await expect(transport.request(rpcUrl, "eth_unknownMethod", [])).rejects.toThrow(
       "EVM RPC error -32601: Method not found",
     );
   });
@@ -229,8 +212,6 @@ describe("EvmJsonRpcHttpTransport", () => {
 
     const transport = new EvmJsonRpcHttpTransport({ fetch });
 
-    await expect(
-      transport.request(rpcUrl, "eth_chainId", []),
-    ).rejects.toBe(fetchError);
+    await expect(transport.request(rpcUrl, "eth_chainId", [])).rejects.toBe(fetchError);
   });
 });

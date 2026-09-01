@@ -26,9 +26,7 @@ describe("WebCryptoVaultCipher", () => {
 
     const ciphertext = await encryptSession.encrypt(plaintext);
 
-    await expect(
-      decryptSession.decrypt(ciphertext),
-    ).rejects.toThrow("Vault decryption failed");
+    await expect(decryptSession.decrypt(ciphertext)).rejects.toThrow("Vault decryption failed");
   });
 
   it("produces different ciphertext for repeated encryption", async () => {
@@ -51,9 +49,7 @@ describe("WebCryptoVaultCipher", () => {
 
     const ciphertext = await session.encrypt(plaintext);
 
-    const envelope = JSON.parse(
-      new TextDecoder().decode(ciphertext),
-    ) as {
+    const envelope = JSON.parse(new TextDecoder().decode(ciphertext)) as {
       version: number;
       kdf: string;
       iterations: number;
@@ -63,16 +59,11 @@ describe("WebCryptoVaultCipher", () => {
       ciphertext: number[];
     };
 
-    envelope.ciphertext[0] =
-      (envelope.ciphertext[0] ?? 0) ^ 1;
+    envelope.ciphertext[0] = (envelope.ciphertext[0] ?? 0) ^ 1;
 
-    const tampered = new TextEncoder().encode(
-      JSON.stringify(envelope),
-    );
+    const tampered = new TextEncoder().encode(JSON.stringify(envelope));
 
-    await expect(
-      session.decrypt(tampered),
-    ).rejects.toThrow("Vault decryption failed");
+    await expect(session.decrypt(tampered)).rejects.toThrow("Vault decryption failed");
   });
 
   it("rejects malformed encrypted payloads", async () => {
@@ -88,9 +79,7 @@ describe("WebCryptoVaultCipher", () => {
       }),
     );
 
-    await expect(
-      session.decrypt(malformed),
-    ).rejects.toThrow("Invalid encrypted vault payload");
+    await expect(session.decrypt(malformed)).rejects.toThrow("Invalid encrypted vault payload");
   });
 
   it("supports empty plaintext", async () => {
@@ -105,40 +94,36 @@ describe("WebCryptoVaultCipher", () => {
     expect(decrypted).toEqual(plaintext);
   });
   it("rejects an empty vault password", async () => {
-  const cipher = new WebCryptoVaultCipher();
+    const cipher = new WebCryptoVaultCipher();
 
-  await expect(
-    cipher.createSession(""),
-  ).rejects.toThrow("Vault password must not be empty");
-});
-it("stores a versioned encrypted envelope", async () => {
-  const cipher = new WebCryptoVaultCipher();
-  const session = await cipher.createSession("test-password");
+    await expect(cipher.createSession("")).rejects.toThrow("Vault password must not be empty");
+  });
+  it("stores a versioned encrypted envelope", async () => {
+    const cipher = new WebCryptoVaultCipher();
+    const session = await cipher.createSession("test-password");
 
-  const plaintext = new TextEncoder().encode("wallet-secret");
+    const plaintext = new TextEncoder().encode("wallet-secret");
 
-  const encrypted = await session.encrypt(plaintext);
+    const encrypted = await session.encrypt(plaintext);
 
-  const envelope = JSON.parse(
-    new TextDecoder().decode(encrypted),
-  ) as {
-    version: number;
-    kdf: string;
-    iterations: number;
-    keyLength: number;
-    salt: number[];
-    cipher: string;
-    nonce: number[];
-    ciphertext: number[];
-  };
+    const envelope = JSON.parse(new TextDecoder().decode(encrypted)) as {
+      version: number;
+      kdf: string;
+      iterations: number;
+      keyLength: number;
+      salt: number[];
+      cipher: string;
+      nonce: number[];
+      ciphertext: number[];
+    };
 
-  expect(envelope.version).toBe(1);
-  expect(envelope.kdf).toBe("PBKDF2-SHA-256");
-  expect(envelope.iterations).toBe(100_000);
-  expect(envelope.keyLength).toBe(32);
-  expect(envelope.cipher).toBe("AES-256-GCM");
-  expect(envelope.salt).toHaveLength(16);
-  expect(envelope.nonce).toHaveLength(12);
-  expect(envelope.ciphertext.length).toBeGreaterThan(0);
-});
+    expect(envelope.version).toBe(1);
+    expect(envelope.kdf).toBe("PBKDF2-SHA-256");
+    expect(envelope.iterations).toBe(100_000);
+    expect(envelope.keyLength).toBe(32);
+    expect(envelope.cipher).toBe("AES-256-GCM");
+    expect(envelope.salt).toHaveLength(16);
+    expect(envelope.nonce).toHaveLength(12);
+    expect(envelope.ciphertext.length).toBeGreaterThan(0);
+  });
 });

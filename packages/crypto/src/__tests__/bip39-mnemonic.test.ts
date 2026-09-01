@@ -64,11 +64,9 @@ describe("Bip39MnemonicService", () => {
     const invalidMnemonic =
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon";
 
-    await expect(service.toSeed(invalidMnemonic)).rejects.toThrow(
-      "Invalid BIP-39 mnemonic",
-    );
+    await expect(service.toSeed(invalidMnemonic)).rejects.toThrow("Invalid BIP-39 mnemonic");
   });
-      it("matches the official BIP-39 deterministic seed vector", async () => {
+  it("matches the official BIP-39 deterministic seed vector", async () => {
     const mnemonic =
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 

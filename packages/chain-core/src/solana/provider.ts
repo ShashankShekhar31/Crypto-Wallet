@@ -1,14 +1,9 @@
 import type { SolanaNetworkConfig } from "./types.js";
-import type {
-  SolanaRpcProvider,
-  SolanaRpcProviderOptions,
-} from "./rpc.js";
+import type { SolanaRpcProvider, SolanaRpcProviderOptions } from "./rpc.js";
 
 const SOLANA_GENESIS_HASH_METHOD = "getGenesisHash";
 
-export class DefaultSolanaRpcProvider
-  implements SolanaRpcProvider
-{
+export class DefaultSolanaRpcProvider implements SolanaRpcProvider {
   readonly networkId: string;
 
   private readonly network: SolanaNetworkConfig;
@@ -37,11 +32,7 @@ export class DefaultSolanaRpcProvider
     let lastError: unknown;
 
     for (const rpcUrl of network.rpcUrls) {
-      const provider = new DefaultSolanaRpcProvider(
-        network,
-        options.transport,
-        rpcUrl,
-      );
+      const provider = new DefaultSolanaRpcProvider(network, options.transport, rpcUrl);
 
       try {
         await provider.validateNetworkIdentity();
@@ -52,53 +43,32 @@ export class DefaultSolanaRpcProvider
       }
     }
 
-    throw new Error(
-      "No Solana RPC endpoint passed network identity validation",
-      {
-        cause: lastError,
-      },
-    );
+    throw new Error("No Solana RPC endpoint passed network identity validation", {
+      cause: lastError,
+    });
   }
 
-  async request<TResponse>(
-    method: string,
-    params: readonly unknown[] = [],
-  ): Promise<TResponse> {
+  async request<TResponse>(method: string, params: readonly unknown[] = []): Promise<TResponse> {
     if (!method.trim()) {
       throw new Error("Solana RPC method is required");
     }
 
-    return this.transport.request<TResponse>(
-      this.rpcUrl,
-      method,
-      params,
-    );
+    return this.transport.request<TResponse>(this.rpcUrl, method, params);
   }
 
   private async validateNetworkIdentity(): Promise<void> {
-    const actualGenesisHash =
-      await this.transport.request<string>(
-        this.rpcUrl,
-        SOLANA_GENESIS_HASH_METHOD,
-        [],
-      );
+    const actualGenesisHash = await this.transport.request<string>(
+      this.rpcUrl,
+      SOLANA_GENESIS_HASH_METHOD,
+      [],
+    );
 
-    if (
-      typeof actualGenesisHash !== "string" ||
-      !actualGenesisHash.trim()
-    ) {
-      throw new Error(
-        "Invalid Solana genesis hash response",
-      );
+    if (typeof actualGenesisHash !== "string" || !actualGenesisHash.trim()) {
+      throw new Error("Invalid Solana genesis hash response");
     }
 
-    if (
-      actualGenesisHash.trim() !==
-      this.network.genesisHash
-    ) {
-      throw new Error(
-        "Solana RPC endpoint returned unexpected genesis hash",
-      );
+    if (actualGenesisHash.trim() !== this.network.genesisHash) {
+      throw new Error("Solana RPC endpoint returned unexpected genesis hash");
     }
   }
 }
