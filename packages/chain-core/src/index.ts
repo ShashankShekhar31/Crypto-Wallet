@@ -79,3 +79,91 @@ export {
 export type {
   EvmTransactionSignature,
 } from "./evm/signed-transaction.js";
+
+export type {
+  SolanaCommitment,
+  SolanaNetworkConfig,
+} from "./solana/types.js";
+
+export {
+  createSolanaNetworkConfig,
+} from "./solana/network.js";
+
+export type {
+  SolanaFetch,
+  SolanaFetchResponse,
+  SolanaJsonRpcHttpTransportOptions,
+} from "./solana/http-transport.js";
+
+export {
+  SolanaJsonRpcHttpTransport,
+} from "./solana/http-transport.js";
+
+export {
+  DefaultSolanaBalanceReader,
+} from "./solana/balance.js";
+
+export type {
+  SolanaBalance,
+  SolanaBalanceReader,
+} from "./solana/balance.js";
+
+export {
+  createSolanaUnsignedTransaction,
+} from "./solana/transaction.js";
+
+export type {
+  SolanaInstruction,
+  SolanaTransactionRequest,
+  SolanaUnsignedTransaction,
+} from "./solana/transaction.js";
+
+export {
+  DefaultSolanaBlockhashReader,
+} from "./solana/blockhash.js";
+
+export type {
+  SolanaLatestBlockhash,
+} from "./solana/blockhash.js";
+
+export {
+  DefaultSolanaSplBalanceReader,
+} from "./solana/spl-balance.js";
+
+export type {
+  SolanaSplBalance,
+  SolanaSplBalanceReader,
+} from "./solana/spl-balance.js";
+
+export {
+  compileSolanaTransactionMessage,
+} from "./solana/message.js";
+
+export type {
+  SolanaAccountMeta,
+  SolanaCompiledInstruction,
+  SolanaTransactionMessage,
+} from "./solana/message.js";
+
+export {
+  serializeSolanaTransactionMessage,
+} from "./solana/serializer.js";
+
+export {
+  signSolanaMessage,
+} from "./solana/signing.js";
+
+export type {
+  SolanaTransactionSigner,
+  SolanaSignature,
+} from "./solana/signing.js";
+
+export {
+  createSolanaSignedTransaction,
+  serializeSolanaSignedTransaction,
+} from "./solana/signed-transaction.js";
+
+export type {
+  SolanaSignedTransaction,
+} from "./solana/signed-transaction.js";
+
