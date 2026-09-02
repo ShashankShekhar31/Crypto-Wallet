@@ -19,6 +19,7 @@
   "dependencies": {
     "@crypto-wallet/crypto": "workspace:*",
     "@noble/hashes": "^2.4.0",
-    "@scure/base": "^2.4.0"
+    "@scure/base": "^2.4.0",
+    "@scure/btc-signer": "2.3.0"
   }
 }

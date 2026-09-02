@@ -98,3 +98,6 @@ export {
 } from "./solana/signed-transaction.js";
 
 export type { SolanaSignedTransaction } from "./solana/signed-transaction.js";
+
+export * from "./bitcoin/provider.js";
+export * from "./bitcoin/esplora-provider.js";
