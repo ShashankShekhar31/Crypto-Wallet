@@ -15,7 +15,7 @@ describe("Bitcoin address validation", () => {
 
   it("accepts a mainnet SegWit address", () => {
     expect(
-      isValidBitcoinAddress("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080", "bitcoin-mainnet"),
+      isValidBitcoinAddress("bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu", "bitcoin-mainnet"),
     ).toBe(true);
   });
 
@@ -59,7 +59,7 @@ describe("Bitcoin address validation", () => {
 
   it("rejects a mainnet SegWit address on testnet", () => {
     expect(
-      isValidBitcoinAddress("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080", "bitcoin-testnet"),
+      isValidBitcoinAddress("bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu", "bitcoin-testnet"),
     ).toBe(false);
   });
 
