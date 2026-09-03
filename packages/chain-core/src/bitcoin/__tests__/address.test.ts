@@ -50,4 +50,32 @@ describe("Bitcoin address validation", () => {
       "1111111111111111111114oLvT2",
     );
   });
+
+  it("rejects a SegWit address with an invalid checksum", () => {
+    expect(
+      isValidBitcoinAddress("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt081", "bitcoin-mainnet"),
+    ).toBe(false);
+  });
+
+  it("rejects a mainnet SegWit address on testnet", () => {
+    expect(
+      isValidBitcoinAddress("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080", "bitcoin-testnet"),
+    ).toBe(false);
+  });
+
+  it("rejects a malformed Bech32 address with a valid prefix", () => {
+    expect(isValidBitcoinAddress("bc1thisisnotavalidbitcoinaddress", "bitcoin-mainnet")).toBe(
+      false,
+    );
+  });
+
+  it("rejects a Base58 address with an invalid checksum", () => {
+    expect(isValidBitcoinAddress("1111111111111111111114oLvT3", "bitcoin-mainnet")).toBe(false);
+  });
+
+  it("accepts a testnet SegWit address", () => {
+    expect(
+      isValidBitcoinAddress("tb1qcr8te4kr609gcawutmrza0j4xv80jy8zmfp6l0", "bitcoin-testnet"),
+    ).toBe(true);
+  });
 });
