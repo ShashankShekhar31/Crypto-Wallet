@@ -9,6 +9,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@crypto-wallet/secure-storage": "workspace:*",
+    "@crypto-wallet/wallet-core": "workspace:*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
