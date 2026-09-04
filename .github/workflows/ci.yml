@@ -69,7 +69,18 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Dependency audit
-        run: pnpm audit --audit-level high
+        run: |
+          attempts=0
+          max_attempts=3
+          until pnpm audit --audit-level high; do
+            attempts=$((attempts + 1))
+            if [ "$attempts" -ge "$max_attempts" ]; then
+              echo "pnpm audit failed after ${max_attempts} attempts."
+              exit 1
+            fi
+            echo "pnpm audit failed (attempt ${attempts}/${max_attempts}). Retrying in 15s..."
+            sleep 15
+          done
 
       - name: Secret scan
         uses: gitleaks/gitleaks-action@v3
