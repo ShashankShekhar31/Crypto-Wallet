@@ -30,6 +30,8 @@ export interface SecureStorageOptions {
 export interface SecureVault {
   readonly state: VaultState;
 
+  hasPersistedData(): Promise<boolean>;
+
   unlock(password: string): Promise<void>;
   lock(): void;
   persist(): Promise<void>;

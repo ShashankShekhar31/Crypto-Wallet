@@ -17,6 +17,10 @@ class TestVault implements SecureVault {
     };
   }
 
+  async hasPersistedData(): Promise<boolean> {
+    return false;
+  }
+
   async unlock(_password: string): Promise<void> {
     this.locked = false;
   }

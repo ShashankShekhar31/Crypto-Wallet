@@ -24,6 +24,7 @@ export interface WalletCreationResult {
  */
 
 export interface WalletLifecycle {
+  exists(): Promise<boolean>;
   create(password: string): Promise<WalletCreationResult>;
   restore(password: string, mnemonic: string): Promise<void>;
 }
@@ -33,6 +34,10 @@ export class DefaultWalletLifecycle implements WalletLifecycle {
     private readonly vault: SecureVault,
     private readonly crypto: WalletCrypto,
   ) {}
+
+  async exists(): Promise<boolean> {
+    return this.vault.hasPersistedData();
+  }
 
   /**
    * Creates a new wallet and returns its recovery mnemonic.

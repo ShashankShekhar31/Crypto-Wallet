@@ -327,7 +327,42 @@ importers:
 
   apps/mobile: {}
 
-  apps/web: {}
+  apps/web:
+    dependencies:
+      "@crypto-wallet/chain-core":
+        specifier: workspace:*
+        version: link:../../packages/chain-core
+      "@crypto-wallet/secure-storage":
+        specifier: workspace:*
+        version: link:../../packages/secure-storage
+      "@crypto-wallet/wallet-core":
+        specifier: workspace:*
+        version: link:../../packages/wallet-core
+      qrcode.react:
+        specifier: ^4.2.0
+        version: 4.2.0(react@19.2.8)
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      "@types/react":
+        specifier: ^19.2.18
+        version: 19.2.18
+      "@types/react-dom":
+        specifier: ^19.2.5
+        version: 19.2.5(@types/react@19.2.18)
+      "@vitejs/plugin-react":
+        specifier: ^6.1.1
+        version: 6.1.1(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(tsx@4.23.12))
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vite:
+        specifier: ^8.2.2
+        version: 8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(tsx@4.23.12)
 
   packages/cache:
     dependencies:
@@ -403,6 +438,9 @@ importers:
 
   packages/wallet-core:
     dependencies:
+      "@crypto-wallet/chain-core":
+        specifier: workspace:*
+        version: link:../chain-core
       "@crypto-wallet/crypto":
         specifier: workspace:*
         version: link:../crypto
@@ -1285,6 +1323,20 @@ packages:
         integrity: sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==,
       }
 
+  "@types/react-dom@19.2.5":
+    resolution:
+      {
+        integrity: sha512-fMPwH9v7r/pp43yUd2/Mbiex5KouJwwR3dzHkhLREUC6764VyDsqxhAxv6OFEYR1RhjOyD1naqba8ECDBe7ZQg==,
+      }
+    peerDependencies:
+      "@types/react": ^19.2.0
+
+  "@types/react@19.2.18":
+    resolution:
+      {
+        integrity: sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==,
+      }
+
   "@typescript-eslint/eslint-plugin@8.67.0":
     resolution:
       {
@@ -1373,6 +1425,25 @@ packages:
         integrity: sha512-fkv8dHRDqfGtTHuJeebdrQ7cX6Ad4WAS00rgHh9UGvMycF1mjBfsxry1XsLIFhWZ6Judlh6UdzK+TYlbpCXgnA==,
       }
     engines: { node: ^18.18.0 || ^20.9.0 || >=21.1.0 }
+
+  "@vitejs/plugin-react@6.1.1":
+    resolution:
+      {
+        integrity: sha512-yxLaQV9gkhS8ezJqCM6+ndU7mDY6gqAg75NQ+0IjwEI8IYOmQCgkRwHKVSfWXW076DsqMo0Dk+0FK1U+M5RgFw==,
+      }
+    engines: { node: ^20.19.0 || >=22.12.0 }
+    peerDependencies:
+      "@rolldown/plugin-babel": ^0.1.7 || ^0.2.0
+      babel-plugin-react-compiler: ^1.0.0
+      oxc-transform-react: ^0.145.0
+      vite: ^8.0.0
+    peerDependenciesMeta:
+      "@rolldown/plugin-babel":
+        optional: true
+      babel-plugin-react-compiler:
+        optional: true
+      oxc-transform-react:
+        optional: true
 
   "@vitest/expect@4.1.11":
     resolution:
@@ -1543,6 +1614,12 @@ packages:
         integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==,
       }
     engines: { node: ">= 8" }
+
+  csstype@3.2.3:
+    resolution:
+      {
+        integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==,
+      }
 
   debug@4.4.3:
     resolution:
@@ -2290,11 +2367,34 @@ packages:
       }
     engines: { node: ">=16.0.0" }
 
+  qrcode.react@4.2.0:
+    resolution:
+      {
+        integrity: sha512-QpgqWi8rD9DsS9EP3z7BT+5lY5SFhsqGjpgW5DY/i3mK4M9DTBNz3ErMi8BWYEfI3L0d8GIbGmcdFAS1uIRGjA==,
+      }
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   quick-format-unescaped@4.0.4:
     resolution:
       {
         integrity: sha512-tYC1Q1hgyRuHgloV/YXs2w15unPVh8qfu/qCTfhTYamaw7fyhumKa2yGpdSo87vY32rIclj+4fWYQXUMs9EHvg==,
       }
+
+  react-dom@19.2.8:
+    resolution:
+      {
+        integrity: sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ==,
+      }
+    peerDependencies:
+      react: ^19.2.8
+
+  react@19.2.8:
+    resolution:
+      {
+        integrity: sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw==,
+      }
+    engines: { node: ">=0.10.0" }
 
   real-require@0.2.0:
     resolution:
@@ -2370,6 +2470,12 @@ packages:
         integrity: sha512-b3rppTKm9T+PsVCBEOUR46GWI7fdOs00VKZ1+9c1EWDaDMvjQc6tUwuFyIprgGgTcWoVHSKrU8H31ZHA2e0RHA==,
       }
     engines: { node: ">=10" }
+
+  scheduler@0.27.0:
+    resolution:
+      {
+        integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==,
+      }
 
   secure-json-parse@4.1.0:
     resolution:
@@ -3122,6 +3228,14 @@ snapshots:
       pg-protocol: 1.16.0
       pg-types: 2.2.0
 
+  "@types/react-dom@19.2.5(@types/react@19.2.18)":
+    dependencies:
+      "@types/react": 19.2.18
+
+  "@types/react@19.2.18":
+    dependencies:
+      csstype: 3.2.3
+
   "@typescript-eslint/eslint-plugin@8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1)(typescript@6.0.3))(eslint@10.8.1)(typescript@6.0.3)":
     dependencies:
       "@eslint-community/regexpp": 4.12.2
@@ -3212,6 +3326,11 @@ snapshots:
     dependencies:
       "@typescript-eslint/types": 8.67.0
       eslint-visitor-keys: 5.0.1
+
+  "@vitejs/plugin-react@6.1.1(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(tsx@4.23.12))":
+    dependencies:
+      "@rolldown/pluginutils": 1.0.1
+      vite: 8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(tsx@4.23.12)
 
   "@vitest/expect@4.1.11":
     dependencies:
@@ -3314,6 +3433,8 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  csstype@3.2.3: {}
 
   debug@4.4.3:
     dependencies:
@@ -3744,7 +3865,18 @@ snapshots:
 
   pvutils@1.2.0: {}
 
+  qrcode.react@4.2.0(react@19.2.8):
+    dependencies:
+      react: 19.2.8
+
   quick-format-unescaped@4.0.4: {}
+
+  react-dom@19.2.8(react@19.2.8):
+    dependencies:
+      react: 19.2.8
+      scheduler: 0.27.0
+
+  react@19.2.8: {}
 
   real-require@0.2.0: {}
 
@@ -3797,6 +3929,8 @@ snapshots:
       ret: 0.5.0
 
   safe-stable-stringify@2.5.0: {}
+
+  scheduler@0.27.0: {}
 
   secure-json-parse@4.1.0: {}
 

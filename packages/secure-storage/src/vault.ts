@@ -39,6 +39,10 @@ export class WalletVault implements SecureVault {
     };
   }
 
+  async hasPersistedData(): Promise<boolean> {
+    return (await this.adapter.get("wallet-vault")) !== null;
+  }
+
   async unlock(password: string): Promise<void> {
     const encrypted = await this.adapter.get("wallet-vault");
 
