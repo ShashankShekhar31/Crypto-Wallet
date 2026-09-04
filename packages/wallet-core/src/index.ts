@@ -10,3 +10,6 @@ export * from "./transaction-lifecycle.js";
 export * from "./transaction-state.js";
 export * from "./transaction-engine.js";
 export * from "./transaction-authority.js";
+export * from "./receive-address.js";
+export * from "./bitcoin-send.js";
+export * from "./bitcoin-send-signing.js";

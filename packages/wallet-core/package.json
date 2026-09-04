@@ -22,6 +22,7 @@
   "dependencies": {
     "@crypto-wallet/crypto": "workspace:*",
     "@crypto-wallet/secure-storage": "workspace:*",
-    "@crypto-wallet/shared-types": "workspace:*"
+    "@crypto-wallet/shared-types": "workspace:*",
+    "@crypto-wallet/chain-core": "workspace:*"
   }
 }

@@ -6,8 +6,55 @@ import { DefaultWalletLifecycle, type WalletLifecycle } from "./wallet-lifecycle
 
 import type { WalletSession } from "./types.js";
 
+import {
+  deriveBitcoinReceiveAddress,
+  type BitcoinReceiveAddressOptions,
+} from "./receive-address.js";
+
+import {
+  createBitcoinSendPreview,
+  type BitcoinSendPreview,
+  type BitcoinSendRequest,
+} from "./bitcoin-send.js";
+
+import {
+  signBitcoinTransaction,
+  type BitcoinSignedTransaction,
+  type BitcoinSendSigningRequest,
+} from "./bitcoin-send-signing.js";
+
 export class DefaultWalletSession implements WalletSession {
   readonly lifecycle: WalletLifecycle;
+
+  async getBitcoinReceiveAddress(options: BitcoinReceiveAddressOptions): Promise<string> {
+    if (this.vault.state.locked) {
+      throw new Error("Wallet is locked");
+    }
+
+    return deriveBitcoinReceiveAddress(
+      this.vault,
+      (mnemonic) => this.crypto.mnemonic.toSeed(mnemonic),
+      options,
+    );
+  }
+
+  async createBitcoinSendPreview(request: BitcoinSendRequest): Promise<BitcoinSendPreview> {
+    if (this.vault.state.locked) {
+      throw new Error("Wallet is locked");
+    }
+
+    return createBitcoinSendPreview(this.vault, this.crypto, request);
+  }
+
+  async signBitcoinTransaction(
+    request: BitcoinSendSigningRequest,
+  ): Promise<BitcoinSignedTransaction> {
+    if (this.vault.state.locked) {
+      throw new Error("Wallet is locked");
+    }
+
+    return signBitcoinTransaction(this.vault, this.crypto, request);
+  }
 
   constructor(
     readonly vault: SecureVault,

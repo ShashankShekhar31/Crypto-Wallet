@@ -159,3 +159,71 @@ export function deriveBitcoinAddress(
     derived.key.wipe();
   }
 }
+
+export function bitcoinAddressToScriptPubKey(
+  address: string,
+  network: BitcoinNetworkId,
+): Uint8Array {
+  const normalized = validateBitcoinAddress(address, network);
+
+  if (isValidBech32Address(normalized, network)) {
+    const decoded = bech32.decode(normalized);
+
+    const [version, ...programWords] = decoded.words;
+
+    if (version !== 0) {
+      throw new Error("Unsupported Bitcoin SegWit version");
+    }
+
+    const program = bech32.fromWords(programWords);
+
+    const script = new Uint8Array(2 + program.length);
+
+    script[0] = 0x00;
+    script[1] = program.length;
+
+    script.set(program, 2);
+
+    return script;
+  }
+
+  const decoded = base58check(sha256).decode(normalized);
+
+  const version = decoded[0];
+
+  if (version === undefined) {
+    throw new Error("Invalid Bitcoin address payload");
+  }
+
+  const hash = decoded.slice(1);
+
+  if (hash.length !== 20) {
+    throw new Error("Invalid Bitcoin address hash length");
+  }
+
+  if (version === 0x00 || version === 0x6f) {
+    const script = new Uint8Array(25);
+
+    script[0] = 0x76;
+    script[1] = 0xa9;
+    script[2] = 0x14;
+    script.set(hash, 3);
+    script[23] = 0x88;
+    script[24] = 0xac;
+
+    return script;
+  }
+
+  if (version === 0x05 || version === 0xc4) {
+    const script = new Uint8Array(23);
+
+    script[0] = 0xa9;
+    script[1] = 0x14;
+    script.set(hash, 2);
+    script[22] = 0x87;
+
+    return script;
+  }
+
+  throw new Error("Unsupported Bitcoin address type");
+}

@@ -72,17 +72,15 @@ function validateHttpResponse(response: BitcoinHttpResponse): void {
 }
 
 function createDefaultFetcher(): BitcoinHttpFetcher {
-  const fetcher = (
-    globalThis as typeof globalThis & {
-      fetch?: BitcoinHttpFetcher;
-    }
-  ).fetch;
+  const globalWithFetch = globalThis as typeof globalThis & {
+    fetch?: BitcoinHttpFetcher;
+  };
 
-  if (!fetcher) {
+  if (typeof globalWithFetch.fetch !== "function") {
     throw new Error("Global fetch is unavailable");
   }
 
-  return fetcher;
+  return globalWithFetch.fetch.bind(globalThis);
 }
 
 function decodeHex(value: string): Uint8Array {
