@@ -1,18 +1,25 @@
 import { decryptAesGcm, encryptAesGcm, WebCryptoProvider } from "@crypto-wallet/crypto";
 
-import type { VaultCipher, VaultCipherSession } from "./types.js";
+import type { VaultCipher, VaultCipherSession, VaultMasterKey } from "./types.js";
 
 const PBKDF2_ITERATIONS = 100_000;
 const KEY_LENGTH = 32;
 const SALT_LENGTH = 16;
 const NONCE_LENGTH = 12;
 
-interface VaultEnvelope {
+interface PasswordVaultEnvelope {
   version: 1;
   kdf: "PBKDF2-SHA-256";
   iterations: number;
   keyLength: number;
   salt: number[];
+  cipher: "AES-256-GCM";
+  nonce: number[];
+  ciphertext: number[];
+}
+
+interface MasterKeyVaultEnvelope {
+  version: 2;
   cipher: "AES-256-GCM";
   nonce: number[];
   ciphertext: number[];
@@ -30,11 +37,23 @@ export class WebCryptoVaultCipher implements VaultCipher {
       throw new Error("Vault password must not be empty");
     }
 
-    return new WebCryptoVaultCipherSession(this.crypto, password);
+    return new PasswordVaultCipherSession(this.crypto, password);
+  }
+
+  async createMasterKey(): Promise<VaultMasterKey> {
+    return new WebCryptoVaultMasterKey(this.crypto.randomBytes(KEY_LENGTH));
+  }
+
+  async createSessionFromMasterKey(masterKey: VaultMasterKey): Promise<VaultCipherSession> {
+    if (masterKey.bytes.length !== KEY_LENGTH) {
+      throw new Error("Invalid vault master key");
+    }
+
+    return new MasterKeyVaultCipherSession(this.crypto, masterKey);
   }
 }
 
-class WebCryptoVaultCipherSession implements VaultCipherSession {
+class PasswordVaultCipherSession implements VaultCipherSession {
   constructor(
     private readonly crypto: WebCryptoProvider,
     private readonly password: string,
@@ -53,7 +72,7 @@ class WebCryptoVaultCipherSession implements VaultCipherSession {
 
     const ciphertext = await encryptAesGcm(key, plaintext, { nonce });
 
-    const envelope: VaultEnvelope = {
+    const envelope: PasswordVaultEnvelope = {
       version: 1,
       kdf: "PBKDF2-SHA-256",
       iterations: PBKDF2_ITERATIONS,
@@ -76,7 +95,7 @@ class WebCryptoVaultCipherSession implements VaultCipherSession {
       throw new Error("Invalid encrypted vault payload");
     }
 
-    if (!isVaultEnvelope(envelope)) {
+    if (!isPasswordVaultEnvelope(envelope)) {
       throw new Error("Invalid encrypted vault payload");
     }
 
@@ -96,7 +115,71 @@ class WebCryptoVaultCipherSession implements VaultCipherSession {
   }
 }
 
-function isVaultEnvelope(value: unknown): value is VaultEnvelope {
+class MasterKeyVaultCipherSession implements VaultCipherSession {
+  constructor(
+    private readonly crypto: WebCryptoProvider,
+    private readonly masterKey: VaultMasterKey,
+  ) {}
+
+  async encrypt(plaintext: Uint8Array): Promise<Uint8Array> {
+    const nonce = this.crypto.randomBytes(NONCE_LENGTH);
+
+    const ciphertext = await encryptAesGcm({ bytes: this.masterKey.bytes }, plaintext, { nonce });
+
+    const envelope: MasterKeyVaultEnvelope = {
+      version: 2,
+      cipher: "AES-256-GCM",
+      nonce: Array.from(nonce),
+      ciphertext: Array.from(ciphertext),
+    };
+
+    return new TextEncoder().encode(JSON.stringify(envelope));
+  }
+
+  async decrypt(ciphertext: Uint8Array): Promise<Uint8Array> {
+    let envelope: unknown;
+
+    try {
+      envelope = JSON.parse(new TextDecoder().decode(ciphertext));
+    } catch {
+      throw new Error("Invalid vault envelope");
+    }
+
+    if (!isMasterKeyVaultEnvelope(envelope)) {
+      throw new Error("Invalid vault envelope");
+    }
+
+    try {
+      return await decryptAesGcm(
+        { bytes: this.masterKey.bytes },
+        Uint8Array.from(envelope.ciphertext),
+        {
+          nonce: Uint8Array.from(envelope.nonce),
+        },
+      );
+    } catch {
+      throw new Error("Vault decryption failed");
+    }
+  }
+}
+
+class WebCryptoVaultMasterKey implements VaultMasterKey {
+  private _bytes: Uint8Array;
+
+  constructor(bytes: Uint8Array) {
+    this._bytes = new Uint8Array(bytes);
+  }
+
+  get bytes(): Uint8Array {
+    return this._bytes;
+  }
+
+  wipe(): void {
+    this._bytes.fill(0);
+  }
+}
+
+function isPasswordVaultEnvelope(value: unknown): value is PasswordVaultEnvelope {
   if (
     typeof value !== "object" ||
     value === null ||
@@ -118,6 +201,29 @@ function isVaultEnvelope(value: unknown): value is VaultEnvelope {
     envelope.cipher === "AES-256-GCM" &&
     isByteArray(envelope.salt) &&
     envelope.salt.length === SALT_LENGTH &&
+    isByteArray(envelope.nonce) &&
+    envelope.nonce.length === NONCE_LENGTH &&
+    isByteArray(envelope.ciphertext)
+  );
+}
+
+function isMasterKeyVaultEnvelope(value: unknown): value is MasterKeyVaultEnvelope {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("version" in value) ||
+    !("cipher" in value) ||
+    !("nonce" in value) ||
+    !("ciphertext" in value)
+  ) {
+    return false;
+  }
+
+  const envelope = value as Record<string, unknown>;
+
+  return (
+    envelope.version === 2 &&
+    envelope.cipher === "AES-256-GCM" &&
     isByteArray(envelope.nonce) &&
     envelope.nonce.length === NONCE_LENGTH &&
     isByteArray(envelope.ciphertext)

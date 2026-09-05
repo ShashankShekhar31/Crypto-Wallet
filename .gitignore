@@ -42,3 +42,5 @@ Thumbs.db
 *.pfx
 *.keystore
 "@ | Set-Content .gitignore
+# Expo local state
+apps/mobile/.expo/

@@ -3,7 +3,7 @@ import type { WalletCrypto } from "@crypto-wallet/crypto";
 
 import { DefaultWalletSession, type WalletSession } from "../index.js";
 
-import type { SecureVault, VaultState } from "@crypto-wallet/secure-storage";
+import type { SecureVault, VaultMasterKey, VaultState } from "@crypto-wallet/secure-storage";
 
 class TestVault implements SecureVault {
   private locked = true;
@@ -23,6 +23,14 @@ class TestVault implements SecureVault {
 
   async unlock(_password: string): Promise<void> {
     this.locked = false;
+  }
+
+  async unlockWithMasterKey(_masterKey: VaultMasterKey): Promise<void> {
+    this.locked = false;
+  }
+
+  getMasterKey(): VaultMasterKey | null {
+    return null;
   }
 
   lock(): void {

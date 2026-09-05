@@ -1,0 +1,8 @@
+{
+  "expo": {
+    "plugins": ["expo-secure-store"],
+    "android": {
+      "allowBackup": false
+    }
+  }
+}

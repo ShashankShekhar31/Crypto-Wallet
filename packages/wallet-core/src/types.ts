@@ -11,6 +11,9 @@ import type {
   BitcoinSignedTransaction,
   BitcoinSendSigningRequest,
 } from "./bitcoin-send-signing.js";
+
+import type { BitcoinTransactionActivity } from "@crypto-wallet/chain-core";
+import type { BitcoinActivityRequest } from "./bitcoin-activity.js";
 export interface WalletSession {
   readonly vault: SecureVault;
   readonly crypto: WalletCrypto;
@@ -24,4 +27,7 @@ export interface WalletSession {
   getBitcoinReceiveAddress(options: BitcoinReceiveAddressOptions): Promise<string>;
   createBitcoinSendPreview(request: BitcoinSendRequest): Promise<BitcoinSendPreview>;
   signBitcoinTransaction(request: BitcoinSendSigningRequest): Promise<BitcoinSignedTransaction>;
+  getBitcoinActivity(
+    request: BitcoinActivityRequest,
+  ): Promise<readonly BitcoinTransactionActivity[]>;
 }
