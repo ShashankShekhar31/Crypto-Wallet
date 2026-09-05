@@ -3,6 +3,7 @@ import {
   createWalletVault,
   type SecureStorageAdapter,
   type SecureStorageOptions,
+  type VaultCipher,
 } from "@crypto-wallet/secure-storage";
 
 import { createWalletSession } from "./create-session.js";
@@ -13,8 +14,8 @@ export function createWallet(
   adapter: SecureStorageAdapter,
   options: SecureStorageOptions,
   crypto: WalletCrypto = new DefaultWalletCrypto(),
+  cipher?: VaultCipher,
 ): WalletSession {
-  const vault = createWalletVault(adapter, options);
-
+  const vault = createWalletVault(adapter, options, cipher);
   return createWalletSession(vault, crypto);
 }

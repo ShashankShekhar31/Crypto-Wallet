@@ -3,6 +3,7 @@ import type {
   BitcoinNetworkId,
   BitcoinProvider,
   BitcoinTransactionActivity,
+  BitcoinTransactionActivityReader,
 } from "@crypto-wallet/chain-core";
 
 import type { WalletCrypto } from "@crypto-wallet/crypto";
@@ -11,7 +12,7 @@ import type { SecureVault } from "@crypto-wallet/secure-storage";
 import { deriveBitcoinReceiveAddress } from "./receive-address.js";
 
 export interface BitcoinActivityRequest {
-  readonly provider: BitcoinProvider;
+  readonly provider: BitcoinProvider & BitcoinTransactionActivityReader;
   readonly network: BitcoinNetworkId;
   readonly addressType?: BitcoinAddressType;
   readonly account?: number;

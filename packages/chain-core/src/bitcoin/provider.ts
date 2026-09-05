@@ -16,6 +16,19 @@ export interface BitcoinTransactionStatus {
   readonly blockHash?: string;
 }
 
+export interface BitcoinTransactionActivity {
+  readonly txid: string;
+  readonly confirmed: boolean;
+  readonly confirmations: number;
+  readonly blockHeight?: number;
+  readonly blockHash?: string;
+  readonly netSatoshis: bigint;
+}
+
+export interface BitcoinTransactionActivityReader {
+  getTransactions(address: string): Promise<readonly BitcoinTransactionActivity[]>;
+}
+
 export interface BitcoinFeeEstimate {
   readonly satoshisPerVbyte: number;
 }

@@ -1,8 +1,10 @@
-import { validateBitcoinAddress } from "./address.js";
+import { bitcoinAddressToScriptPubKey, validateBitcoinAddress } from "./address.js";
 
 import type {
   BitcoinFeeEstimate,
   BitcoinProvider,
+  BitcoinTransactionActivity,
+  BitcoinTransactionActivityReader,
   BitcoinTransactionStatus,
   BitcoinUtxo,
 } from "./provider.js";
@@ -50,6 +52,24 @@ interface EsploraTransactionStatusResponse {
   readonly confirmed: boolean;
   readonly block_height?: number;
   readonly block_hash?: string;
+}
+
+interface EsploraTransactionInputResponse {
+  readonly prevout?: {
+    readonly value: number;
+    readonly scriptpubkey: string;
+  } | null;
+}
+
+interface EsploraTransactionActivityResponse {
+  readonly txid: string;
+  readonly vin: readonly EsploraTransactionInputResponse[];
+  readonly vout: readonly EsploraTransactionOutputResponse[];
+  readonly status: {
+    readonly confirmed: boolean;
+    readonly block_height?: number;
+    readonly block_hash?: string;
+  };
 }
 
 type BitcoinHttpFetcher = (
@@ -113,7 +133,9 @@ function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export class EsploraBitcoinProvider implements BitcoinProvider, BitcoinTransactionReader {
+export class EsploraBitcoinProvider
+  implements BitcoinProvider, BitcoinTransactionReader, BitcoinTransactionActivityReader
+{
   readonly network: BitcoinNetworkId;
 
   private readonly baseUrl: string;
@@ -227,6 +249,108 @@ export class EsploraBitcoinProvider implements BitcoinProvider, BitcoinTransacti
     const transactionId = await response.text();
 
     return normalizeTransactionId(transactionId);
+  }
+
+  async getTransactions(address: string): Promise<readonly BitcoinTransactionActivity[]> {
+    const validatedAddress = validateBitcoinAddress(address, this.network);
+    const addressScriptPubKey = bytesToHex(
+      bitcoinAddressToScriptPubKey(validatedAddress, this.network),
+    );
+
+    const response = await this.fetcher(
+      `${this.baseUrl}/address/${encodeURIComponent(validatedAddress)}/txs`,
+    );
+
+    validateHttpResponse(response);
+
+    const data = (await response.json()) as EsploraTransactionActivityResponse[];
+
+    const tipHeightResponse = await this.fetcher(`${this.baseUrl}/blocks/tip/height`);
+
+    validateHttpResponse(tipHeightResponse);
+
+    if (!tipHeightResponse.text) {
+      throw new Error("Bitcoin tip-height response has no text body");
+    }
+
+    const tipHeightText = (await tipHeightResponse.text()).trim();
+    const tipHeight = Number(tipHeightText);
+
+    if (!Number.isSafeInteger(tipHeight) || tipHeight < 0) {
+      throw new Error("Invalid Bitcoin tip height");
+    }
+
+    const transactions = data.map((transaction) => {
+      let receivedSatoshis = 0n;
+      let spentSatoshis = 0n;
+
+      for (const output of transaction.vout) {
+        if (
+          output.scriptpubkey === addressScriptPubKey &&
+          Number.isSafeInteger(output.value) &&
+          output.value >= 0
+        ) {
+          receivedSatoshis += BigInt(output.value);
+        }
+      }
+
+      for (const input of transaction.vin) {
+        const prevout = input.prevout;
+
+        if (
+          prevout !== undefined &&
+          prevout !== null &&
+          prevout.scriptpubkey === addressScriptPubKey &&
+          Number.isSafeInteger(prevout.value) &&
+          prevout.value >= 0
+        ) {
+          spentSatoshis += BigInt(prevout.value);
+        }
+      }
+
+      if (typeof transaction.txid !== "string" || !/^[0-9a-fA-F]{64}$/.test(transaction.txid)) {
+        throw new Error("Invalid Bitcoin transaction ID");
+      }
+
+      if (typeof transaction.status.confirmed !== "boolean") {
+        throw new Error("Invalid Bitcoin transaction status");
+      }
+
+      if (!transaction.status.confirmed) {
+        return Object.freeze({
+          txid: transaction.txid.toLowerCase(),
+          confirmed: false,
+          confirmations: 0,
+          netSatoshis: receivedSatoshis - spentSatoshis,
+        });
+      }
+
+      const blockHeight = transaction.status.block_height;
+      const blockHash = transaction.status.block_hash;
+
+      if (blockHeight === undefined || !Number.isSafeInteger(blockHeight) || blockHeight < 0) {
+        throw new Error("Invalid Bitcoin transaction block height");
+      }
+
+      if (blockHash === undefined || !/^[0-9a-fA-F]{64}$/.test(blockHash)) {
+        throw new Error("Invalid Bitcoin transaction block hash");
+      }
+
+      if (tipHeight < blockHeight) {
+        throw new Error("Bitcoin transaction block is ahead of chain tip");
+      }
+
+      return Object.freeze({
+        txid: transaction.txid.toLowerCase(),
+        confirmed: true,
+        confirmations: tipHeight - blockHeight + 1,
+        blockHeight,
+        blockHash: blockHash.toLowerCase(),
+        netSatoshis: receivedSatoshis - spentSatoshis,
+      });
+    });
+
+    return Object.freeze(transactions);
   }
 
   async getTransactionStatus(txid: string): Promise<BitcoinTransactionStatus> {

@@ -9,6 +9,15 @@ export interface SecureStorageAdapter {
 
 export interface VaultCipher {
   createSession(password: string): Promise<VaultCipherSession>;
+
+  createMasterKey(): Promise<VaultMasterKey>;
+
+  createSessionFromMasterKey(masterKey: VaultMasterKey): Promise<VaultCipherSession>;
+}
+
+export interface VaultMasterKey {
+  readonly bytes: Uint8Array;
+  wipe(): void;
 }
 
 export interface VaultCipherSession {
@@ -23,7 +32,7 @@ export interface VaultState {
 }
 
 export interface SecureStorageOptions {
-  inactivityTimeoutMs: number;
+  inactivityTimeoutMs?: number;
   now?: () => number;
 }
 
@@ -33,11 +42,19 @@ export interface SecureVault {
   hasPersistedData(): Promise<boolean>;
 
   unlock(password: string): Promise<void>;
+
+  unlockWithMasterKey(masterKey: VaultMasterKey): Promise<void>;
+
+  getMasterKey(): VaultMasterKey | null;
+
   lock(): void;
+
   persist(): Promise<void>;
 
   get(key: SecureStorageKey): Uint8Array | null;
+
   set(key: SecureStorageKey, value: Uint8Array): void;
+
   remove(key: SecureStorageKey): void;
 
   touch(): void;

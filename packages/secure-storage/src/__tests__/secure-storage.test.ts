@@ -7,6 +7,7 @@ import {
   WebCryptoVaultCipher,
   type SecureStorageAdapter,
   type VaultCipher,
+  type VaultMasterKey,
 } from "../index.js";
 
 class MemoryAdapter implements SecureStorageAdapter {
@@ -41,6 +42,36 @@ class TestCipher implements VaultCipher {
       },
     };
   }
+
+  async createMasterKey() {
+    return createTestMasterKey();
+  }
+
+  async createSessionFromMasterKey(_masterKey: VaultMasterKey) {
+    return {
+      async encrypt(plaintext: Uint8Array): Promise<Uint8Array> {
+        return new Uint8Array(plaintext);
+      },
+
+      async decrypt(ciphertext: Uint8Array): Promise<Uint8Array> {
+        return new Uint8Array(ciphertext);
+      },
+    };
+  }
+}
+
+function createTestMasterKey(): VaultMasterKey {
+  const bytes = new Uint8Array(32).fill(7);
+
+  return {
+    get bytes() {
+      return bytes;
+    },
+
+    wipe() {
+      bytes.fill(0);
+    },
+  };
 }
 
 describe("MemorySecureStorageAdapter", () => {
@@ -226,9 +257,17 @@ describe("MemorySecureStorageAdapter", () => {
     const persisted = await adapter.get("wallet-vault");
 
     expect(persisted).not.toBeNull();
-    expect(persisted).toEqual(
-      new TextEncoder().encode(JSON.stringify([["wallet-secret", [1, 2, 3]]])),
-    );
+
+    if (persisted !== null) {
+      const envelope = JSON.parse(new TextDecoder().decode(persisted)) as {
+        version: number;
+        wrappedMasterKey: number[];
+        encryptedValues: number[];
+      };
+      expect(envelope.version).toBe(2);
+      expect(envelope.wrappedMasterKey).toEqual(expect.any(Array));
+      expect(envelope.encryptedValues).toEqual(expect.any(Array));
+    }
   });
 
   it("restores persisted values after unlocking a new vault", async () => {
@@ -275,6 +314,22 @@ describe("MemorySecureStorageAdapter", () => {
 
     class FailingCipher implements VaultCipher {
       async createSession(_password: string) {
+        return {
+          async encrypt(plaintext: Uint8Array): Promise<Uint8Array> {
+            return new Uint8Array(plaintext);
+          },
+
+          async decrypt(_ciphertext: Uint8Array): Promise<Uint8Array> {
+            throw new Error("Decryption failed");
+          },
+        };
+      }
+
+      async createMasterKey() {
+        return createTestMasterKey();
+      }
+
+      async createSessionFromMasterKey(_masterKey: VaultMasterKey) {
         return {
           async encrypt(plaintext: Uint8Array): Promise<Uint8Array> {
             return new Uint8Array(plaintext);

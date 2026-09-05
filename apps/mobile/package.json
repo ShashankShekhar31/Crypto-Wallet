@@ -5,5 +5,26 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@crypto-wallet/chain-core": "workspace:*",
+    "@crypto-wallet/secure-storage": "workspace:*",
+    "@crypto-wallet/shared-types": "workspace:*",
+    "@crypto-wallet/ui": "workspace:*",
+    "@crypto-wallet/wallet-core": "workspace:*",
+    "@noble/hashes": "^2.4.0",
+    "expo": "~57.0.20",
+    "expo-crypto": "~57.0.2",
+    "expo-local-authentication": "~57.0.2",
+    "expo-screen-capture": "~57.0.2",
+    "expo-secure-store": "~57.0.3",
+    "expo-standard-web-crypto": "^57.0.2",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-qrcode-svg": "^6.3.22",
+    "react-native-svg": "^15.15.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18"
   }
 }

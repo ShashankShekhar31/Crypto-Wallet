@@ -23,6 +23,10 @@ import {
   type BitcoinSendSigningRequest,
 } from "./bitcoin-send-signing.js";
 
+import { getBitcoinActivity, type BitcoinActivityRequest } from "./bitcoin-activity.js";
+
+import type { BitcoinTransactionActivity } from "@crypto-wallet/chain-core";
+
 export class DefaultWalletSession implements WalletSession {
   readonly lifecycle: WalletLifecycle;
 
@@ -54,6 +58,16 @@ export class DefaultWalletSession implements WalletSession {
     }
 
     return signBitcoinTransaction(this.vault, this.crypto, request);
+  }
+
+  async getBitcoinActivity(
+    request: BitcoinActivityRequest,
+  ): Promise<readonly BitcoinTransactionActivity[]> {
+    if (this.vault.state.locked) {
+      throw new Error("Wallet is locked");
+    }
+
+    return getBitcoinActivity(this.vault, this.crypto, request);
   }
 
   constructor(

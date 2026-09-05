@@ -13,3 +13,4 @@ export * from "./transaction-authority.js";
 export * from "./receive-address.js";
 export * from "./bitcoin-send.js";
 export * from "./bitcoin-send-signing.js";
+export * from "./bitcoin-activity.js";
