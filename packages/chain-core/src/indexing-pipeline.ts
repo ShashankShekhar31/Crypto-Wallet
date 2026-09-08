@@ -63,11 +63,7 @@ export class IndexingPipeline<TData> {
     this.validateCursorRange(normalizedStart, normalizedEnd);
 
     const checkpoint = await this.store.getCheckpoint();
-    let currentCursor = this.resolveResumeCursor(
-      normalizedStart,
-      normalizedEnd,
-      checkpoint,
-    );
+    let currentCursor = this.resolveResumeCursor(normalizedStart, normalizedEnd, checkpoint);
 
     let batchesProcessed = 0;
     let itemsProcessed = 0;
@@ -113,10 +109,7 @@ export class IndexingPipeline<TData> {
     });
   }
 
-  private validateBatch(
-    batch: BlockchainDataBatch<TData>,
-    expectedCursor: IndexingCursor,
-  ): void {
+  private validateBatch(batch: BlockchainDataBatch<TData>, expectedCursor: IndexingCursor): void {
     if (!batch || typeof batch !== "object") {
       throw new Error("Indexing reader returned an invalid batch");
     }
@@ -135,10 +128,7 @@ export class IndexingPipeline<TData> {
       );
     }
 
-    if (
-      !Number.isSafeInteger(batch.checkpoint.blockHeight) ||
-      batch.checkpoint.blockHeight < 0
-    ) {
+    if (!Number.isSafeInteger(batch.checkpoint.blockHeight) || batch.checkpoint.blockHeight < 0) {
       throw new Error("Indexing checkpoint block height must be a safe integer");
     }
 
@@ -175,10 +165,7 @@ export class IndexingPipeline<TData> {
     return checkpoint.cursor;
   }
 
-  private validateCursorRange(
-    start: IndexingCursor,
-    end: IndexingCursor,
-  ): void {
+  private validateCursorRange(start: IndexingCursor, end: IndexingCursor): void {
     const startNumber = this.parseCursor(start);
     const endNumber = this.parseCursor(end);
 
@@ -187,10 +174,7 @@ export class IndexingPipeline<TData> {
     }
   }
 
-  private advanceCursor(
-    current: IndexingCursor,
-    end: IndexingCursor,
-  ): IndexingCursor {
+  private advanceCursor(current: IndexingCursor, end: IndexingCursor): IndexingCursor {
     const currentNumber = this.parseCursor(current);
     const endNumber = this.parseCursor(end);
 

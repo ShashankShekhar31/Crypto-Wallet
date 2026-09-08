@@ -19,10 +19,7 @@ export interface BlockchainDataBatch<TData> {
 }
 
 export interface BlockchainDataReader<TData> {
-  read(
-    from: IndexingCursor,
-    to: IndexingCursor,
-  ): Promise<BlockchainDataBatch<TData>>;
+  read(from: IndexingCursor, to: IndexingCursor): Promise<BlockchainDataBatch<TData>>;
 }
 
 export interface BlockchainDataStore<TData> {

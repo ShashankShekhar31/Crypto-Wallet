@@ -17,15 +17,10 @@ export interface ProviderConsistencyOptions<TData> {
 }
 
 export class ProviderConsistencyChecker<TData> {
-  private readonly equals: (
-    left: TData,
-    right: TData,
-  ) => boolean;
+  private readonly equals: (left: TData, right: TData) => boolean;
 
   constructor(options: ProviderConsistencyOptions<TData> = {}) {
-    this.equals =
-      options.equals ??
-      ((left, right) => Object.is(left, right));
+    this.equals = options.equals ?? ((left, right) => Object.is(left, right));
   }
 
   async check(
@@ -44,10 +39,7 @@ export class ProviderConsistencyChecker<TData> {
       throw new Error("Consistency providers must be different");
     }
 
-    const [primaryValue, secondaryValue] = await Promise.all([
-      primary.get(),
-      secondary.get(),
-    ]);
+    const [primaryValue, secondaryValue] = await Promise.all([primary.get(), secondary.get()]);
 
     if (this.equals(primaryValue, secondaryValue)) {
       return {
