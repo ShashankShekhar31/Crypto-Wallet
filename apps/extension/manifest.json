@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Crypto Wallet",
+  "version": "0.1.0",
+  "description": "Security-first crypto wallet browser extension.",
+  "action": {
+    "default_title": "Crypto Wallet",
+    "default_popup": "popup/index.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [],
+  "host_permissions": [],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost/*", "https://localhost/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
