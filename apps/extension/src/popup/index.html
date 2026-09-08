@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; object-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crypto Wallet</title>
+  </head>
+
+  <body>
+    <main>
+      <h1>Crypto Wallet</h1>
+
+      <section id="request" hidden>
+        <p id="request-type"></p>
+
+        <h2 id="origin"></h2>
+
+        <dl>
+          <dt>Account</dt>
+          <dd id="account"></dd>
+
+          <dt>Chain</dt>
+          <dd id="chain"></dd>
+        </dl>
+
+        <pre id="details"></pre>
+
+        <div>
+          <button id="reject" type="button">Reject</button>
+          <button id="approve" type="button">Approve</button>
+        </div>
+      </section>
+
+      <p id="status">No pending requests.</p>
+    </main>
+
+    <script src="./popup.js"></script>
+  </body>
+</html>

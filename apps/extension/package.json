@@ -4,6 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-extension-assets.mjs && node scripts/build-extension.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@crypto-wallet/dapp-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.2.9",
+    "esbuild": "^0.28.2",
+    "typescript": "^6.0.3"
   }
 }
