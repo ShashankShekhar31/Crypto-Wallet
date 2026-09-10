@@ -409,4 +409,218 @@ describe("MemorySecureStorageAdapter", () => {
 
     expect(secondVault.state.locked).toBe(true);
   });
+  it("keeps an owned copy of a master key supplied for unlock", async () => {
+    const storage = new MemorySecureStorageAdapter();
+    const cipher = new WebCryptoVaultCipher();
+
+    const vault = createWalletVault(
+      storage,
+      {
+        inactivityTimeoutMs: 15 * 60 * 1000,
+      },
+      cipher,
+    );
+
+    await vault.unlock("test-password");
+    vault.set("wallet-secret", new Uint8Array([1, 2, 3]));
+    await vault.persist();
+
+    const callerMasterKey = vault.getMasterKey();
+
+    expect(callerMasterKey).not.toBeNull();
+
+    if (callerMasterKey === null) {
+      throw new Error("Expected master key");
+    }
+
+    vault.lock();
+
+    await vault.unlockWithMasterKey(callerMasterKey);
+
+    callerMasterKey.wipe();
+
+    expect(vault.get("wallet-secret")).toEqual(new Uint8Array([1, 2, 3]));
+  });
+  it("rejects a tampered wrapped master key", async () => {
+    const storage = new MemorySecureStorageAdapter();
+    const cipher = new WebCryptoVaultCipher();
+
+    const vault = createWalletVault(
+      storage,
+      {
+        inactivityTimeoutMs: 15 * 60 * 1000,
+      },
+      cipher,
+    );
+
+    await vault.unlock("test-password");
+    vault.set("wallet-secret", new Uint8Array([1, 2, 3]));
+    await vault.persist();
+    vault.lock();
+
+    const persisted = await storage.get("wallet-vault");
+
+    expect(persisted).not.toBeNull();
+
+    if (persisted === null) {
+      throw new Error("Expected persisted vault data");
+    }
+
+    const envelope = JSON.parse(new TextDecoder().decode(persisted)) as {
+      version: number;
+      wrappedMasterKey: number[];
+      encryptedValues: number[];
+    };
+
+    const firstByte = envelope.wrappedMasterKey[0];
+
+    if (firstByte === undefined) {
+      throw new Error("Expected wrapped master key data");
+    }
+
+    envelope.wrappedMasterKey[0] = firstByte ^ 0xff;
+
+    await storage.set("wallet-vault", new TextEncoder().encode(JSON.stringify(envelope)));
+
+    await expect(vault.unlock("test-password")).rejects.toThrow();
+
+    expect(vault.state.locked).toBe(true);
+  });
+  it("rejects tampered encrypted vault values", async () => {
+    const storage = new MemorySecureStorageAdapter();
+    const cipher = new WebCryptoVaultCipher();
+
+    const vault = createWalletVault(
+      storage,
+      {
+        inactivityTimeoutMs: 15 * 60 * 1000,
+      },
+      cipher,
+    );
+
+    await vault.unlock("test-password");
+    vault.set("wallet-secret", new Uint8Array([1, 2, 3]));
+    await vault.persist();
+    vault.lock();
+
+    const persisted = await storage.get("wallet-vault");
+
+    expect(persisted).not.toBeNull();
+
+    if (persisted === null) {
+      throw new Error("Expected persisted vault data");
+    }
+
+    const envelope = JSON.parse(new TextDecoder().decode(persisted)) as {
+      version: number;
+      wrappedMasterKey: number[];
+      encryptedValues: number[];
+    };
+
+    const firstByte = envelope.encryptedValues[0];
+
+    if (firstByte === undefined) {
+      throw new Error("Expected encrypted vault data");
+    }
+
+    envelope.encryptedValues[0] = firstByte ^ 0xff;
+
+    await storage.set("wallet-vault", new TextEncoder().encode(JSON.stringify(envelope)));
+
+    await expect(vault.unlock("test-password")).rejects.toThrow();
+
+    expect(vault.state.locked).toBe(true);
+  });
+  it("rejects an unrelated master key", async () => {
+    const storage = new MemorySecureStorageAdapter();
+    const cipher = new WebCryptoVaultCipher();
+
+    const vault = createWalletVault(
+      storage,
+      {
+        inactivityTimeoutMs: 15 * 60 * 1000,
+      },
+      cipher,
+    );
+
+    await vault.unlock("test-password");
+    vault.set("wallet-secret", new Uint8Array([1, 2, 3]));
+    await vault.persist();
+    vault.lock();
+
+    const unrelatedMasterKey = await cipher.createMasterKey();
+
+    try {
+      await expect(vault.unlockWithMasterKey(unrelatedMasterKey)).rejects.toThrow();
+
+      expect(vault.state.locked).toBe(true);
+    } finally {
+      unrelatedMasterKey.wipe();
+    }
+  });
+  it("does not expose vault data while locked", async () => {
+    const storage = new MemorySecureStorageAdapter();
+    const cipher = new WebCryptoVaultCipher();
+
+    const vault = createWalletVault(
+      storage,
+      {
+        inactivityTimeoutMs: 15 * 60 * 1000,
+      },
+      cipher,
+    );
+
+    await vault.unlock("test-password");
+
+    vault.set("wallet-secret", new Uint8Array([1, 2, 3]));
+    await vault.persist();
+
+    vault.lock();
+
+    expect(vault.state.locked).toBe(true);
+    expect(vault.getMasterKey()).toBeNull();
+
+    expect(() => vault.get("wallet-secret")).toThrow("Wallet vault is locked");
+
+    expect(() => vault.set("wallet-secret", new Uint8Array([4, 5, 6]))).toThrow(
+      "Wallet vault is locked",
+    );
+  });
+  it("wipes the active master key when locking", async () => {
+    const storage = new MemorySecureStorageAdapter();
+    const cipher = new WebCryptoVaultCipher();
+
+    const vault = createWalletVault(
+      storage,
+      {
+        inactivityTimeoutMs: 15 * 60 * 1000,
+      },
+      cipher,
+    );
+
+    await vault.unlock("test-password");
+
+    const masterKey = vault.getMasterKey();
+
+    expect(masterKey).not.toBeNull();
+
+    if (masterKey === null) {
+      throw new Error("Expected master key");
+    }
+
+    const beforeLock = new Uint8Array(masterKey.bytes);
+
+    expect(beforeLock.some((byte) => byte !== 0)).toBe(true);
+
+    vault.lock();
+
+    expect(vault.state.locked).toBe(true);
+    expect(vault.getMasterKey()).toBeNull();
+
+    // The caller's copy is independent, so wiping the vault must not
+    // mutate this returned copy.
+    expect(masterKey.bytes).toEqual(beforeLock);
+
+    masterKey.wipe();
+  });
 });

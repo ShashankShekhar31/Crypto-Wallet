@@ -406,4 +406,31 @@ describe("POST /auth/login", () => {
 
     await app.close();
   });
+  it("does not allow a cross-origin preflight request", async () => {
+    const authenticationService = createAuthenticationServiceMock();
+    const rateLimiter = createRateLimiterMock();
+
+    const app = await createApp(authenticationService, rateLimiter);
+
+    try {
+      const response = await app.inject({
+        method: "OPTIONS",
+        url: "/auth/login",
+        headers: {
+          origin: "https://attacker.example",
+          "access-control-request-method": "POST",
+          "access-control-request-headers": "content-type",
+        },
+      });
+
+      expect(response.statusCode).toBe(404);
+      expect(response.headers["access-control-allow-origin"]).toBeUndefined();
+      expect(response.headers["access-control-allow-credentials"]).toBeUndefined();
+
+      expect(authenticationService.authenticateWithPassword).not.toHaveBeenCalled();
+      expect(rateLimiter.check).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
 });

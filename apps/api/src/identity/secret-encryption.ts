@@ -66,7 +66,9 @@ export class SecretEncryption {
 
     const authTag = encrypted.ciphertext.subarray(authTagOffset);
 
-    const decipher = createDecipheriv(ALGORITHM, this.key, encrypted.nonce);
+    const decipher = createDecipheriv(ALGORITHM, this.key, encrypted.nonce, {
+      authTagLength: AUTH_TAG_BYTES,
+    });
 
     decipher.setAuthTag(authTag);
 
