@@ -60,6 +60,10 @@ import { PasskeyRepository } from "./identity/passkey-repository.js";
 
 import { createLoggerOptions } from "./logging.js";
 
+import { createTelemetrySdk } from "./telemetry.js";
+
+import { recordHttpRequest, recordHttpResponse } from "./metrics.js";
+
 const cacheClient = createCacheClient({
   url: config.redis.url,
 });
@@ -86,9 +90,34 @@ const authenticationService = new AuthenticationService(
 
 const authRateLimiter = new AuthRateLimiter(cacheClient);
 
+const telemetrySdk = createTelemetrySdk();
+await telemetrySdk.start();
+
 const app = Fastify({
   logger: createLoggerOptions(config.security.logLevel),
   genReqId: () => crypto.randomUUID(),
+});
+
+app.addHook("onClose", async () => {
+  await telemetrySdk.shutdown();
+});
+
+app.addHook("onRequest", async (request) => {
+  request.metricsStartTime = process.hrtime.bigint();
+
+  recordHttpRequest(request.method);
+});
+
+app.addHook("onResponse", async (request, reply) => {
+  const startTime = request.metricsStartTime;
+
+  if (startTime === undefined) {
+    return;
+  }
+
+  const durationMs = Number(process.hrtime.bigint() - startTime) / 1_000_000;
+
+  recordHttpResponse(request.method, reply.statusCode, durationMs);
 });
 
 const refreshService = new RefreshService(sessionRepository);
