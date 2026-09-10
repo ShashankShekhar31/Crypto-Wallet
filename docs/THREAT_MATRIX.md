@@ -4,7 +4,7 @@
 | ------------------------ | -------------------- | -------- | ------------------ | --------------------------------------------------- |
 | Seed phrase theft        | Seed                 | Critical | Wallet security    | Secure storage, no logging, no backend transmission |
 | Malicious extension      | Wallet/session       | High     | Client             | Isolation, minimal permissions, explicit approval   |
-| XSS                      | Client state         | High     | Client             | CSP, validation, safe rendering                     |
+| XSS                      | Client state         | High     | Client             | Safe rendering, validation; production CSP required |
 | Supply-chain compromise  | Application          | Critical | Build/dependencies | Dependency review and scanning                      |
 | RPC manipulation         | Transaction state    | High     | Blockchain gateway | Validation, multiple providers, consistency checks  |
 | Phishing                 | User/wallet          | Critical | Client/user        | Clear warnings and explicit confirmation            |

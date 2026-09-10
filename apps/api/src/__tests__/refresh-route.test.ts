@@ -333,4 +333,28 @@ describe("POST /auth/refresh", () => {
       await app.close();
     }
   });
+  it("does not allow a cross-origin preflight request", async () => {
+    const refreshService = createRefreshServiceMock();
+
+    const app = await createApp(refreshService);
+
+    try {
+      const response = await app.inject({
+        method: "OPTIONS",
+        url: "/auth/refresh",
+        headers: {
+          origin: "https://attacker.example",
+          "access-control-request-method": "POST",
+          "access-control-request-headers": "content-type",
+        },
+      });
+
+      expect(response.statusCode).toBe(404);
+      expect(response.headers["access-control-allow-origin"]).toBeUndefined();
+      expect(response.headers["access-control-allow-credentials"]).toBeUndefined();
+      expect(refreshService.refresh).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
 });

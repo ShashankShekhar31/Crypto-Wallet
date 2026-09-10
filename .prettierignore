@@ -6,3 +6,4 @@ build/
 out/
 coverage/
 results.sarif
+.venv/

@@ -1,7 +1,7 @@
 const WALLET_MESSAGE_TYPE = "CRYPTO_WALLET_REQUEST";
 
 window.addEventListener("message", (event) => {
-  if (event.source !== window) {
+  if (event.source !== window || event.origin !== window.location.origin) {
     return;
   }
 

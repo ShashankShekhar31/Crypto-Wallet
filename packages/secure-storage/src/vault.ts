@@ -159,17 +159,24 @@ export class WalletVault implements SecureVault {
 
     const envelope = parseWalletVaultEnvelopeV2(encrypted);
 
-    const masterSession = await this.cipher.createSessionFromMasterKey(masterKey);
+    const ownedMasterKey = createMasterKeyFromBytes(masterKey.bytes);
 
-    const plaintext = await masterSession.decrypt(Uint8Array.from(envelope.encryptedValues));
+    try {
+      const masterSession = await this.cipher.createSessionFromMasterKey(ownedMasterKey);
 
-    this.values = deserializeValues(plaintext);
-    this.masterKey = masterKey;
-    this.wrappedMasterKey = Uint8Array.from(envelope.wrappedMasterKey);
-    this.session = masterSession;
-    this.unlocked = true;
-    this.lastActivityAt = this.now();
-    this.lockedAt = null;
+      const plaintext = await masterSession.decrypt(Uint8Array.from(envelope.encryptedValues));
+
+      this.values = deserializeValues(plaintext);
+      this.masterKey = ownedMasterKey;
+      this.wrappedMasterKey = Uint8Array.from(envelope.wrappedMasterKey);
+      this.session = masterSession;
+      this.unlocked = true;
+      this.lastActivityAt = this.now();
+      this.lockedAt = null;
+    } catch (error) {
+      ownedMasterKey.wipe();
+      throw error;
+    }
   }
 
   getMasterKey(): VaultMasterKey | null {

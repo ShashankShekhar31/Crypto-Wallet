@@ -12,6 +12,7 @@ export default tseslint.config(
       "**/.next/**",
       "**/out/**",
       "**/coverage/**",
+      "**/.venv/**",
     ],
   },
 
