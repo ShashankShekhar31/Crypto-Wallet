@@ -58,6 +58,8 @@ import { PasskeyService } from "./identity/passkey-service.js";
 
 import { PasskeyRepository } from "./identity/passkey-repository.js";
 
+import { createLoggerOptions } from "./logging.js";
+
 const cacheClient = createCacheClient({
   url: config.redis.url,
 });
@@ -85,9 +87,7 @@ const authenticationService = new AuthenticationService(
 const authRateLimiter = new AuthRateLimiter(cacheClient);
 
 const app = Fastify({
-  logger: {
-    level: config.security.logLevel,
-  },
+  logger: createLoggerOptions(config.security.logLevel),
   genReqId: () => crypto.randomUUID(),
 });
 
