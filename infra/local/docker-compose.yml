@@ -16,6 +16,71 @@ services:
       MINIO_ROOT_USER: localadmin
       MINIO_ROOT_PASSWORD: localadmin-change-me
 
+  prometheus:
+    container_name: crypto-wallet-prometheus
+    image: prom/prometheus:v3.13.3
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+
+    ports:
+      - "127.0.0.1:9090:9090"
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+
+    restart: unless-stopped
+
+  grafana:
+    container_name: crypto-wallet-grafana
+    image: grafana/grafana:13.2.1
+
+    ports:
+      - "127.0.0.1:3001:3000"
+
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+
+    restart: unless-stopped
+
+  loki:
+    container_name: crypto-wallet-loki
+    image: grafana/loki:3.7.3
+
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+
+    ports:
+      - "127.0.0.1:3100:3100"
+
+    volumes:
+      - loki_data:/loki
+
+    restart: unless-stopped
+
+  alloy:
+    container_name: crypto-wallet-alloy
+    image: grafana/alloy:v1.18.1
+
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+
+    ports:
+      - "127.0.0.1:12345:12345"
+
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./../../logs:/var/log/crypto-wallet:ro
+      - alloy_data:/var/lib/alloy/data
+
+    restart: unless-stopped
+
   postgres:
     image: postgres:17-alpine
     container_name: crypto-wallet-postgres
@@ -73,3 +138,11 @@ volumes:
   minio_data:
   postgres_data:
   valkey_data:
+  prometheus_data:
+    name: local_prometheus_data
+  grafana_data:
+    name: local_grafana_data
+  loki_data:
+    name: local_loki_data
+  alloy_data:
+    name: local_alloy_data

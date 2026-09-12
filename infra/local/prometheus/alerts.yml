@@ -1,0 +1,41 @@
+groups:
+  - name: crypto-wallet-api
+    rules:
+      - alert: CryptoWalletApiDown
+        expr: up{job="crypto-wallet-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "Crypto Wallet API metrics target is down"
+          description: "Prometheus has been unable to scrape the Crypto Wallet API metrics endpoint for more than 2 minutes."
+
+      - alert: CryptoWalletApiHighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_request_error_count_total[5m]))
+            /
+            clamp_min(sum(rate(http_server_request_count_total[5m])), 0.1)
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "Crypto Wallet API error rate is high"
+          description: "More than 5% of API requests have returned HTTP errors over the last 5 minutes."
+
+      - alert: CryptoWalletApiHighLatency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum(rate(http_server_request_duration_bucket[5m])) by (le)
+          ) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "Crypto Wallet API p95 latency is high"
+          description: "API p95 request latency has exceeded 1 second for more than 5 minutes."

@@ -1,0 +1,28 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+loki.source.file "api" {
+  targets = [
+    {
+      __path__ = "/var/log/crypto-wallet/api.log",
+      job      = "crypto-wallet-api",
+      service  = "api",
+    },
+  ]
+
+  forward_to = [loki.write.local.receiver]
+
+  tail_from_end = true
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+
+  external_labels = {
+    environment = "local",
+  }
+}
