@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  ExchangeFeeRegistry,
-  type ExchangeFeeRecord,
-} from "../index.js";
+import { ExchangeFeeRegistry, type ExchangeFeeRecord } from "../index.js";
 
-function createFee(
-  overrides: Partial<ExchangeFeeRecord> = {},
-): ExchangeFeeRecord {
+function createFee(overrides: Partial<ExchangeFeeRecord> = {}): ExchangeFeeRecord {
   return {
     id: "fee-1",
     tradeId: "trade-1",
@@ -99,9 +94,7 @@ describe("ExchangeFeeRegistry", () => {
           sourceExchangeAssetAccountId: "   ",
         }),
       ),
-    ).toThrow(
-      "Exchange fee source asset account ID must not be empty",
-    );
+    ).toThrow("Exchange fee source asset account ID must not be empty");
   });
 
   it("rejects an empty fee account ID", () => {
@@ -125,9 +118,7 @@ describe("ExchangeFeeRegistry", () => {
           feeExchangeAssetAccountId: "customer-asset-account",
         }),
       ),
-    ).toThrow(
-      "Exchange fee source and fee accounts must differ",
-    );
+    ).toThrow("Exchange fee source and fee accounts must differ");
   });
 
   it("rejects an empty asset ID", () => {

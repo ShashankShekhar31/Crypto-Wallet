@@ -2,11 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { Storage } from "@crypto-wallet/storage";
 
-export type ExchangeDepositStatus =
-  | "detected"
-  | "confirmed"
-  | "credited"
-  | "reversed";
+export type ExchangeDepositStatus = "detected" | "confirmed" | "credited" | "reversed";
 
 export interface ExchangeDepositRecord {
   id: string;
@@ -42,9 +38,7 @@ interface ExchangeDepositRow {
 export class ExchangeDepositRepository {
   constructor(private readonly storage: Storage) {}
 
-  async create(
-    input: CreateExchangeDepositInput,
-  ): Promise<ExchangeDepositRecord> {
+  async create(input: CreateExchangeDepositInput): Promise<ExchangeDepositRecord> {
     const id = randomUUID();
 
     const result = await this.storage.query<ExchangeDepositRow>(
@@ -89,9 +83,7 @@ export class ExchangeDepositRepository {
     return mapExchangeDeposit(row);
   }
 
-  async findById(
-    id: string,
-  ): Promise<ExchangeDepositRecord | null> {
+  async findById(id: string): Promise<ExchangeDepositRecord | null> {
     const result = await this.storage.query<ExchangeDepositRow>(
       `
         SELECT
@@ -119,9 +111,7 @@ export class ExchangeDepositRepository {
     return mapExchangeDeposit(row);
   }
 
-  async findByReference(
-    reference: string,
-  ): Promise<ExchangeDepositRecord | null> {
+  async findByReference(reference: string): Promise<ExchangeDepositRecord | null> {
     const result = await this.storage.query<ExchangeDepositRow>(
       `
         SELECT
@@ -182,9 +172,7 @@ export class ExchangeDepositRepository {
   }
 }
 
-function mapExchangeDeposit(
-  row: ExchangeDepositRow,
-): ExchangeDepositRecord {
+function mapExchangeDeposit(row: ExchangeDepositRow): ExchangeDepositRecord {
   return {
     id: row.id,
     exchangeAssetAccountId: row.exchange_asset_account_id,

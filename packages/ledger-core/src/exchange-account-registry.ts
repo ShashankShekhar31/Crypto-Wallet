@@ -12,9 +12,7 @@ export class ExchangeAccountRegistry {
     const identity = this.getIdentity(account);
 
     if (this.identities.has(identity)) {
-      throw new Error(
-        "Exchange account already exists for owner and account kind",
-      );
+      throw new Error("Exchange account already exists for owner and account kind");
     }
 
     this.validate(account);
@@ -38,11 +36,7 @@ export class ExchangeAccountRegistry {
   }
 
   private getIdentity(account: ExchangeAccountRecord): string {
-    return JSON.stringify([
-      account.ownerType,
-      account.ownerId,
-      account.kind,
-    ]);
+    return JSON.stringify([account.ownerType, account.ownerId, account.kind]);
   }
 
   private validate(account: ExchangeAccountRecord): void {
@@ -50,22 +44,12 @@ export class ExchangeAccountRegistry {
       throw new Error("Exchange account owner ID must not be empty");
     }
 
-    if (
-      account.ownerType === "customer" &&
-      account.kind !== "customer"
-    ) {
-      throw new Error(
-        "Customer-owned exchange accounts must have customer kind",
-      );
+    if (account.ownerType === "customer" && account.kind !== "customer") {
+      throw new Error("Customer-owned exchange accounts must have customer kind");
     }
 
-    if (
-      account.ownerType === "platform" &&
-      account.kind === "customer"
-    ) {
-      throw new Error(
-        "Platform-owned exchange accounts cannot have customer kind",
-      );
+    if (account.ownerType === "platform" && account.kind === "customer") {
+      throw new Error("Platform-owned exchange accounts cannot have customer kind");
     }
   }
 }

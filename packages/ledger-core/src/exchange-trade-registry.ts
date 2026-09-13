@@ -10,9 +10,7 @@ export class ExchangeTradeRegistry {
     }
 
     if (this.references.has(trade.reference)) {
-      throw new Error(
-        `Exchange trade reference already exists: ${trade.reference}`,
-      );
+      throw new Error(`Exchange trade reference already exists: ${trade.reference}`);
     }
 
     this.validate(trade);
@@ -37,24 +35,15 @@ export class ExchangeTradeRegistry {
 
   private validate(trade: ExchangeTradeRecord): void {
     if (trade.buyerExchangeAssetAccountId.trim().length === 0) {
-      throw new Error(
-        "Exchange trade buyer asset account ID must not be empty",
-      );
+      throw new Error("Exchange trade buyer asset account ID must not be empty");
     }
 
     if (trade.sellerExchangeAssetAccountId.trim().length === 0) {
-      throw new Error(
-        "Exchange trade seller asset account ID must not be empty",
-      );
+      throw new Error("Exchange trade seller asset account ID must not be empty");
     }
 
-    if (
-      trade.buyerExchangeAssetAccountId ===
-      trade.sellerExchangeAssetAccountId
-    ) {
-      throw new Error(
-        "Exchange trade buyer and seller asset accounts must differ",
-      );
+    if (trade.buyerExchangeAssetAccountId === trade.sellerExchangeAssetAccountId) {
+      throw new Error("Exchange trade buyer and seller asset accounts must differ");
     }
 
     if (trade.baseAssetId.trim().length === 0) {
@@ -66,30 +55,16 @@ export class ExchangeTradeRegistry {
     }
 
     if (trade.baseAssetId === trade.quoteAssetId) {
-      throw new Error(
-        "Exchange trade base and quote assets must differ",
-      );
+      throw new Error("Exchange trade base and quote assets must differ");
     }
 
-    this.validatePositiveInteger(
-      trade.baseAmount,
-      "Exchange trade base amount",
-    );
+    this.validatePositiveInteger(trade.baseAmount, "Exchange trade base amount");
 
-    this.validatePositiveInteger(
-      trade.quoteAmount,
-      "Exchange trade quote amount",
-    );
+    this.validatePositiveInteger(trade.quoteAmount, "Exchange trade quote amount");
 
-    this.validatePositiveInteger(
-      trade.priceNumerator,
-      "Exchange trade price numerator",
-    );
+    this.validatePositiveInteger(trade.priceNumerator, "Exchange trade price numerator");
 
-    this.validatePositiveInteger(
-      trade.priceDenominator,
-      "Exchange trade price denominator",
-    );
+    this.validatePositiveInteger(trade.priceDenominator, "Exchange trade price denominator");
 
     if (trade.reference.trim().length === 0) {
       throw new Error("Exchange trade reference must not be empty");
@@ -100,10 +75,7 @@ export class ExchangeTradeRegistry {
     }
   }
 
-  private validatePositiveInteger(
-    value: string,
-    field: string,
-  ): void {
+  private validatePositiveInteger(value: string, field: string): void {
     if (!/^[0-9]+$/.test(value) || BigInt(value) <= 0n) {
       throw new Error(`${field} must be positive`);
     }

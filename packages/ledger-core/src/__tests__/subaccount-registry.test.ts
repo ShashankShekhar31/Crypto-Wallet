@@ -40,9 +40,7 @@ describe("LedgerSubaccountRegistry", () => {
         ...subaccount,
         id: "subaccount-2",
       }),
-    ).toThrow(
-      "Ledger subaccount already exists for ledger account and name",
-    );
+    ).toThrow("Ledger subaccount already exists for ledger account and name");
   });
 
   it("allows the same subaccount name on different ledger accounts", () => {

@@ -41,9 +41,7 @@ interface ExchangeFeeRow {
 export class ExchangeFeeRepository {
   constructor(private readonly storage: Storage) {}
 
-  async create(
-    input: CreateExchangeFeeInput,
-  ): Promise<ExchangeFeeRecord> {
+  async create(input: CreateExchangeFeeInput): Promise<ExchangeFeeRecord> {
     const id = randomUUID();
 
     const result = await this.storage.query<ExchangeFeeRow>(
@@ -91,9 +89,7 @@ export class ExchangeFeeRepository {
     return mapExchangeFee(row);
   }
 
-  async findById(
-    id: string,
-  ): Promise<ExchangeFeeRecord | null> {
+  async findById(id: string): Promise<ExchangeFeeRecord | null> {
     const result = await this.storage.query<ExchangeFeeRow>(
       `
         SELECT
@@ -122,9 +118,7 @@ export class ExchangeFeeRepository {
     return mapExchangeFee(row);
   }
 
-  async findByReference(
-    reference: string,
-  ): Promise<ExchangeFeeRecord | null> {
+  async findByReference(reference: string): Promise<ExchangeFeeRecord | null> {
     const result = await this.storage.query<ExchangeFeeRow>(
       `
         SELECT
@@ -154,16 +148,12 @@ export class ExchangeFeeRepository {
   }
 }
 
-function mapExchangeFee(
-  row: ExchangeFeeRow,
-): ExchangeFeeRecord {
+function mapExchangeFee(row: ExchangeFeeRow): ExchangeFeeRecord {
   return {
     id: row.id,
     tradeId: row.trade_id,
-    sourceExchangeAssetAccountId:
-      row.source_exchange_asset_account_id,
-    feeExchangeAssetAccountId:
-      row.fee_exchange_asset_account_id,
+    sourceExchangeAssetAccountId: row.source_exchange_asset_account_id,
+    feeExchangeAssetAccountId: row.fee_exchange_asset_account_id,
     assetId: row.asset_id,
     amount: row.amount,
     status: row.status,

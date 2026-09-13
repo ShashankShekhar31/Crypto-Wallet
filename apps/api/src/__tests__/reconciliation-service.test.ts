@@ -7,9 +7,7 @@ import type {
 
 import { ReconciliationService } from "../reconciliation/reconciliation-service.js";
 
-class InMemoryReconciliationRepository
-  implements ReconciliationRepository
-{
+class InMemoryReconciliationRepository implements ReconciliationRepository {
   private latest: ReconciliationComparison | null = null;
 
   async save(comparison: ReconciliationComparison): Promise<void> {
@@ -72,11 +70,7 @@ describe("ReconciliationService", () => {
     expect(result.difference).toBe("-500");
 
     await expect(
-      service.findLatest(
-        scope.assetId,
-        scope.networkId,
-        scope.accountId,
-      ),
+      service.findLatest(scope.assetId, scope.networkId, scope.accountId),
     ).resolves.toEqual(result);
   });
 
@@ -85,11 +79,7 @@ describe("ReconciliationService", () => {
     const service = new ReconciliationService(repository);
 
     await expect(
-      service.findLatest(
-        "missing-asset",
-        "missing-network",
-        "missing-account",
-      ),
+      service.findLatest("missing-asset", "missing-network", "missing-account"),
     ).resolves.toBeNull();
   });
 });

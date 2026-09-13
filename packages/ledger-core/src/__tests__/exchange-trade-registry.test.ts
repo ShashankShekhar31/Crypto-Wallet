@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  ExchangeTradeRegistry,
-  type ExchangeTradeRecord,
-} from "../index.js";
+import { ExchangeTradeRegistry, type ExchangeTradeRecord } from "../index.js";
 
-function createTrade(
-  overrides: Partial<ExchangeTradeRecord> = {},
-): ExchangeTradeRecord {
+function createTrade(overrides: Partial<ExchangeTradeRecord> = {}): ExchangeTradeRecord {
   return {
     id: "trade-1",
     buyerExchangeAssetAccountId: "buyer-asset-account",
@@ -90,9 +85,7 @@ describe("ExchangeTradeRegistry", () => {
           sellerExchangeAssetAccountId: "buyer-asset-account",
         }),
       ),
-    ).toThrow(
-      "Exchange trade buyer and seller asset accounts must differ",
-    );
+    ).toThrow("Exchange trade buyer and seller asset accounts must differ");
   });
 
   it("rejects identical base and quote assets", () => {
@@ -104,9 +97,7 @@ describe("ExchangeTradeRegistry", () => {
           quoteAssetId: "btc",
         }),
       ),
-    ).toThrow(
-      "Exchange trade base and quote assets must differ",
-    );
+    ).toThrow("Exchange trade base and quote assets must differ");
   });
 
   it("rejects a non-positive base amount", () => {
@@ -178,8 +169,6 @@ describe("ExchangeTradeRegistry", () => {
           executedAt: "   ",
         }),
       ),
-    ).toThrow(
-      "Exchange trade execution time must not be empty",
-    );
+    ).toThrow("Exchange trade execution time must not be empty");
   });
 });

@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  ExchangeWithdrawalRegistry,
-  type ExchangeWithdrawalRecord,
-} from "../index.js";
+import { ExchangeWithdrawalRegistry, type ExchangeWithdrawalRecord } from "../index.js";
 
 function createWithdrawal(
   overrides: Partial<ExchangeWithdrawalRecord> = {},
@@ -86,9 +83,7 @@ describe("ExchangeWithdrawalRegistry", () => {
           exchangeAssetAccountId: "   ",
         }),
       ),
-    ).toThrow(
-      "Exchange withdrawal asset account ID must not be empty",
-    );
+    ).toThrow("Exchange withdrawal asset account ID must not be empty");
   });
 
   it("rejects an empty network ID", () => {

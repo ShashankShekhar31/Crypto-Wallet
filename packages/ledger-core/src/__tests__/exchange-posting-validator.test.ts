@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  validateExchangeLedgerTransaction,
-  type ExchangeLedgerTransaction,
-} from "../index.js";
+import { validateExchangeLedgerTransaction, type ExchangeLedgerTransaction } from "../index.js";
 
 function createTransaction(
   overrides: Partial<ExchangeLedgerTransaction> = {},
@@ -29,9 +26,7 @@ function createTransaction(
 
 describe("validateExchangeLedgerTransaction", () => {
   it("accepts a balanced transaction", () => {
-    expect(() =>
-      validateExchangeLedgerTransaction(createTransaction()),
-    ).not.toThrow();
+    expect(() => validateExchangeLedgerTransaction(createTransaction())).not.toThrow();
   });
 
   it("accepts multiple balanced postings", () => {
@@ -67,9 +62,7 @@ describe("validateExchangeLedgerTransaction", () => {
           id: "   ",
         }),
       ),
-    ).toThrow(
-      "Exchange ledger transaction ID must not be empty",
-    );
+    ).toThrow("Exchange ledger transaction ID must not be empty");
   });
 
   it("rejects an empty reference", () => {
@@ -79,9 +72,7 @@ describe("validateExchangeLedgerTransaction", () => {
           reference: "   ",
         }),
       ),
-    ).toThrow(
-      "Exchange ledger transaction reference must not be empty",
-    );
+    ).toThrow("Exchange ledger transaction reference must not be empty");
   });
 
   it("requires at least two postings", () => {
@@ -97,9 +88,7 @@ describe("validateExchangeLedgerTransaction", () => {
           ],
         }),
       ),
-    ).toThrow(
-      "Exchange ledger transaction requires at least two postings",
-    );
+    ).toThrow("Exchange ledger transaction requires at least two postings");
   });
 
   it("rejects unbalanced postings", () => {
@@ -141,9 +130,7 @@ describe("validateExchangeLedgerTransaction", () => {
           ],
         }),
       ),
-    ).toThrow(
-      "Exchange ledger posting account ID must not be empty",
-    );
+    ).toThrow("Exchange ledger posting account ID must not be empty");
   });
 
   it("rejects a zero posting amount", () => {
@@ -164,9 +151,7 @@ describe("validateExchangeLedgerTransaction", () => {
           ],
         }),
       ),
-    ).toThrow(
-      "Exchange ledger posting amount must be positive",
-    );
+    ).toThrow("Exchange ledger posting amount must be positive");
   });
 
   it("rejects a fractional posting amount", () => {
@@ -187,8 +172,6 @@ describe("validateExchangeLedgerTransaction", () => {
           ],
         }),
       ),
-    ).toThrow(
-      "Exchange ledger posting amount must be positive",
-    );
+    ).toThrow("Exchange ledger posting amount must be positive");
   });
 });

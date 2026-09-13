@@ -57,9 +57,7 @@ interface ExchangeTradeRow {
 export class ExchangeTradeRepository {
   constructor(private readonly storage: Storage) {}
 
-  async create(
-    input: CreateExchangeTradeInput,
-  ): Promise<ExchangeTradeRecord> {
+  async create(input: CreateExchangeTradeInput): Promise<ExchangeTradeRecord> {
     const id = randomUUID();
 
     const result = await this.storage.query<ExchangeTradeRow>(
@@ -127,9 +125,7 @@ export class ExchangeTradeRepository {
     return mapExchangeTrade(row);
   }
 
-  async findById(
-    id: string,
-  ): Promise<ExchangeTradeRecord | null> {
+  async findById(id: string): Promise<ExchangeTradeRecord | null> {
     const result = await this.storage.query<ExchangeTradeRow>(
       `
         SELECT
@@ -163,9 +159,7 @@ export class ExchangeTradeRepository {
     return mapExchangeTrade(row);
   }
 
-  async findByReference(
-    reference: string,
-  ): Promise<ExchangeTradeRecord | null> {
+  async findByReference(reference: string): Promise<ExchangeTradeRecord | null> {
     const result = await this.storage.query<ExchangeTradeRow>(
       `
         SELECT
@@ -200,19 +194,13 @@ export class ExchangeTradeRepository {
   }
 }
 
-function mapExchangeTrade(
-  row: ExchangeTradeRow,
-): ExchangeTradeRecord {
+function mapExchangeTrade(row: ExchangeTradeRow): ExchangeTradeRecord {
   return {
     id: row.id,
-    buyerBaseExchangeAssetAccountId:
-      row.buyer_base_exchange_asset_account_id,
-    buyerQuoteExchangeAssetAccountId:
-      row.buyer_quote_exchange_asset_account_id,
-    sellerBaseExchangeAssetAccountId:
-      row.seller_base_exchange_asset_account_id,
-    sellerQuoteExchangeAssetAccountId:
-      row.seller_quote_exchange_asset_account_id,
+    buyerBaseExchangeAssetAccountId: row.buyer_base_exchange_asset_account_id,
+    buyerQuoteExchangeAssetAccountId: row.buyer_quote_exchange_asset_account_id,
+    sellerBaseExchangeAssetAccountId: row.seller_base_exchange_asset_account_id,
+    sellerQuoteExchangeAssetAccountId: row.seller_quote_exchange_asset_account_id,
     baseAssetId: row.base_asset_id,
     quoteAssetId: row.quote_asset_id,
     baseAmount: row.base_amount,

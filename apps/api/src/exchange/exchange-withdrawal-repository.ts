@@ -3,12 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { Storage } from "@crypto-wallet/storage";
 
 export type ExchangeWithdrawalStatus =
-  | "requested"
-  | "approved"
-  | "rejected"
-  | "submitted"
-  | "confirmed"
-  | "failed";
+  "requested" | "approved" | "rejected" | "submitted" | "confirmed" | "failed";
 
 export interface ExchangeWithdrawalRecord {
   id: string;
@@ -50,9 +45,7 @@ interface ExchangeWithdrawalRow {
 export class ExchangeWithdrawalRepository {
   constructor(private readonly storage: Storage) {}
 
-  async create(
-    input: CreateExchangeWithdrawalInput,
-  ): Promise<ExchangeWithdrawalRecord> {
+  async create(input: CreateExchangeWithdrawalInput): Promise<ExchangeWithdrawalRecord> {
     const id = randomUUID();
 
     const result = await this.storage.query<ExchangeWithdrawalRow>(
@@ -103,9 +96,7 @@ export class ExchangeWithdrawalRepository {
     return mapExchangeWithdrawal(row);
   }
 
-  async findById(
-    id: string,
-  ): Promise<ExchangeWithdrawalRecord | null> {
+  async findById(id: string): Promise<ExchangeWithdrawalRecord | null> {
     const result = await this.storage.query<ExchangeWithdrawalRow>(
       `
         SELECT
@@ -135,9 +126,7 @@ export class ExchangeWithdrawalRepository {
     return mapExchangeWithdrawal(row);
   }
 
-  async findByReference(
-    reference: string,
-  ): Promise<ExchangeWithdrawalRecord | null> {
+  async findByReference(reference: string): Promise<ExchangeWithdrawalRecord | null> {
     const result = await this.storage.query<ExchangeWithdrawalRow>(
       `
         SELECT
@@ -168,9 +157,7 @@ export class ExchangeWithdrawalRepository {
   }
 }
 
-function mapExchangeWithdrawal(
-  row: ExchangeWithdrawalRow,
-): ExchangeWithdrawalRecord {
+function mapExchangeWithdrawal(row: ExchangeWithdrawalRow): ExchangeWithdrawalRecord {
   return {
     id: row.id,
     requestedBy: row.requested_by,

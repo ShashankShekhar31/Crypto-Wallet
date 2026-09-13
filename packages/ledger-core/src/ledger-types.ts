@@ -1,7 +1,4 @@
-import type {
-  LedgerEntryStatus,
-  LedgerEntryType,
-} from "@crypto-wallet/shared-types";
+import type { LedgerEntryStatus, LedgerEntryType } from "@crypto-wallet/shared-types";
 
 export interface LedgerAccountRecord {
   id: string;
@@ -12,12 +9,7 @@ export interface LedgerAccountRecord {
   createdAt: string;
 }
 
-export type LedgerAccountKind =
-  | "asset"
-  | "liability"
-  | "revenue"
-  | "expense"
-  | "equity";
+export type LedgerAccountKind = "asset" | "liability" | "revenue" | "expense" | "equity";
 
 export interface LedgerSubaccountRecord {
   id: string;

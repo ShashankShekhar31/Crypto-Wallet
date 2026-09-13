@@ -4,9 +4,7 @@ import type {
   ReconciliationObservation,
 } from "./reconciliation-types.js";
 
-export class DefaultReconciliationEngine
-  implements ReconciliationContract
-{
+export class DefaultReconciliationEngine implements ReconciliationContract {
   compare(
     expected: ReconciliationObservation,
     actual: ReconciliationObservation,
@@ -15,10 +13,7 @@ export class DefaultReconciliationEngine
       throw new Error("Reconciliation observations must use the same scope");
     }
 
-    if (
-      expected.status === "unavailable" ||
-      actual.status === "unavailable"
-    ) {
+    if (expected.status === "unavailable" || actual.status === "unavailable") {
       return {
         scope: expected.scope,
         expected,
@@ -29,9 +24,7 @@ export class DefaultReconciliationEngine
     }
 
     if (expected.amount === null || actual.amount === null) {
-      throw new Error(
-        "Available reconciliation observations must have an amount",
-      );
+      throw new Error("Available reconciliation observations must have an amount");
     }
 
     const expectedAmount = this.parseAmount(expected.amount);

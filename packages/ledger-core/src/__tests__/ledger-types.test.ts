@@ -8,13 +8,7 @@ import type {
 
 describe("ledger domain types", () => {
   it("supports explicit ledger account kinds", () => {
-    const kinds: LedgerAccountKind[] = [
-      "asset",
-      "liability",
-      "revenue",
-      "expense",
-      "equity",
-    ];
+    const kinds: LedgerAccountKind[] = ["asset", "liability", "revenue", "expense", "equity"];
 
     expect(kinds).toHaveLength(5);
   });

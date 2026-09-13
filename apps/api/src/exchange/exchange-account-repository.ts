@@ -4,11 +4,7 @@ import type { Storage } from "@crypto-wallet/storage";
 
 export type ExchangeAccountOwnerType = "customer" | "platform";
 
-export type ExchangeAccountKind =
-  | "customer"
-  | "treasury"
-  | "fee"
-  | "operational";
+export type ExchangeAccountKind = "customer" | "treasury" | "fee" | "operational";
 
 export type ExchangeAccountStatus = "active" | "blocked";
 
@@ -40,9 +36,7 @@ interface ExchangeAccountRow {
 export class ExchangeAccountRepository {
   constructor(private readonly storage: Storage) {}
 
-  async create(
-    input: CreateExchangeAccountInput,
-  ): Promise<ExchangeAccountRecord> {
+  async create(input: CreateExchangeAccountInput): Promise<ExchangeAccountRecord> {
     const id = randomUUID();
 
     const result = await this.storage.query<ExchangeAccountRow>(
@@ -63,13 +57,7 @@ export class ExchangeAccountRepository {
           status,
           created_at
       `,
-      [
-        id,
-        input.ownerType,
-        input.ownerId,
-        input.kind,
-        input.status ?? null,
-      ],
+      [id, input.ownerType, input.ownerId, input.kind, input.status ?? null],
     );
 
     const row = result.rows[0];
@@ -140,9 +128,7 @@ export class ExchangeAccountRepository {
   }
 }
 
-function mapExchangeAccount(
-  row: ExchangeAccountRow,
-): ExchangeAccountRecord {
+function mapExchangeAccount(row: ExchangeAccountRow): ExchangeAccountRecord {
   return {
     id: row.id,
     ownerType: row.owner_type,

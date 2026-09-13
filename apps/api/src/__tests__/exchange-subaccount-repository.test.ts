@@ -4,16 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import { PostgresStorage } from "@crypto-wallet/storage";
 
-import {
-  ExchangeSubaccountRepository,
-} from "../exchange/exchange-subaccount-repository.js";
+import { ExchangeSubaccountRepository } from "../exchange/exchange-subaccount-repository.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for exchange subaccount repository tests",
-  );
+  throw new Error("DATABASE_URL is required for exchange subaccount repository tests");
 }
 
 describe("ExchangeSubaccountRepository", () => {
@@ -55,7 +51,6 @@ describe("ExchangeSubaccountRepository", () => {
       const found = await repository.findById(created.id);
 
       expect(found).toEqual(created);
-
     } finally {
       await storage.query(
         `
@@ -109,9 +104,7 @@ describe("ExchangeSubaccountRepository", () => {
         name: "margin",
       });
 
-      const listed = await repository.listByExchangeAccount(
-        exchangeAccountId,
-      );
+      const listed = await repository.listByExchangeAccount(exchangeAccountId);
 
       expect(listed).toEqual([first, second]);
     } finally {

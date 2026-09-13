@@ -27,9 +27,7 @@ interface ExchangeAssetAccountRow {
 export class ExchangeAssetAccountRepository {
   constructor(private readonly storage: Storage) {}
 
-  async create(
-    input: CreateExchangeAssetAccountInput,
-  ): Promise<ExchangeAssetAccountRecord> {
+  async create(input: CreateExchangeAssetAccountInput): Promise<ExchangeAssetAccountRecord> {
     const id = randomUUID();
 
     const result = await this.storage.query<ExchangeAssetAccountRow>(
@@ -48,12 +46,7 @@ export class ExchangeAssetAccountRepository {
           network_id,
           created_at
       `,
-      [
-        id,
-        input.exchangeAccountId,
-        input.assetId,
-        input.networkId,
-      ],
+      [id, input.exchangeAccountId, input.assetId, input.networkId],
     );
 
     const row = result.rows[0];
@@ -65,9 +58,7 @@ export class ExchangeAssetAccountRepository {
     return mapExchangeAssetAccount(row);
   }
 
-  async findById(
-    id: string,
-  ): Promise<ExchangeAssetAccountRecord | null> {
+  async findById(id: string): Promise<ExchangeAssetAccountRecord | null> {
     const result = await this.storage.query<ExchangeAssetAccountRow>(
       `
         SELECT
@@ -121,9 +112,7 @@ export class ExchangeAssetAccountRepository {
     return mapExchangeAssetAccount(row);
   }
 
-  async listByExchangeAccount(
-    exchangeAccountId: string,
-  ): Promise<ExchangeAssetAccountRecord[]> {
+  async listByExchangeAccount(exchangeAccountId: string): Promise<ExchangeAssetAccountRecord[]> {
     const result = await this.storage.query<ExchangeAssetAccountRow>(
       `
         SELECT
@@ -143,9 +132,7 @@ export class ExchangeAssetAccountRepository {
   }
 }
 
-function mapExchangeAssetAccount(
-  row: ExchangeAssetAccountRow,
-): ExchangeAssetAccountRecord {
+function mapExchangeAssetAccount(row: ExchangeAssetAccountRow): ExchangeAssetAccountRecord {
   return {
     id: row.id,
     exchangeAccountId: row.exchange_account_id,

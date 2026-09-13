@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  ExchangeSubaccountRegistry,
-  type ExchangeSubaccountRecord,
-} from "../index.js";
+import { ExchangeSubaccountRegistry, type ExchangeSubaccountRecord } from "../index.js";
 
 function createSubaccount(
   overrides: Partial<ExchangeSubaccountRecord> = {},
@@ -52,9 +49,7 @@ describe("ExchangeSubaccountRegistry", () => {
           id: "exchange-subaccount-2",
         }),
       ),
-    ).toThrow(
-      "Exchange subaccount already exists for exchange account and name",
-    );
+    ).toThrow("Exchange subaccount already exists for exchange account and name");
   });
 
   it("allows the same name for different exchange accounts", () => {
@@ -99,9 +94,7 @@ describe("ExchangeSubaccountRegistry", () => {
           exchangeAccountId: "   ",
         }),
       ),
-    ).toThrow(
-      "Exchange subaccount exchange account ID must not be empty",
-    );
+    ).toThrow("Exchange subaccount exchange account ID must not be empty");
   });
 
   it("rejects an empty name", () => {

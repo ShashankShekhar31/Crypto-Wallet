@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  ExchangeAccountRegistry,
-  type ExchangeAccountRecord,
-} from "../index.js";
+import { ExchangeAccountRegistry, type ExchangeAccountRecord } from "../index.js";
 
-function createAccount(
-  overrides: Partial<ExchangeAccountRecord> = {},
-): ExchangeAccountRecord {
+function createAccount(overrides: Partial<ExchangeAccountRecord> = {}): ExchangeAccountRecord {
   return {
     id: "exchange-account-1",
     ownerType: "customer",
@@ -34,9 +29,9 @@ describe("ExchangeAccountRegistry", () => {
 
     registry.create(createAccount());
 
-    expect(() =>
-      registry.create(createAccount({ ownerId: "customer-2" })),
-    ).toThrow("Exchange account already exists");
+    expect(() => registry.create(createAccount({ ownerId: "customer-2" }))).toThrow(
+      "Exchange account already exists",
+    );
   });
 
   it("rejects duplicate owner and account kind", () => {
@@ -44,9 +39,7 @@ describe("ExchangeAccountRegistry", () => {
 
     registry.create(createAccount());
 
-    expect(() =>
-      registry.create(createAccount({ id: "exchange-account-2" })),
-    ).toThrow(
+    expect(() => registry.create(createAccount({ id: "exchange-account-2" }))).toThrow(
       "Exchange account already exists for owner and account kind",
     );
   });
@@ -72,9 +65,9 @@ describe("ExchangeAccountRegistry", () => {
   it("rejects an empty owner ID", () => {
     const registry = new ExchangeAccountRegistry();
 
-    expect(() =>
-      registry.create(createAccount({ ownerId: "   " })),
-    ).toThrow("Exchange account owner ID must not be empty");
+    expect(() => registry.create(createAccount({ ownerId: "   " }))).toThrow(
+      "Exchange account owner ID must not be empty",
+    );
   });
 
   it("rejects customer-owned non-customer accounts", () => {
@@ -86,9 +79,7 @@ describe("ExchangeAccountRegistry", () => {
           kind: "fee",
         }),
       ),
-    ).toThrow(
-      "Customer-owned exchange accounts must have customer kind",
-    );
+    ).toThrow("Customer-owned exchange accounts must have customer kind");
   });
 
   it("rejects platform-owned customer accounts", () => {
@@ -101,8 +92,6 @@ describe("ExchangeAccountRegistry", () => {
           kind: "customer",
         }),
       ),
-    ).toThrow(
-      "Platform-owned exchange accounts cannot have customer kind",
-    );
+    ).toThrow("Platform-owned exchange accounts cannot have customer kind");
   });
 });

@@ -12,9 +12,7 @@ export class LedgerAccountRegistry {
     const identity = this.getIdentity(account);
 
     if (this.identities.has(identity)) {
-      throw new Error(
-        `Ledger account already exists for wallet, asset, chain and kind`,
-      );
+      throw new Error(`Ledger account already exists for wallet, asset, chain and kind`);
     }
 
     const stored = Object.freeze({ ...account });
@@ -36,11 +34,6 @@ export class LedgerAccountRegistry {
   }
 
   private getIdentity(account: LedgerAccountRecord): string {
-    return JSON.stringify([
-      account.walletId,
-      account.assetId,
-      account.chain,
-      account.kind,
-    ]);
+    return JSON.stringify([account.walletId, account.assetId, account.chain, account.kind]);
   }
 }

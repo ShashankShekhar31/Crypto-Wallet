@@ -1,10 +1,6 @@
 export type ExchangeAccountOwnerType = "customer" | "platform";
 
-export type ExchangeAccountKind =
-  | "customer"
-  | "treasury"
-  | "fee"
-  | "operational";
+export type ExchangeAccountKind = "customer" | "treasury" | "fee" | "operational";
 
 export type ExchangeAccountStatus = "active" | "blocked";
 

@@ -6,17 +6,13 @@ export class LedgerSubaccountRegistry {
 
   create(subaccount: LedgerSubaccountRecord): LedgerSubaccountRecord {
     if (this.subaccounts.has(subaccount.id)) {
-      throw new Error(
-        `Ledger subaccount already exists: ${subaccount.id}`,
-      );
+      throw new Error(`Ledger subaccount already exists: ${subaccount.id}`);
     }
 
     const identity = this.getIdentity(subaccount);
 
     if (this.identities.has(identity)) {
-      throw new Error(
-        `Ledger subaccount already exists for ledger account and name`,
-      );
+      throw new Error(`Ledger subaccount already exists for ledger account and name`);
     }
 
     const stored = Object.freeze({ ...subaccount });
@@ -38,9 +34,6 @@ export class LedgerSubaccountRegistry {
   }
 
   private getIdentity(subaccount: LedgerSubaccountRecord): string {
-    return JSON.stringify([
-      subaccount.ledgerAccountId,
-      subaccount.name,
-    ]);
+    return JSON.stringify([subaccount.ledgerAccountId, subaccount.name]);
   }
 }

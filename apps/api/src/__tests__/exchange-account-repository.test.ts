@@ -4,16 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import { PostgresStorage } from "@crypto-wallet/storage";
 
-import {
-  ExchangeAccountRepository,
-} from "../exchange/exchange-account-repository.js";
+import { ExchangeAccountRepository } from "../exchange/exchange-account-repository.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for exchange account repository tests",
-  );
+  throw new Error("DATABASE_URL is required for exchange account repository tests");
 }
 
 describe("ExchangeAccountRepository", () => {
@@ -73,11 +69,7 @@ describe("ExchangeAccountRepository", () => {
         kind: "treasury",
       });
 
-      const found = await repository.findByOwnerAndKind(
-        "platform",
-        ownerId,
-        "treasury",
-      );
+      const found = await repository.findByOwnerAndKind("platform", ownerId, "treasury");
 
       expect(found).toEqual(created);
     } finally {

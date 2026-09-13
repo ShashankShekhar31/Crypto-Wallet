@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type {
-  ReconciliationComparison,
-  ReconciliationRepository,
-} from "../index.js";
+import type { ReconciliationComparison, ReconciliationRepository } from "../index.js";
 
-class InMemoryReconciliationRepository
-  implements ReconciliationRepository
-{
+class InMemoryReconciliationRepository implements ReconciliationRepository {
   private readonly comparisons: ReconciliationComparison[] = [];
 
   async save(comparison: ReconciliationComparison): Promise<void> {
@@ -76,8 +71,6 @@ describe("ReconciliationRepository contract", () => {
   it("returns null when no comparison exists", async () => {
     const repository = new InMemoryReconciliationRepository();
 
-    await expect(
-      repository.findLatest("btc", "bitcoin", "missing-account"),
-    ).resolves.toBeNull();
+    await expect(repository.findLatest("btc", "bitcoin", "missing-account")).resolves.toBeNull();
   });
 });

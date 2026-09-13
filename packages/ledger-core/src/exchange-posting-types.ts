@@ -1,8 +1,4 @@
-export type ExchangePostingOperation =
-  | "deposit"
-  | "withdrawal"
-  | "trade"
-  | "fee";
+export type ExchangePostingOperation = "deposit" | "withdrawal" | "trade" | "fee";
 
 export interface ExchangePosting {
   ledgerAccountId: string;

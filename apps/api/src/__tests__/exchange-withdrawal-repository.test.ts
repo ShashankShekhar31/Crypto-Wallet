@@ -4,16 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import { PostgresStorage } from "@crypto-wallet/storage";
 
-import {
-  ExchangeWithdrawalRepository,
-} from "../exchange/exchange-withdrawal-repository.js";
+import { ExchangeWithdrawalRepository } from "../exchange/exchange-withdrawal-repository.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for exchange withdrawal repository tests",
-  );
+  throw new Error("DATABASE_URL is required for exchange withdrawal repository tests");
 }
 
 describe("ExchangeWithdrawalRepository", () => {
@@ -68,14 +64,7 @@ describe("ExchangeWithdrawalRepository", () => {
         )
         VALUES ($1, $2, $3, $4, $5, $6)
       `,
-      [
-        assetId,
-        networkId,
-        `W${assetId.slice(0, 6)}`,
-        "Withdrawal Test Asset",
-        18,
-        "native",
-      ],
+      [assetId, networkId, `W${assetId.slice(0, 6)}`, "Withdrawal Test Asset", 18, "native"],
     );
 
     await storage.query(
@@ -88,12 +77,7 @@ describe("ExchangeWithdrawalRepository", () => {
         )
         VALUES ($1, $2, $3, $4)
       `,
-      [
-        exchangeAssetAccountId,
-        exchangeAccountId,
-        assetId,
-        networkId,
-      ],
+      [exchangeAssetAccountId, exchangeAccountId, assetId, networkId],
     );
 
     return {
@@ -372,7 +356,7 @@ describe("ExchangeWithdrawalRepository", () => {
       await storage.disconnect();
     }
   });
-    it("rejects an approved withdrawal when requester and approver are the same actor", async () => {
+  it("rejects an approved withdrawal when requester and approver are the same actor", async () => {
     const storage = new PostgresStorage(databaseUrl);
     const repository = new ExchangeWithdrawalRepository(storage);
 

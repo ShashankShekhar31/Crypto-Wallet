@@ -4,16 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import { PostgresStorage } from "@crypto-wallet/storage";
 
-import {
-  ExchangeAssetAccountRepository,
-} from "../exchange/exchange-asset-account-repository.js";
+import { ExchangeAssetAccountRepository } from "../exchange/exchange-asset-account-repository.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for exchange asset account repository tests",
-  );
+  throw new Error("DATABASE_URL is required for exchange asset account repository tests");
 }
 
 describe("ExchangeAssetAccountRepository", () => {
@@ -46,13 +42,7 @@ describe("ExchangeAssetAccountRepository", () => {
         )
         VALUES ($1, $2, $3, $4, $5)
       `,
-      [
-        networkId,
-        `test-${networkId}`,
-        "Test Network",
-        "test-chain",
-        "test",
-      ],
+      [networkId, `test-${networkId}`, "Test Network", "test-chain", "test"],
     );
 
     await storage.query(
@@ -67,14 +57,7 @@ describe("ExchangeAssetAccountRepository", () => {
         )
         VALUES ($1, $2, $3, $4, $5, $6)
       `,
-      [
-        assetId,
-        networkId,
-        `T${assetId.slice(0, 6)}`,
-        "Test Asset",
-        18,
-        "native",
-      ],
+      [assetId, networkId, `T${assetId.slice(0, 6)}`, "Test Asset", 18, "native"],
     );
 
     return {
@@ -267,9 +250,7 @@ describe("ExchangeAssetAccountRepository", () => {
         networkId,
       });
 
-      const listed = await repository.listByExchangeAccount(
-        exchangeAccountId,
-      );
+      const listed = await repository.listByExchangeAccount(exchangeAccountId);
 
       expect(listed).toEqual([first, second]);
     } finally {
@@ -292,24 +273,15 @@ describe("ExchangeAssetAccountRepository", () => {
       }
 
       if (assetId) {
-        await storage.query(
-          `DELETE FROM assets WHERE id = $1`,
-          [assetId],
-        );
+        await storage.query(`DELETE FROM assets WHERE id = $1`, [assetId]);
       }
 
       if (secondAssetId) {
-        await storage.query(
-          `DELETE FROM assets WHERE id = $1`,
-          [secondAssetId],
-        );
+        await storage.query(`DELETE FROM assets WHERE id = $1`, [secondAssetId]);
       }
 
       if (networkId) {
-        await storage.query(
-          `DELETE FROM networks WHERE id = $1`,
-          [networkId],
-        );
+        await storage.query(`DELETE FROM networks WHERE id = $1`, [networkId]);
       }
 
       await storage.disconnect();
@@ -346,13 +318,7 @@ describe("ExchangeAssetAccountRepository", () => {
           )
           VALUES ($1, $2, $3, $4, $5)
         `,
-        [
-          wrongNetworkId,
-          `wrong-${wrongNetworkId}`,
-          "Wrong Network",
-          "wrong-chain",
-          "test",
-        ],
+        [wrongNetworkId, `wrong-${wrongNetworkId}`, "Wrong Network", "wrong-chain", "test"],
       );
 
       await expect(
@@ -382,24 +348,15 @@ describe("ExchangeAssetAccountRepository", () => {
       }
 
       if (assetId) {
-        await storage.query(
-          `DELETE FROM assets WHERE id = $1`,
-          [assetId],
-        );
+        await storage.query(`DELETE FROM assets WHERE id = $1`, [assetId]);
       }
 
       if (wrongNetworkId) {
-        await storage.query(
-          `DELETE FROM networks WHERE id = $1`,
-          [wrongNetworkId],
-        );
+        await storage.query(`DELETE FROM networks WHERE id = $1`, [wrongNetworkId]);
       }
 
       if (networkId) {
-        await storage.query(
-          `DELETE FROM networks WHERE id = $1`,
-          [networkId],
-        );
+        await storage.query(`DELETE FROM networks WHERE id = $1`, [networkId]);
       }
 
       await storage.disconnect();

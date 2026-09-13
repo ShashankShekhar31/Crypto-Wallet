@@ -8,9 +8,7 @@ import {
 export class ReconciliationService {
   private readonly engine: DefaultReconciliationEngine;
 
-  constructor(
-    private readonly repository: ReconciliationRepository,
-  ) {
+  constructor(private readonly repository: ReconciliationRepository) {
     this.engine = new DefaultReconciliationEngine();
   }
 
@@ -30,10 +28,6 @@ export class ReconciliationService {
     networkId?: string,
     accountId?: string,
   ): Promise<ReconciliationComparison | null> {
-    return this.repository.findLatest(
-      assetId,
-      networkId,
-      accountId,
-    );
+    return this.repository.findLatest(assetId, networkId, accountId);
   }
 }

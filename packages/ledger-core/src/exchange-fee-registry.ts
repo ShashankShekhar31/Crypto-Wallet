@@ -10,9 +10,7 @@ export class ExchangeFeeRegistry {
     }
 
     if (this.references.has(fee.reference)) {
-      throw new Error(
-        `Exchange fee reference already exists: ${fee.reference}`,
-      );
+      throw new Error(`Exchange fee reference already exists: ${fee.reference}`);
     }
 
     this.validate(fee);
@@ -41,24 +39,15 @@ export class ExchangeFeeRegistry {
     }
 
     if (fee.sourceExchangeAssetAccountId.trim().length === 0) {
-      throw new Error(
-        "Exchange fee source asset account ID must not be empty",
-      );
+      throw new Error("Exchange fee source asset account ID must not be empty");
     }
 
     if (fee.feeExchangeAssetAccountId.trim().length === 0) {
-      throw new Error(
-        "Exchange fee fee account ID must not be empty",
-      );
+      throw new Error("Exchange fee fee account ID must not be empty");
     }
 
-    if (
-      fee.sourceExchangeAssetAccountId ===
-      fee.feeExchangeAssetAccountId
-    ) {
-      throw new Error(
-        "Exchange fee source and fee accounts must differ",
-      );
+    if (fee.sourceExchangeAssetAccountId === fee.feeExchangeAssetAccountId) {
+      throw new Error("Exchange fee source and fee accounts must differ");
     }
 
     if (fee.assetId.trim().length === 0) {

@@ -13,12 +13,8 @@ interface ReconciliationComparisonRow {
   asset_id: string;
   network_id: string | null;
   account_id: string | null;
-  expected_observation_status:
-    | "available"
-    | "unavailable";
-  actual_observation_status:
-    | "available"
-    | "unavailable";
+  expected_observation_status: "available" | "unavailable";
+  actual_observation_status: "available" | "unavailable";
   expected_source: ReconciliationSource;
   expected_amount: string | null;
   actual_source: ReconciliationSource;
@@ -32,9 +28,7 @@ interface ReconciliationComparisonRow {
   created_at: Date;
 }
 
-export class PostgresReconciliationRepository
-  implements ReconciliationRepository
-{
+export class PostgresReconciliationRepository implements ReconciliationRepository {
   constructor(private readonly storage: Storage) {}
 
   async save(comparison: ReconciliationComparison): Promise<void> {
@@ -130,11 +124,7 @@ export class PostgresReconciliationRepository
         ORDER BY created_at DESC
         LIMIT 1
       `,
-      [
-        assetId,
-        networkId ?? null,
-        accountId ?? null,
-      ],
+      [assetId, networkId ?? null, accountId ?? null],
     );
 
     const row = result.rows[0];
@@ -147,17 +137,11 @@ export class PostgresReconciliationRepository
   }
 }
 
-function mapReconciliationComparison(
-  row: ReconciliationComparisonRow,
-): ReconciliationComparison {
+function mapReconciliationComparison(row: ReconciliationComparisonRow): ReconciliationComparison {
   const scope = {
     assetId: row.asset_id,
-    ...(row.network_id !== null
-      ? { networkId: row.network_id }
-      : {}),
-    ...(row.account_id !== null
-      ? { accountId: row.account_id }
-      : {}),
+    ...(row.network_id !== null ? { networkId: row.network_id } : {}),
+    ...(row.account_id !== null ? { accountId: row.account_id } : {}),
   };
 
   return {
@@ -168,9 +152,7 @@ function mapReconciliationComparison(
       amount: row.expected_amount,
       status: row.expected_observation_status,
       observedAt: row.expected_observed_at.toISOString(),
-      ...(row.expected_reference !== null
-        ? { reference: row.expected_reference }
-        : {}),
+      ...(row.expected_reference !== null ? { reference: row.expected_reference } : {}),
     },
     actual: {
       source: row.actual_source,
@@ -178,9 +160,7 @@ function mapReconciliationComparison(
       amount: row.actual_amount,
       status: row.actual_observation_status,
       observedAt: row.actual_observed_at.toISOString(),
-      ...(row.actual_reference !== null
-        ? { reference: row.actual_reference }
-        : {}),
+      ...(row.actual_reference !== null ? { reference: row.actual_reference } : {}),
     },
     difference: row.difference,
     status: row.status,

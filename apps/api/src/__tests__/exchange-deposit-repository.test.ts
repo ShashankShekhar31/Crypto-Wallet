@@ -4,16 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import { PostgresStorage } from "@crypto-wallet/storage";
 
-import {
-  ExchangeDepositRepository,
-} from "../exchange/exchange-deposit-repository.js";
+import { ExchangeDepositRepository } from "../exchange/exchange-deposit-repository.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for exchange deposit repository tests",
-  );
+  throw new Error("DATABASE_URL is required for exchange deposit repository tests");
 }
 
 describe("ExchangeDepositRepository", () => {
@@ -68,14 +64,7 @@ describe("ExchangeDepositRepository", () => {
         )
         VALUES ($1, $2, $3, $4, $5, $6)
       `,
-      [
-        assetId,
-        networkId,
-        `D${assetId.slice(0, 6)}`,
-        "Deposit Test Asset",
-        18,
-        "native",
-      ],
+      [assetId, networkId, `D${assetId.slice(0, 6)}`, "Deposit Test Asset", 18, "native"],
     );
 
     await storage.query(
@@ -88,12 +77,7 @@ describe("ExchangeDepositRepository", () => {
         )
         VALUES ($1, $2, $3, $4)
       `,
-      [
-        exchangeAssetAccountId,
-        exchangeAccountId,
-        assetId,
-        networkId,
-      ],
+      [exchangeAssetAccountId, exchangeAccountId, assetId, networkId],
     );
 
     return {
@@ -280,10 +264,7 @@ describe("ExchangeDepositRepository", () => {
         reference: `deposit-${randomUUID()}`,
       });
 
-      const found = await repository.findByTransaction(
-        fixtures.networkId,
-        transactionHash,
-      );
+      const found = await repository.findByTransaction(fixtures.networkId, transactionHash);
 
       expect(found).toEqual(created);
     } finally {

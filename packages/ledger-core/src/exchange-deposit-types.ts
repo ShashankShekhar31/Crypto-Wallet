@@ -1,8 +1,4 @@
-export type ExchangeDepositStatus =
-  | "detected"
-  | "confirmed"
-  | "credited"
-  | "reversed";
+export type ExchangeDepositStatus = "detected" | "confirmed" | "credited" | "reversed";
 
 export interface ExchangeDepositRecord {
   id: string;

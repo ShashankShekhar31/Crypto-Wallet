@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  ExchangeDepositRegistry,
-  type ExchangeDepositRecord,
-} from "../index.js";
+import { ExchangeDepositRegistry, type ExchangeDepositRecord } from "../index.js";
 
-function createDeposit(
-  overrides: Partial<ExchangeDepositRecord> = {},
-): ExchangeDepositRecord {
+function createDeposit(overrides: Partial<ExchangeDepositRecord> = {}): ExchangeDepositRecord {
   return {
     id: "deposit-1",
     exchangeAssetAccountId: "exchange-asset-account-1",
@@ -86,9 +81,7 @@ describe("ExchangeDepositRegistry", () => {
           exchangeAssetAccountId: "   ",
         }),
       ),
-    ).toThrow(
-      "Exchange deposit asset account ID must not be empty",
-    );
+    ).toThrow("Exchange deposit asset account ID must not be empty");
   });
 
   it("rejects an empty network ID", () => {
@@ -112,9 +105,7 @@ describe("ExchangeDepositRegistry", () => {
           transactionHash: "   ",
         }),
       ),
-    ).toThrow(
-      "Exchange deposit transaction hash must not be empty",
-    );
+    ).toThrow("Exchange deposit transaction hash must not be empty");
   });
 
   it("rejects a non-positive amount", () => {

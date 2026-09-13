@@ -36,9 +36,7 @@ export interface FeePostingInput {
   amount: string;
 }
 
-export function buildDepositPosting(
-  input: DepositPostingInput,
-): ExchangeLedgerTransaction {
+export function buildDepositPosting(input: DepositPostingInput): ExchangeLedgerTransaction {
   const transaction: ExchangeLedgerTransaction = {
     id: input.id,
     reference: input.reference,
@@ -61,15 +59,11 @@ export function buildDepositPosting(
 
   return Object.freeze({
     ...transaction,
-    postings: Object.freeze(
-      transaction.postings.map((posting) => Object.freeze({ ...posting })),
-    ),
+    postings: Object.freeze(transaction.postings.map((posting) => Object.freeze({ ...posting }))),
   });
 }
 
-export function buildWithdrawalPosting(
-  input: WithdrawalPostingInput,
-): ExchangeLedgerTransaction {
+export function buildWithdrawalPosting(input: WithdrawalPostingInput): ExchangeLedgerTransaction {
   const transaction: ExchangeLedgerTransaction = {
     id: input.id,
     reference: input.reference,
@@ -92,15 +86,11 @@ export function buildWithdrawalPosting(
 
   return Object.freeze({
     ...transaction,
-    postings: Object.freeze(
-      transaction.postings.map((posting) => Object.freeze({ ...posting })),
-    ),
+    postings: Object.freeze(transaction.postings.map((posting) => Object.freeze({ ...posting }))),
   });
 }
 
-export function buildTradePosting(
-  input: TradePostingInput,
-): ExchangeLedgerTransaction {
+export function buildTradePosting(input: TradePostingInput): ExchangeLedgerTransaction {
   const transaction: ExchangeLedgerTransaction = {
     id: input.id,
     reference: input.reference,
@@ -133,15 +123,11 @@ export function buildTradePosting(
 
   return Object.freeze({
     ...transaction,
-    postings: Object.freeze(
-      transaction.postings.map((posting) => Object.freeze({ ...posting })),
-    ),
+    postings: Object.freeze(transaction.postings.map((posting) => Object.freeze({ ...posting }))),
   });
 }
 
-export function buildFeePosting(
-  input: FeePostingInput,
-): ExchangeLedgerTransaction {
+export function buildFeePosting(input: FeePostingInput): ExchangeLedgerTransaction {
   const transaction: ExchangeLedgerTransaction = {
     id: input.id,
     reference: input.reference,
@@ -164,8 +150,6 @@ export function buildFeePosting(
 
   return Object.freeze({
     ...transaction,
-    postings: Object.freeze(
-      transaction.postings.map((posting) => Object.freeze({ ...posting })),
-    ),
+    postings: Object.freeze(transaction.postings.map((posting) => Object.freeze({ ...posting }))),
   });
 }

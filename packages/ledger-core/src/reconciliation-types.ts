@@ -1,17 +1,8 @@
-export type ReconciliationSource =
-  | "ledger"
-  | "custody"
-  | "blockchain"
-  | "fiat";
+export type ReconciliationSource = "ledger" | "custody" | "blockchain" | "fiat";
 
-export type ReconciliationStatus =
-  | "matched"
-  | "mismatched"
-  | "unavailable";
+export type ReconciliationStatus = "matched" | "mismatched" | "unavailable";
 
-export type ReconciliationObservationStatus =
-  | "available"
-  | "unavailable";
+export type ReconciliationObservationStatus = "available" | "unavailable";
 
 export interface ReconciliationScope {
   assetId: string;

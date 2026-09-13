@@ -24,9 +24,7 @@ interface ExchangeSubaccountRow {
 export class ExchangeSubaccountRepository {
   constructor(private readonly storage: Storage) {}
 
-  async create(
-    input: CreateExchangeSubaccountInput,
-  ): Promise<ExchangeSubaccountRecord> {
+  async create(input: CreateExchangeSubaccountInput): Promise<ExchangeSubaccountRecord> {
     const id = randomUUID();
 
     const result = await this.storage.query<ExchangeSubaccountRow>(
@@ -79,9 +77,7 @@ export class ExchangeSubaccountRepository {
     return mapExchangeSubaccount(row);
   }
 
-  async listByExchangeAccount(
-    exchangeAccountId: string,
-  ): Promise<ExchangeSubaccountRecord[]> {
+  async listByExchangeAccount(exchangeAccountId: string): Promise<ExchangeSubaccountRecord[]> {
     const result = await this.storage.query<ExchangeSubaccountRow>(
       `
         SELECT
@@ -100,9 +96,7 @@ export class ExchangeSubaccountRepository {
   }
 }
 
-function mapExchangeSubaccount(
-  row: ExchangeSubaccountRow,
-): ExchangeSubaccountRecord {
+function mapExchangeSubaccount(row: ExchangeSubaccountRow): ExchangeSubaccountRecord {
   return {
     id: row.id,
     exchangeAccountId: row.exchange_account_id,
