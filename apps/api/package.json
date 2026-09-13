@@ -15,6 +15,7 @@
   "dependencies": {
     "@crypto-wallet/cache": "workspace:*",
     "@crypto-wallet/config": "workspace:*",
+    "@crypto-wallet/ledger-core": "workspace:*",
     "@crypto-wallet/shared-types": "workspace:*",
     "@crypto-wallet/storage": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
