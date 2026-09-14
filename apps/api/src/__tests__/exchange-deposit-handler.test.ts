@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { EventEnvelope, ExchangeDepositCreatedEvent } from "@crypto-wallet/shared-types";
+import type { ExchangeDepositCreatedEvent } from "@crypto-wallet/shared-types";
 
 import { createExchangeDepositEventHandler } from "../messaging/exchange-deposit-handler.js";
 
