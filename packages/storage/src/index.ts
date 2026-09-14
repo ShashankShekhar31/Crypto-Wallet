@@ -21,3 +21,6 @@ export interface Storage {
 }
 
 export { PostgresStorage } from "./postgres.js";
+export { OutboxRepository } from "./outbox.js";
+export type { OutboxEventRecord } from "./outbox.js";
+export { InboxRepository, DeadLetterRepository } from "./inbox.js";

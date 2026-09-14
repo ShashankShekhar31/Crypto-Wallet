@@ -64,11 +64,42 @@ import { createTelemetrySdk } from "./telemetry.js";
 
 import { recordHttpRequest, recordHttpResponse } from "./metrics.js";
 
+import { KafkaEventPublisher } from "./messaging/event-publisher.js";
+
+import { OutboxPublisher } from "./messaging/outbox-publisher.js";
+
+import { OutboxWorker } from "./messaging/outbox-worker.js";
+
+import { KafkaEventConsumer } from "./messaging/event-consumer.js";
+
+import { createExchangeDepositEventHandler } from "./messaging/exchange-deposit-handler.js";
+
+import { createTemporalClient } from "./temporal/client.js";
+
 const cacheClient = createCacheClient({
   url: config.redis.url,
 });
 
 const storage = new PostgresStorage(config.database.url);
+
+const eventPublisher = new KafkaEventPublisher({
+  messaging: config.messaging,
+});
+
+const outboxPublisher = new OutboxPublisher(storage, eventPublisher);
+
+const outboxWorker = new OutboxWorker(outboxPublisher);
+
+const temporalClient = await createTemporalClient();
+
+const eventConsumer = new KafkaEventConsumer({
+  messaging: config.messaging,
+  storage,
+  consumerName: "exchange-deposit-temporal",
+  handler: createExchangeDepositEventHandler({
+    temporalClient,
+  }),
+});
 
 const identityRepository = new IdentityRepository(storage);
 
@@ -100,6 +131,14 @@ const app = Fastify({
 
 app.addHook("onClose", async () => {
   await telemetrySdk.shutdown();
+  await eventConsumer.disconnect();
+  await outboxWorker.stop();
+  await eventPublisher.disconnect();
+
+  await temporalClient.connection.close();
+
+  await disconnectCacheClient(cacheClient);
+  await storage.disconnect();
 });
 
 app.addHook("onRequest", async (request) => {
@@ -188,12 +227,6 @@ app.setErrorHandler((error, request, reply) => {
   });
 });
 
-app.addHook("onClose", async () => {
-  await disconnectCacheClient(cacheClient);
-
-  await storage.disconnect();
-});
-
 await app.register(healthRoutes);
 
 await app.register(
@@ -238,6 +271,10 @@ const start = async () => {
     await storage.connect();
 
     await connectCacheClient(cacheClient);
+
+    await eventPublisher.connect();
+    await outboxWorker.start();
+    await eventConsumer.connect();
 
     await app.listen({
       host: "127.0.0.1",
