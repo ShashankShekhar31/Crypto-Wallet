@@ -48,6 +48,26 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      redpanda:
+        image: docker.redpanda.com/redpandadata/redpanda:v26.2.2
+        ports:
+          - 19092:19092
+        options: >-
+          --health-cmd "rpk cluster health | grep -E 'Healthy:.+true' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 10s
+        command: >
+          redpanda start
+          --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+          --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+          --rpc-addr redpanda:33145
+          --advertise-rpc-addr redpanda:33145
+          --mode dev-container
+          --smp 1
+          --default-log-level=info
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -95,6 +115,10 @@ jobs:
         env:
           DATABASE_URL: postgresql://wallet_admin:ci-postgres-password@localhost:5432/crypto_wallet
           REDIS_URL: redis://localhost:6379
+          KAFKA_BROKERS: 127.0.0.1:19092
+          KAFKA_TOPIC: crypto-wallet.events
+          KAFKA_CLIENT_ID: crypto-wallet-api
+          KAFKA_CONSUMER_GROUP: crypto-wallet-api
 
       - name: Build
         run: pnpm build
