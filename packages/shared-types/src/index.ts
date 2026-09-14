@@ -37,3 +37,4 @@ export interface Transaction {
 }
 
 export * from "./ledger.js";
+export * from "./events.js";

@@ -6,11 +6,12 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "tsx src/server.ts",
+    "dev": "node --env-file-if-exists=../../.env ./node_modules/tsx/dist/cli.mjs src/server.ts",
+    "temporal:worker": "node --env-file-if-exists=../../.env ./node_modules/tsx/dist/cli.mjs src/temporal/worker.ts",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --env-file-if-exists=../../.env ./node_modules/vitest/vitest.mjs run",
-    "start": "node dist/server.js"
+    "start": "node --env-file-if-exists=../../.env dist/server.js"
   },
   "dependencies": {
     "@crypto-wallet/cache": "workspace:*",
@@ -24,7 +25,11 @@
     "@opentelemetry/sdk-node": "^0.222.0",
     "@opentelemetry/sdk-trace-node": "^2.11.0",
     "@simplewebauthn/server": "^13.3.3",
+    "@temporalio/client": "^1.23.0",
+    "@temporalio/worker": "^1.23.0",
+    "@temporalio/workflow": "^1.23.0",
     "fastify": "^5.12.1",
+    "kafkajs": "^2.2.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -105,6 +105,64 @@ services:
       timeout: 5s
       retries: 10
 
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v26.2.2
+    container_name: crypto-wallet-redpanda
+    restart: unless-stopped
+
+    command:
+      - redpanda
+      - start
+      - --kafka-addr
+      - internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr
+      - internal://redpanda:9092,external://localhost:19092
+      - --rpc-addr
+      - redpanda:33145
+      - --advertise-rpc-addr
+      - redpanda:33145
+      - --mode
+      - dev-container
+      - --smp
+      - "1"
+      - --default-log-level=info
+
+    ports:
+      - "127.0.0.1:19092:19092"
+      - "127.0.0.1:19644:9644"
+
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - rpk cluster health | grep -E 'Healthy:.+true' || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  temporal:
+    image: temporalio/temporal:1.8.3
+    container_name: crypto-wallet-temporal
+    restart: unless-stopped
+
+    command:
+      - server
+      - start-dev
+      - --ip
+      - 0.0.0.0
+      - --db-filename
+      - /var/lib/temporal/temporal.sqlite
+
+    ports:
+      - "127.0.0.1:7233:7233"
+      - "127.0.0.1:8233:8233"
+
+    volumes:
+      - temporal_data:/var/lib/temporal
+
   valkey:
     image: valkey/valkey:8-alpine
     container_name: crypto-wallet-valkey
@@ -138,6 +196,8 @@ volumes:
   minio_data:
   postgres_data:
   valkey_data:
+  redpanda_data:
+  temporal_data:
   prometheus_data:
     name: local_prometheus_data
   grafana_data:

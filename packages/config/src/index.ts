@@ -13,6 +13,13 @@ export interface AppConfig {
     url: string;
   };
 
+  messaging: {
+    brokers: string[];
+    topic: string;
+    clientId: string;
+    consumerGroup: string;
+  };
+
   security: {
     logLevel: string;
     totpEncryptionKey: string;
@@ -117,6 +124,21 @@ function passkeyRpNameEnv(): string {
   return process.env.PASSKEY_RP_NAME?.trim() || "Crypto Wallet";
 }
 
+function messagingBrokersEnv(): string[] {
+  const value = process.env.KAFKA_BROKERS?.trim() || "127.0.0.1:19092";
+
+  const brokers = value
+    .split(",")
+    .map((broker) => broker.trim())
+    .filter(Boolean);
+
+  if (brokers.length === 0) {
+    throw new Error("Environment variable KAFKA_BROKERS must contain at least one broker");
+  }
+
+  return brokers;
+}
+
 export function loadConfig(): AppConfig {
   const nodeEnv = process.env.NODE_ENV?.trim() || "development";
 
@@ -144,6 +166,13 @@ export function loadConfig(): AppConfig {
 
     redis: {
       url: urlEnv("REDIS_URL"),
+    },
+
+    messaging: {
+      brokers: messagingBrokersEnv(),
+      topic: process.env.KAFKA_TOPIC?.trim() || "crypto-wallet.events",
+      clientId: process.env.KAFKA_CLIENT_ID?.trim() || "crypto-wallet-api",
+      consumerGroup: process.env.KAFKA_CONSUMER_GROUP?.trim() || "crypto-wallet-api",
     },
 
     security: {

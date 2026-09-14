@@ -14,10 +14,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "migrate": "tsx src/migrate.ts",
+    "migrate": "node --env-file-if-exists=../../.env ./node_modules/tsx/dist/cli.mjs src/migrate.ts",
     "seed": "tsx src/seed.ts"
   },
   "dependencies": {
+    "@crypto-wallet/shared-types": "workspace:*",
     "pg": "^8.23.0"
   },
   "devDependencies": {
