@@ -15,6 +15,7 @@ Shared functionality will be organized into:
 
 - ui
 - wallet-core
+- custody-core
 - chain-core
 - crypto
 - storage
@@ -57,3 +58,7 @@ It will eventually contain its own:
 
 The exchange architecture must not collapse the self-custody
 wallet and custodial exchange into the same security boundary.
+
+Custodial key-management functionality is implemented behind a dedicated custody-core boundary.
+
+The custody boundary is provider-neutral and is intended to support future production key-management adapters such as AWS KMS, AWS CloudHSM, and MPC without coupling the self-custody wallet to custodial infrastructure.
