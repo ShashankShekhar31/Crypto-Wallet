@@ -29,87 +29,151 @@ export interface AuthRouteDependencies {
 
 export function createAuthRoutes(dependencies: AuthRouteDependencies) {
   return async function authRoutes(app: FastifyInstance): Promise<void> {
-    app.post("/auth/login", async (request) => {
-      let body: z.infer<typeof loginBodySchema>;
-      try {
-        body = loginBodySchema.parse(request.body);
-      } catch {
-        throw new ApiError(400, "INVALID_REQUEST", "Invalid login request");
-      }
+    app.post(
+      "/auth/login",
+      {
+        schema: {
+          tags: ["auth"],
+          summary: "Authenticate with email and password",
+          description:
+            "Authenticates an identity account, creates a session, and returns a refresh token.",
+          operationId: "login",
+          body: {
+            type: "object",
+            properties: {
+              email: {
+                type: "string",
+                description: "Account email address",
+              },
+              password: {
+                type: "string",
+                description: "Account password",
+                format: "password",
+              },
+              deviceId: {
+                type: "string",
+                description: "Registered device identifier",
+              },
+            },
+          },
+          response: {
+            200: {
+              description: "Authentication successful",
+              type: "object",
+              properties: {
+                data: {
+                  type: "object",
+                  properties: {
+                    userId: { type: "string", format: "uuid" },
+                    sessionId: { type: "string", format: "uuid" },
+                    refreshToken: { type: "string" },
+                  },
+                  required: ["userId", "sessionId", "refreshToken"],
+                },
+                requestId: { type: "string" },
+              },
+              required: ["data", "requestId"],
+            },
+            400: {
+              description: "Invalid login request",
+            },
+            401: {
+              description: "Invalid credentials or invalid device",
+            },
+            403: {
+              description: "Identity account is not active",
+            },
+            423: {
+              description: "Password credential is locked",
+            },
+            429: {
+              description: "Authentication rate limit exceeded",
+            },
+          },
+        },
+      },
+      async (request) => {
+        let body: z.infer<typeof loginBodySchema>;
+        try {
+          body = loginBodySchema.parse(request.body);
+        } catch {
+          throw new ApiError(400, "INVALID_REQUEST", "Invalid login request");
+        }
 
-      const normalizedEmail = body.email.toLowerCase();
+        const normalizedEmail = body.email.toLowerCase();
 
-      const sourceIpHash = createHash("sha256").update(request.ip).digest("hex");
+        const sourceIpHash = createHash("sha256").update(request.ip).digest("hex");
 
-      const rateLimitKey = createHash("sha256")
-        .update(`${normalizedEmail}:${sourceIpHash}`)
-        .digest("hex");
+        const rateLimitKey = createHash("sha256")
+          .update(`${normalizedEmail}:${sourceIpHash}`)
+          .digest("hex");
 
-      const rateLimit = await dependencies.rateLimiter.check({
-        key: `auth:login:${rateLimitKey}`,
-        limit: LOGIN_RATE_LIMIT,
-        windowSeconds: LOGIN_RATE_WINDOW_SECONDS,
-      });
-
-      if (!rateLimit.allowed) {
-        throw new ApiError(429, "AUTH_RATE_LIMITED", "Authentication rate limit exceeded");
-      }
-
-      const now = Date.now();
-
-      const expiresAt = new Date(now + SESSION_DURATION_MS);
-
-      const idleExpiresAt = new Date(now + SESSION_IDLE_DURATION_MS);
-
-      try {
-        const authenticated = await dependencies.authenticationService.authenticateWithPassword({
-          normalizedEmail,
-          password: body.password,
-          deviceId: body.deviceId,
-          sourceIpHash,
-          userAgent: request.headers["user-agent"] ?? null,
-          expiresAt,
-          idleExpiresAt,
+        const rateLimit = await dependencies.rateLimiter.check({
+          key: `auth:login:${rateLimitKey}`,
+          limit: LOGIN_RATE_LIMIT,
+          windowSeconds: LOGIN_RATE_WINDOW_SECONDS,
         });
 
-        return {
-          data: {
-            userId: authenticated.identityAccount.userId,
-            sessionId: authenticated.session.id,
-            refreshToken: authenticated.refreshToken,
-          },
-          requestId: request.id,
-        };
-      } catch (error) {
-        if (error instanceof ApiError) {
+        if (!rateLimit.allowed) {
+          throw new ApiError(429, "AUTH_RATE_LIMITED", "Authentication rate limit exceeded");
+        }
+
+        const now = Date.now();
+
+        const expiresAt = new Date(now + SESSION_DURATION_MS);
+
+        const idleExpiresAt = new Date(now + SESSION_IDLE_DURATION_MS);
+
+        try {
+          const authenticated = await dependencies.authenticationService.authenticateWithPassword({
+            normalizedEmail,
+            password: body.password,
+            deviceId: body.deviceId,
+            sourceIpHash,
+            userAgent: request.headers["user-agent"] ?? null,
+            expiresAt,
+            idleExpiresAt,
+          });
+
+          return {
+            data: {
+              userId: authenticated.identityAccount.userId,
+              sessionId: authenticated.session.id,
+              refreshToken: authenticated.refreshToken,
+            },
+            requestId: request.id,
+          };
+        } catch (error) {
+          if (error instanceof ApiError) {
+            throw error;
+          }
+
+          if (error instanceof Error) {
+            switch (error.message) {
+              case "Invalid credentials":
+                throw new ApiError(401, "INVALID_CREDENTIALS", "Invalid credentials");
+
+              case "Identity account is not active":
+                throw new ApiError(
+                  403,
+                  "IDENTITY_ACCOUNT_NOT_ACTIVE",
+                  "Identity account is not active",
+                );
+
+              case "Password credential is locked":
+                throw new ApiError(423, "PASSWORD_LOCKED", "Password credential is locked");
+
+              case "Invalid device":
+                throw new ApiError(401, "INVALID_DEVICE", "Invalid device");
+
+              default:
+                throw error;
+            }
+          }
+
           throw error;
         }
-
-        if (error instanceof Error) {
-          switch (error.message) {
-            case "Invalid credentials":
-              throw new ApiError(401, "INVALID_CREDENTIALS", "Invalid credentials");
-
-            case "Identity account is not active":
-              throw new ApiError(
-                403,
-                "IDENTITY_ACCOUNT_NOT_ACTIVE",
-                "Identity account is not active",
-              );
-
-            case "Password credential is locked":
-              throw new ApiError(423, "PASSWORD_LOCKED", "Password credential is locked");
-
-            case "Invalid device":
-              throw new ApiError(401, "INVALID_DEVICE", "Invalid device");
-
-            default:
-              throw error;
-          }
-        }
-
-        throw error;
-      }
-    });
+      },
+    );
   };
 }

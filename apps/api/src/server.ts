@@ -76,6 +76,10 @@ import { createExchangeDepositEventHandler } from "./messaging/exchange-deposit-
 
 import { createTemporalClient } from "./temporal/client.js";
 
+import swagger from "@fastify/swagger";
+
+import swaggerUi from "@fastify/swagger-ui";
+
 const cacheClient = createCacheClient({
   url: config.redis.url,
 });
@@ -127,6 +131,41 @@ await telemetrySdk.start();
 const app = Fastify({
   logger: createLoggerOptions(config.security.logLevel),
   genReqId: () => crypto.randomUUID(),
+});
+
+await app.register(swagger, {
+  openapi: {
+    openapi: "3.0.3",
+    info: {
+      title: "Crypto Wallet API",
+      description: "Security-first Crypto Wallet API",
+      version: "0.1.0",
+    },
+    servers: [
+      {
+        url: `http://127.0.0.1:${config.port}`,
+        description: "Local development server",
+      },
+    ],
+    tags: [
+      {
+        name: "health",
+        description: "Health and service status",
+      },
+      {
+        name: "auth",
+        description: "Authentication and session management",
+      },
+      {
+        name: "security",
+        description: "TOTP, passkey, and account recovery",
+      },
+    ],
+  },
+});
+
+await app.register(swaggerUi, {
+  routePrefix: "/docs",
 });
 
 app.addHook("onClose", async () => {
@@ -200,6 +239,15 @@ app.setErrorHandler((error, request, reply) => {
       error: {
         code: error.code,
         message: error.message,
+      },
+    });
+  }
+
+  if (error instanceof Error && "code" in error && error.code === "FST_ERR_VALIDATION") {
+    return reply.status(400).send({
+      error: {
+        code: "INVALID_REQUEST",
+        message: "Invalid request",
       },
     });
   }
