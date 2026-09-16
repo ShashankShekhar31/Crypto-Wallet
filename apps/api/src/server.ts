@@ -282,36 +282,42 @@ await app.register(
     authenticationService,
     rateLimiter: authRateLimiter,
   }),
+  { prefix: "/api/v1" },
 );
 
 await app.register(
   createRefreshRoutes({
     refreshService,
   }),
+  { prefix: "/api/v1" },
 );
 
 await app.register(
   createLogoutRoutes({
     logoutService,
   }),
+  { prefix: "/api/v1" },
 );
 
 await app.register(
   createTotpRoutes({
     totpService,
   }),
+  { prefix: "/api/v1" },
 );
 
 await app.register(
   createPasskeyRoutes({
     passkeyService,
   }),
+  { prefix: "/api/v1" },
 );
 
 await app.register(
   createRecoveryRoutes({
     recoveryCodeService,
   }),
+  { prefix: "/api/v1" },
 );
 
 const start = async () => {
