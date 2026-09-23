@@ -12,7 +12,7 @@ import { healthRoutes } from "./routes/health.js";
 
 import { createAuthRoutes } from "./routes/auth.js";
 
-import { ApiError } from "./errors.js";
+import { handleApiError } from "./errors.js";
 
 import { IdentityRepository } from "./identity/repository.js";
 
@@ -231,49 +231,7 @@ const recoveryCodeService = new RecoveryCodeService({
   repository: recoveryCodeRepository,
 });
 
-app.setErrorHandler((error, request, reply) => {
-  request.log.error(error);
-
-  if (error instanceof ApiError) {
-    return reply.status(error.statusCode).send({
-      error: {
-        code: error.code,
-        message: error.message,
-      },
-    });
-  }
-
-  if (error instanceof Error && "code" in error && error.code === "FST_ERR_VALIDATION") {
-    return reply.status(400).send({
-      error: {
-        code: "INVALID_REQUEST",
-        message: "Invalid request",
-      },
-    });
-  }
-
-  if (
-    error instanceof Error &&
-    "statusCode" in error &&
-    typeof error.statusCode === "number" &&
-    error.statusCode >= 400 &&
-    error.statusCode < 500
-  ) {
-    return reply.status(error.statusCode).send({
-      error: {
-        code: "BAD_REQUEST",
-        message: error.message,
-      },
-    });
-  }
-
-  return reply.status(500).send({
-    error: {
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Internal server error",
-    },
-  });
-});
+app.setErrorHandler(handleApiError);
 
 await app.register(healthRoutes);
 
