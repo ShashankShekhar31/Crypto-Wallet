@@ -12,7 +12,7 @@ import { healthRoutes } from "./routes/health.js";
 
 import { createAuthRoutes } from "./routes/auth.js";
 
-import { ApiError } from "./errors.js";
+import { handleApiError } from "./errors.js";
 
 import { IdentityRepository } from "./identity/repository.js";
 
@@ -76,6 +76,10 @@ import { createExchangeDepositEventHandler } from "./messaging/exchange-deposit-
 
 import { createTemporalClient } from "./temporal/client.js";
 
+import swagger from "@fastify/swagger";
+
+import swaggerUi from "@fastify/swagger-ui";
+
 const cacheClient = createCacheClient({
   url: config.redis.url,
 });
@@ -127,6 +131,41 @@ await telemetrySdk.start();
 const app = Fastify({
   logger: createLoggerOptions(config.security.logLevel),
   genReqId: () => crypto.randomUUID(),
+});
+
+await app.register(swagger, {
+  openapi: {
+    openapi: "3.0.3",
+    info: {
+      title: "Crypto Wallet API",
+      description: "Security-first Crypto Wallet API",
+      version: "0.1.0",
+    },
+    servers: [
+      {
+        url: `http://127.0.0.1:${config.port}`,
+        description: "Local development server",
+      },
+    ],
+    tags: [
+      {
+        name: "health",
+        description: "Health and service status",
+      },
+      {
+        name: "auth",
+        description: "Authentication and session management",
+      },
+      {
+        name: "security",
+        description: "TOTP, passkey, and account recovery",
+      },
+    ],
+  },
+});
+
+await app.register(swaggerUi, {
+  routePrefix: "/docs",
 });
 
 app.addHook("onClose", async () => {
@@ -192,40 +231,7 @@ const recoveryCodeService = new RecoveryCodeService({
   repository: recoveryCodeRepository,
 });
 
-app.setErrorHandler((error, request, reply) => {
-  request.log.error(error);
-
-  if (error instanceof ApiError) {
-    return reply.status(error.statusCode).send({
-      error: {
-        code: error.code,
-        message: error.message,
-      },
-    });
-  }
-
-  if (
-    error instanceof Error &&
-    "statusCode" in error &&
-    typeof error.statusCode === "number" &&
-    error.statusCode >= 400 &&
-    error.statusCode < 500
-  ) {
-    return reply.status(error.statusCode).send({
-      error: {
-        code: "BAD_REQUEST",
-        message: error.message,
-      },
-    });
-  }
-
-  return reply.status(500).send({
-    error: {
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Internal server error",
-    },
-  });
-});
+app.setErrorHandler(handleApiError);
 
 await app.register(healthRoutes);
 
@@ -234,36 +240,42 @@ await app.register(
     authenticationService,
     rateLimiter: authRateLimiter,
   }),
+  { prefix: "/api/v1" },
 );
 
 await app.register(
   createRefreshRoutes({
     refreshService,
   }),
+  { prefix: "/api/v1" },
 );
 
 await app.register(
   createLogoutRoutes({
     logoutService,
   }),
+  { prefix: "/api/v1" },
 );
 
 await app.register(
   createTotpRoutes({
     totpService,
   }),
+  { prefix: "/api/v1" },
 );
 
 await app.register(
   createPasskeyRoutes({
     passkeyService,
   }),
+  { prefix: "/api/v1" },
 );
 
 await app.register(
   createRecoveryRoutes({
     recoveryCodeService,
   }),
+  { prefix: "/api/v1" },
 );
 
 const start = async () => {

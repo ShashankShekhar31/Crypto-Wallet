@@ -18,61 +18,122 @@ export interface RefreshRouteDependencies {
 
 export function createRefreshRoutes(dependencies: RefreshRouteDependencies) {
   return async function refreshRoutes(app: FastifyInstance): Promise<void> {
-    app.post("/auth/refresh", async (request) => {
-      let body: z.infer<typeof refreshBodySchema>;
-
-      try {
-        body = refreshBodySchema.parse(request.body);
-      } catch {
-        throw new ApiError(400, "INVALID_REQUEST", "Invalid refresh request");
-      }
-
-      const now = Date.now();
-
-      try {
-        const result = await dependencies.refreshService.refresh({
-          refreshToken: body.refreshToken,
-          expiresAt: new Date(now + SESSION_DURATION_MS),
-          idleExpiresAt: new Date(now + SESSION_IDLE_DURATION_MS),
-        });
-
-        return {
-          data: {
-            userId: result.session.userId,
-            sessionId: result.session.id,
-            refreshToken: result.refreshToken,
+    app.post(
+      "/auth/refresh",
+      {
+        attachValidation: true,
+        schema: {
+          tags: ["auth"],
+          summary: "Refresh an authentication session",
+          description:
+            "Rotates a refresh token, creates a replacement session, and returns a new refresh token.",
+          operationId: "refreshSession",
+          body: {
+            type: "object",
+            required: ["refreshToken"],
+            properties: {
+              refreshToken: {
+                type: "string",
+                minLength: 1,
+                description: "The currently valid refresh token.",
+              },
+            },
+            additionalProperties: false,
           },
-          requestId: request.id,
-        };
-      } catch (error) {
-        if (error instanceof ApiError) {
+          response: {
+            200: {
+              description: "Session refreshed successfully",
+              type: "object",
+              properties: {
+                data: {
+                  type: "object",
+                  properties: {
+                    userId: {
+                      type: "string",
+                      format: "uuid",
+                    },
+                    sessionId: {
+                      type: "string",
+                      format: "uuid",
+                    },
+                    refreshToken: {
+                      type: "string",
+                    },
+                  },
+                  required: ["userId", "sessionId", "refreshToken"],
+                },
+                requestId: {
+                  type: "string",
+                },
+              },
+              required: ["data", "requestId"],
+            },
+            400: {
+              description: "Invalid refresh request",
+            },
+            401: {
+              description:
+                "Invalid refresh token, replayed token, inactive session, or expired session",
+            },
+          },
+        },
+      },
+      async (request) => {
+        let body: z.infer<typeof refreshBodySchema>;
+
+        try {
+          body = refreshBodySchema.parse(request.body);
+        } catch {
+          throw new ApiError(400, "INVALID_REQUEST", "Invalid refresh request");
+        }
+
+        const now = Date.now();
+
+        try {
+          const result = await dependencies.refreshService.refresh({
+            refreshToken: body.refreshToken,
+            expiresAt: new Date(now + SESSION_DURATION_MS),
+            idleExpiresAt: new Date(now + SESSION_IDLE_DURATION_MS),
+          });
+
+          return {
+            data: {
+              userId: result.session.userId,
+              sessionId: result.session.id,
+              refreshToken: result.refreshToken,
+            },
+            requestId: request.id,
+          };
+        } catch (error) {
+          if (error instanceof ApiError) {
+            throw error;
+          }
+
+          if (error instanceof Error) {
+            switch (error.message) {
+              case "Invalid refresh token":
+                throw new ApiError(401, "INVALID_REFRESH_TOKEN", "Invalid refresh token");
+
+              case "Refresh token replay detected":
+                throw new ApiError(401, "REFRESH_TOKEN_REPLAY", "Refresh token replay detected");
+
+              case "Refresh session is not active":
+                throw new ApiError(401, "SESSION_NOT_ACTIVE", "Refresh session is not active");
+
+              case "Refresh session has expired":
+                throw new ApiError(401, "SESSION_EXPIRED", "Refresh session has expired");
+
+              case "Refresh session is idle expired":
+                throw new ApiError(401, "SESSION_IDLE_EXPIRED", "Refresh session is idle expired");
+
+              default:
+                throw error;
+            }
+          }
+
           throw error;
         }
-
-        if (error instanceof Error) {
-          switch (error.message) {
-            case "Invalid refresh token":
-              throw new ApiError(401, "INVALID_REFRESH_TOKEN", "Invalid refresh token");
-
-            case "Refresh token replay detected":
-              throw new ApiError(401, "REFRESH_TOKEN_REPLAY", "Refresh token replay detected");
-
-            case "Refresh session is not active":
-              throw new ApiError(401, "SESSION_NOT_ACTIVE", "Refresh session is not active");
-
-            case "Refresh session has expired":
-              throw new ApiError(401, "SESSION_EXPIRED", "Refresh session has expired");
-
-            case "Refresh session is idle expired":
-              throw new ApiError(401, "SESSION_IDLE_EXPIRED", "Refresh session is idle expired");
-
-            default:
-              throw error;
-          }
-        }
-
-        throw error;
-      }
-    });
+      },
+    );
   };
 }
