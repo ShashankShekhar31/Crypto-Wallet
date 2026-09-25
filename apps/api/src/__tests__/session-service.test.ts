@@ -386,4 +386,77 @@ describe("SessionService", () => {
       await storage.disconnect();
     }
   });
+  it("rejects refresh after the session is revoked for device loss", async () => {
+    const storage = new PostgresStorage(databaseUrl);
+    const repository = new SessionRepository(storage);
+    const service = new SessionService(repository);
+
+    const userId = randomUUID();
+    const deviceId = randomUUID();
+    const refreshToken = generateRefreshToken();
+
+    try {
+      await storage.connect();
+
+      await storage.query(
+        `
+          INSERT INTO users (id)
+          VALUES ($1)
+        `,
+        [userId],
+      );
+
+      await storage.query(
+        `
+          INSERT INTO devices (
+            id,
+            user_id,
+            platform,
+            name
+          )
+          VALUES ($1, $2, $3, $4)
+        `,
+        [deviceId, userId, "test", "device-loss-test"],
+      );
+
+      const session = await repository.createSession({
+        userId,
+        deviceId,
+        refreshTokenHash: hashRefreshToken(refreshToken),
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        idleExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      });
+
+      const revoked = await service.revoke(session.id, "device_lost");
+
+      expect(revoked).not.toBeNull();
+      expect(revoked?.status).toBe("revoked");
+      expect(revoked?.revokedReason).toBe("device_lost");
+
+      await expect(
+        service.refresh({
+          refreshToken,
+          idleTimeoutMs: 15 * 60 * 1000,
+        }),
+      ).rejects.toThrow("Auth session is not active");
+    } finally {
+      await storage.query(
+        `
+          DELETE FROM devices
+          WHERE id = $1
+        `,
+        [deviceId],
+      );
+
+      await storage.query(
+        `
+          DELETE FROM users
+          WHERE id = $1
+        `,
+        [userId],
+      );
+
+      await storage.disconnect();
+    }
+  });
 });
